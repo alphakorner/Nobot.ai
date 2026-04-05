@@ -293,6 +293,10 @@ h1.hero-title{font-family:'Outfit',sans-serif;font-size:clamp(28px,5vw,58px);fon
 .mac-msg.user .mac-msg-label{text-align:right;}
 .mac-input-bar{display:flex;align-items:center;gap:10px;padding:9px 14px 11px;background:rgba(255,255,255,0.04);border-top:1px solid rgba(255,255,255,0.07);flex-shrink:0;}
 .mac-input-field{flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:10px 16px;font-size:13px;color:#fff;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer;min-width:0;white-space:nowrap;overflow:hidden;}
+@media(max-width:768px){
+  .mac-input-field{font-size:10.5px;white-space:normal;line-height:1.45;padding:8px 12px;min-height:2.9em;display:flex;align-items:center;}
+  .typewriter-cursor{height:11px;}
+}
 .typewriter-text{display:inline;}
 .typewriter-cursor{display:inline-block;width:2px;height:13px;background:rgba(124,58,237,0.8);margin-left:2px;vertical-align:middle;animation:blink 0.85s steps(1) infinite;}
 @keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0}}
@@ -1058,7 +1062,7 @@ if('serviceWorker' in navigator){
   <div class="badge-top">✦&nbsp;Nouveau · + De 200 Agents IA Disponibles Dès Maintenant</div>
   <h1 class="hero-title" style="line-height:1.15;">
     <span style="color:#fff;display:block;">L'IA qui travaille pour vous</span>
-    <span class="grad" style="font-size:clamp(20px,3.5vw,42px);display:block;margin-top:6px;">100% Strasbourgeois</span>
+    <span class="grad" id="heroTypewriter" style="font-size:clamp(20px,3.5vw,42px);display:block;margin-top:6px;min-height:1.3em;">&nbsp;</span>
   </h1>
   <p class="hero-sub">Créez, analysez, rédigez, développez — du simple au complexe, nobot.ai est votre expert IA local pour Strasbourg & l'Alsace. Particuliers ou professionnels : questions du quotidien, démarches strasbourgeoises de A à Z.</p>
   
@@ -1679,12 +1683,12 @@ function showPage(name){
    ============================================================ */
 (function(){
   const phrases = [
-    "Écrivez ce que vous souhaitez créer juste ici…",
-    "Créez un site web pour ma boutique alsacienne…",
-    "Analyse mon fichier Excel de gestion des coûts…",
-    "Rédige un e-mail professionnel en anglais…",
-    "Développe une WebApp de réservation en ligne…",
-    "Explique-moi les aides à Strasbourg pour mon entreprise…",
+    "Créez un site pour ma boutique…",
+    "Analysez mon fichier Excel…",
+    "Rédigez un mail pro en anglais…",
+    "Développez une app de réservation…",
+    "Quelles aides à Strasbourg ?",
+    "Générez un document PDF pro…",
   ];
   const el = document.getElementById('typewriterEl');
   if(!el) return;
@@ -1735,11 +1739,11 @@ if(ham&&mob){
    CHAT CONFIGURATION & STATE
    ============================================================ */
 let OPENROUTER_DEFAULT_KEY = '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';
-let OPENROUTER_DEFAULT_MODEL = 'google/gemini-2.0-flash-001';
+let OPENROUTER_DEFAULT_MODEL = 'openai/gpt-4o-mini';
 
 
 function getApiKey(){
-  // Override admin uniquement si la clé sauvegardée commence bien par sk-or-
+  // Priorité absolue : clé sauvegardée dans l'admin
   try{
     const g = JSON.parse(localStorage.getItem('nobot_global_config')||'{}');
     if(g.key && g.key.startsWith('sk-or-') && g.key.length > 20) return g.key;
@@ -1980,8 +1984,16 @@ async function callOpenRouter(userMessage){
   if(!res.ok){
     const errBody = await res.json().catch(()=>({}));
     console.error('[nobot] Erreur OpenRouter:', res.status, JSON.stringify(errBody));
-    const msg = errBody?.error?.message || errBody?.message || `Erreur HTTP ${res.status}`;
-    throw new Error(`${msg} (HTTP ${res.status})`);
+    const rawMsg = errBody?.error?.message || errBody?.message || '';
+    let msg = rawMsg || `Erreur HTTP ${res.status}`;
+    if(res.status === 401 || rawMsg.toLowerCase().includes('user not found') || rawMsg.toLowerCase().includes('unauthorized')){
+      msg = '🔑 Clé API invalide ou expirée. Rendez-vous sur openrouter.ai pour régénérer votre clé, puis mettez-la à jour dans l\'Admin.';
+    } else if(res.status === 429){
+      msg = '⏱ Limite de requêtes atteinte. Réessayez dans quelques secondes.';
+    } else if(res.status >= 500){
+      msg = '⚡ Serveur OpenRouter temporairement indisponible. Réessayez dans un moment.';
+    }
+    throw new Error(`${msg}`);
   }
   const data = await res.json();
   return data?.choices?.[0]?.message?.content || 'Aucune réponse reçue.';
@@ -2233,7 +2245,7 @@ function loadAdminSettings(){
     list.innerHTML='';
     if(keys.length === 0){
       // Clé par défaut pré-remplie
-      addApiKeyRow({name:'OpenRouter (défaut)', key:'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', model:'google/gemini-2.0-flash-001', active:true});
+      addApiKeyRow({name:'OpenRouter (défaut)', key:'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', model:'openai/gpt-4o-mini', active:true});
     } else {
       keys.forEach(k=>addApiKeyRow(k));
     }
@@ -2548,30 +2560,25 @@ function handleAdminClick(){
 }
 
 /* ============================================================
-   HERO TYPEWRITER
+   HERO TYPEWRITER — "100% Strasbourgeois" uniquement, boucle infinie
    ============================================================ */
 (function(){
   const el = document.getElementById('heroTypewriter');
   if(!el) return;
-  const phrases = [
-    "L'IA qui travaille pour vous",
-    "100 % Strasbourgeoise",
-    "Votre expert IA local",
-    "Créez · Analysez · Rédigez",
-    "Du simple au complexe",
-    "nobot.ai — Pour Strasbourg",
-  ];
-  let idx=0, charIdx=0, deleting=false;
+  const phrase = "100% Strasbourgeois";
+  let charIdx = 0, deleting = false;
   function type(){
-    const cur = phrases[idx];
     if(!deleting){
-      el.textContent = cur.slice(0, ++charIdx);
-      if(charIdx===cur.length){ deleting=true; setTimeout(type,2400); return; }
+      charIdx++;
+      el.textContent = phrase.slice(0, charIdx);
+      if(charIdx === phrase.length){ deleting = true; setTimeout(type, 1400); return; }
+      setTimeout(type, 45);
     } else {
-      el.textContent = cur.slice(0, --charIdx);
-      if(charIdx===0){ deleting=false; idx=(idx+1)%phrases.length; setTimeout(type,400); return; }
+      charIdx--;
+      el.textContent = phrase.slice(0, charIdx);
+      if(charIdx === 0){ deleting = false; setTimeout(type, 350); return; }
+      setTimeout(type, 22);
     }
-    setTimeout(type, deleting ? 28 : 58);
   }
   type();
 })();
