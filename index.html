@@ -251,8 +251,9 @@ h1.hero-title{font-family:'Outfit',sans-serif;font-size:clamp(28px,5vw,58px);fon
 .green-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;margin-right:6px;animation:pulse 2s infinite;}
 
 /* ====== AI PILLS ====== */
-.ai-logos-under{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;}
-.ai-logo-pill{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:600;color:rgba(255,255,255,0.9);cursor:default;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.2);backdrop-filter:blur(8px);}
+.ai-logos-under{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;justify-content:center;overflow-x:auto;scrollbar-width:none;max-width:100%;}
+.ai-logos-under::-webkit-scrollbar{display:none;}
+.ai-logo-pill{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:999px;padding:5px 10px;font-size:clamp(10px,2vw,12px);font-weight:600;color:rgba(255,255,255,0.9);cursor:default;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.2);backdrop-filter:blur(8px);flex-shrink:0;white-space:nowrap;}
 .ai-logo-pill:hover{background:rgba(255,255,255,0.12);border-color:rgba(124,58,237,0.4);color:#fff;}
 .ai-logo-pill svg{flex-shrink:0;}
 
@@ -383,8 +384,9 @@ h1.hero-title{font-family:'Outfit',sans-serif;font-size:clamp(28px,5vw,58px);fon
 /* ====== SECTIONS ====== */
 .powered-section{text-align:center;margin-top:64px;padding:0 24px;}
 .powered-txt{font-size:13px;color:rgba(255,255,255,0.85);font-weight:600;letter-spacing:0.05em;text-transform:uppercase;}
-.logos-row{display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;padding:20px 24px;position:relative;z-index:2;}
-.logo-item{display:flex;align-items:center;gap:8px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:rgba(255,255,255,0.85);transition:all 0.2s;cursor:default;}
+.logos-row{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:nowrap;overflow-x:auto;padding:20px 24px;position:relative;z-index:2;scrollbar-width:none;}
+.logos-row::-webkit-scrollbar{display:none;}
+.logo-item{display:flex;align-items:center;gap:6px;font-family:'Outfit',sans-serif;font-size:clamp(11px,2vw,14px);font-weight:700;color:rgba(255,255,255,0.85);transition:all 0.2s;cursor:default;flex-shrink:0;white-space:nowrap;}
 .logo-item:hover{color:#fff;transform:translateY(-2px);}
 .admin-btn-wrap{text-align:center;margin-top:48px;padding-bottom:8px;}
 .btn-admin{display:inline-block;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:999px;padding:8px 20px;font-size:12px;font-weight:600;color:rgba(255,255,255,0.25);text-decoration:none;cursor:pointer;transition:all 0.2s;}
@@ -1054,7 +1056,7 @@ if('serviceWorker' in navigator){
     <span style="color:#fff;display:block;">L'IA qui travaille pour vous</span>
     <span class="grad" style="font-size:clamp(20px,3.5vw,42px);display:block;margin-top:6px;min-height:1.2em;" id="strasbourgTypewriter"></span>
   </h1>
-  <p class="hero-sub">Créez, analysez, rédigez, développez — du simple au complexe, nobot.ai est votre expert IA local spécialisé pour Strasbourg & l'Alsace. Pour les particuliers comme pour les pros : questions du quotidien, démarches strasbourgeoisesde A à Z.</p>
+  <p class="hero-sub" style="text-wrap:balance;">Créez, analysez, rédigez, développez — du simple au complexe, nobot.ai est votre expert IA local spécialisé pour Strasbourg & l'Alsace. Pour les particuliers comme pour les pros : questions du quotidien, démarches strasbourgeoises de A à Z.</p>
   
   <button class="btn-cta" onclick="showPage('chat')">
     Commencer une discussion
