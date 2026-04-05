@@ -1370,6 +1370,7 @@ if('serviceWorker' in navigator){
         <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
           <button class="save-btn" onclick="addApiKeyRow()" style="background:linear-gradient(135deg,#10b981,#06b6d4);">+ Ajouter une clé API</button>
           <button class="save-btn" onclick="saveApiKeys()">💾 Sauvegarder tout</button>
+          <button class="save-btn red" onclick="resetApiCache()" style="background:rgba(239,68,68,0.25);border:1px solid rgba(239,68,68,0.4);color:#fca5a5;" title="Vide les anciennes clés du cache navigateur">🗑 Réinitialiser le cache</button>
         </div>
       </div>
 
@@ -1537,13 +1538,12 @@ function showPage(name){
   if(!pg) return;
   pg.style.display = (name==='chat') ? 'flex' : 'block';
   pg.classList.add('active');
+  // Actualiser le cache API à chaque visite index ou chat
+  if(name==='index' || name==='chat') refreshApiCache();
   if(name==='chat'){
-    // Save previous session if any
     saveCurrentConversation();
     clearChatForNewSession();
-    // Show welcome modal if first visit
     showWelcomeIfNeeded();
-    // Track sessions
     let s = parseInt(localStorage.getItem('nobot_sessions')||'0')+1;
     localStorage.setItem('nobot_sessions', s);
   }
@@ -1698,19 +1698,20 @@ if(ham&&mob){
 let OPENROUTER_DEFAULT_KEY = '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';
 let OPENROUTER_DEFAULT_MODEL = 'google/gemini-2.0-flash-001';
 
-// Charger les overrides admin au démarrage (persistés dans localStorage)
-(function(){
-  try{
-    const g = JSON.parse(localStorage.getItem('nobot_global_config')||'{}');
-    if(g.key)   OPENROUTER_DEFAULT_KEY   = g.key;
-    if(g.model) OPENROUTER_DEFAULT_MODEL = g.model;
-  }catch(e){}
-})();
 
 function getApiKey(){
+  // Override admin uniquement si la clé sauvegardée commence bien par sk-or-
+  try{
+    const g = JSON.parse(localStorage.getItem('nobot_global_config')||'{}');
+    if(g.key && g.key.startsWith('sk-or-') && g.key.length > 20) return g.key;
+  }catch(e){}
   return OPENROUTER_DEFAULT_KEY;
 }
 function getActiveModel(){
+  try{
+    const g = JSON.parse(localStorage.getItem('nobot_global_config')||'{}');
+    if(g.model && g.model.length > 3) return g.model;
+  }catch(e){}
   return OPENROUTER_DEFAULT_MODEL;
 }
 function getGlobalSystemPrompt(){
@@ -2050,19 +2051,20 @@ function saveApiKeys(){
     if(name||key) keys.push({name,key,model,active});
   });
   localStorage.setItem('nobot_api_keys_v2', JSON.stringify(keys));
-  // Appliquer la clé active globalement (affecte TOUS les utilisateurs via les variables globales)
-  const activeKey = keys.find(k=>k.active&&k.key);
+  const activeKey = keys.find(k=>k.active&&k.key&&k.key.startsWith('sk-or-'));
   if(activeKey){
-    const cfg = {
-      key:   activeKey.key,
-      model: activeKey.model || OPENROUTER_DEFAULT_MODEL
-    };
+    const cfg = { key: activeKey.key, model: activeKey.model || OPENROUTER_DEFAULT_MODEL };
     localStorage.setItem('nobot_global_config', JSON.stringify(cfg));
-    // Mettre à jour en mémoire pour la session courante
     OPENROUTER_DEFAULT_KEY   = cfg.key;
     OPENROUTER_DEFAULT_MODEL = cfg.model;
   }
-  showToast('Clés API sauvegardées ✓ — Appliquées globalement');
+  showToast('Clés API sauvegardées ✓');
+}
+function resetApiCache(){
+  localStorage.removeItem('nobot_global_config');
+  localStorage.removeItem('nobot_admin_keys');
+  localStorage.removeItem('nobot_api_keys_v2');
+  showToast('Cache API réinitialisé ✓ — Clé par défaut restaurée');
 }
 function addApiKeyRow(data={}){
   const list = document.getElementById('apiKeysList');
@@ -2478,22 +2480,32 @@ function toggleSidebar(){
    INIT — load user preferences + set default API key
    ============================================================ */
 (function init(){
-  // Set default OpenRouter key if none configured
-  const existing = JSON.parse(localStorage.getItem('nobot_admin_keys')||'{}');
-  if(!existing.openrouter){
-    existing.openrouter = OPENROUTER_DEFAULT_KEY;
-    localStorage.setItem('nobot_admin_keys', JSON.stringify(existing));
-  }
+  // Purge automatique des vieux caches API à chaque chargement
+  // (évite que de vieilles clés invalides écrasent la clé par défaut)
+  refreshApiCache();
 
   const savedMode = localStorage.getItem('nobot_user_mode');
   if(savedMode && MODES[savedMode]){ currentMode = savedMode; }
-  applyModeToChat(); // construit aussi les pills
+  applyModeToChat();
   const savedSmartActive = localStorage.getItem('nobot_smart_active')==='1';
   const savedSmartCtx = localStorage.getItem('nobot_smart_context')||'';
   smartSearchActive = savedSmartActive;
   smartSearchContext = savedSmartCtx;
   updateSmartBadge();
 })();
+
+/* Purge les clés API obsolètes — garde uniquement les prefs utilisateur */
+function refreshApiCache(){
+  localStorage.removeItem('nobot_global_config');
+  localStorage.removeItem('nobot_admin_keys');
+  // nobot_api_keys_v2 gardé si l'admin a sauvegardé une clé valide
+  try{
+    const keys = JSON.parse(localStorage.getItem('nobot_api_keys_v2')||'[]');
+    const valid = keys.filter(k => k.key && k.key.startsWith('sk-or-') && k.key.length > 20);
+    if(valid.length === 0) localStorage.removeItem('nobot_api_keys_v2');
+    else localStorage.setItem('nobot_api_keys_v2', JSON.stringify(valid));
+  }catch(e){ localStorage.removeItem('nobot_api_keys_v2'); }
+}
 
 /* ============================================================
    STAR ROBOTS (hero avatars)
