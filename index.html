@@ -1770,21 +1770,14 @@ if(ham&&mob){
    INIT — précharge la clé correcte si aucune config existante
    ============================================================ */
 (function initApiConfig(){
-  const CORRECT_KEY = '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';
+  const CORRECT_KEY = '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';
+  const CORRECT_MODEL = 'google/gemini-2.0-flash-001';
   try{
-    const existing = JSON.parse(localStorage.getItem('nobot_global_config')||'{}');
-    // Si pas de clé valide stockée → on injecte la bonne clé
-    if(!existing.key || !existing.key.startsWith('sk-or-') || existing.key.length < 20){
-      const cfg = { key: CORRECT_KEY, model: 'google/gemini-2.0-flash-001' };
-      localStorage.setItem('nobot_global_config', JSON.stringify(cfg));
-      OPENROUTER_DEFAULT_MODEL = cfg.model;
-    }
-    // Nettoyer toute ancienne mauvaise clé dans les keys_v2
-    const keys = JSON.parse(localStorage.getItem('nobot_api_keys_v2')||'[]');
-    if(keys.length === 0){
-      const freshKeys = [{name:'OpenRouter', key: CORRECT_KEY, model:'google/gemini-2.0-flash-001', active:true}];
-      localStorage.setItem('nobot_api_keys_v2', JSON.stringify(freshKeys));
-    }
+    // Toujours écraser avec la clé correcte (plug & play pour tous)
+    const cfg = { key: CORRECT_KEY, model: CORRECT_MODEL };
+    localStorage.setItem('nobot_global_config', JSON.stringify(cfg));
+    const freshKeys = [{name:'OpenRouter', key: CORRECT_KEY, model: CORRECT_MODEL, active:true}];
+    localStorage.setItem('nobot_api_keys_v2', JSON.stringify(freshKeys));
   }catch(e){}
 })();
 
