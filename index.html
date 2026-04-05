@@ -219,12 +219,13 @@ nav.scrolled{background:rgba(10,0,30,0.82);}
 
 /* ====== HERO ====== */
 .hero{position:relative;z-index:2;text-align:center;padding:140px 24px 40px;}
-.badge-top{display:inline-flex;align-items:center;gap:8px;background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.35);border-radius:999px;padding:6px 18px;font-size:13px;color:#c084fc;font-weight:600;margin-bottom:24px;backdrop-filter:blur(8px);}
+.badge-top{display:inline-flex;align-items:center;gap:8px;background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.35);border-radius:999px;padding:6px 18px;font-size:clamp(10px,2.8vw,13px);color:#c084fc;font-weight:600;margin-bottom:24px;backdrop-filter:blur(8px);white-space:nowrap;max-width:calc(100vw - 48px);overflow:hidden;text-overflow:ellipsis;}
 .badge-top::before{content:'';width:6px;height:6px;border-radius:50%;background:#c084fc;animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.6)}}
 h1.hero-title{font-family:'Outfit',sans-serif;font-size:clamp(28px,5vw,58px);font-weight:900;line-height:1.1;margin-bottom:20px;color:#fff;}
 .grad{background:linear-gradient(135deg,#7c3aed 0%,#f472b6 50%,#22d3ee 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-.hero-sub{font-size:clamp(14px,1.8vw,16px);color:#fff;max-width:660px;margin:0 auto 36px;line-height:1.8;}
+.hero-sub{font-size:clamp(14px,1.8vw,16px);color:#fff;max-width:660px;margin:0 auto 36px;line-height:1.8;text-wrap:balance;}
+@media(max-width:640px){.hero-sub{font-size:14px;padding:0 4px;text-align:center;hyphens:auto;}}
 .btn-cta{
   display:inline-flex;align-items:center;gap:10px;
   background:linear-gradient(135deg,#7c3aed,#f472b6);
@@ -252,9 +253,15 @@ h1.hero-title{font-family:'Outfit',sans-serif;font-size:clamp(28px,5vw,58px);fon
 
 /* ====== AI PILLS ====== */
 .ai-logos-under{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;}
-.ai-logo-pill{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:600;color:rgba(255,255,255,0.9);cursor:default;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.2);backdrop-filter:blur(8px);}
+.ai-logo-pill{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:600;color:rgba(255,255,255,0.9);cursor:default;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.2);backdrop-filter:blur(8px);white-space:nowrap;}
 .ai-logo-pill:hover{background:rgba(255,255,255,0.12);border-color:rgba(124,58,237,0.4);color:#fff;}
 .ai-logo-pill svg{flex-shrink:0;}
+@media(max-width:640px){
+  .ai-logos-under{flex-wrap:nowrap;gap:5px;overflow-x:auto;padding-bottom:4px;justify-content:center;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .ai-logos-under::-webkit-scrollbar{display:none;}
+  .ai-logo-pill{padding:4px 8px;font-size:10px;gap:4px;flex-shrink:0;}
+  .ai-logo-pill svg{width:11px !important;height:11px !important;}
+}
 
 /* ====== HERO VISUAL MAC WINDOW ====== */
 .hero-visual{position:relative;z-index:2;max-width:860px;margin:32px auto 0;padding:0 16px;}
@@ -1053,7 +1060,7 @@ if('serviceWorker' in navigator){
     <span style="color:#fff;display:block;">L'IA qui travaille pour vous</span>
     <span class="grad" style="font-size:clamp(20px,3.5vw,42px);display:block;margin-top:6px;">100% Strasbourgeois</span>
   </h1>
-  <p class="hero-sub">Créez, analysez, rédigez, développez — du simple au complexe, nobot.ai est votre expert IA local spécialisé pour Strasbourg & l'Alsace. Pour les particuliers comme pour les pros : questions du quotidien, démarches strasbourgeoisesde A à Z.</p>
+  <p class="hero-sub">Créez, analysez, rédigez, développez — du simple au complexe, nobot.ai est votre expert IA local pour Strasbourg & l'Alsace. Particuliers ou professionnels : questions du quotidien, démarches strasbourgeoises de A à Z.</p>
   
   <button class="btn-cta" onclick="showPage('chat')">
     Commencer une discussion
@@ -1371,6 +1378,38 @@ if('serviceWorker' in navigator){
           <button class="save-btn" onclick="addApiKeyRow()" style="background:linear-gradient(135deg,#10b981,#06b6d4);">+ Ajouter une clé API</button>
           <button class="save-btn" onclick="saveApiKeys()">💾 Sauvegarder tout</button>
           <button class="save-btn red" onclick="resetApiCache()" style="background:rgba(239,68,68,0.25);border:1px solid rgba(239,68,68,0.4);color:#fca5a5;" title="Vide les anciennes clés du cache navigateur">🗑 Réinitialiser le cache</button>
+        </div>
+      </div>
+
+      <!-- TERMINAL DE TEST API -->
+      <div class="admin-card full">
+        <div class="card-header">
+          <div class="card-icon ci-green" style="background:rgba(16,185,129,0.15);color:#6ee7b7;">⌨️</div>
+          <div><div class="card-title">Terminal de diagnostic</div><div class="card-sub">Teste la clé API active en temps réel</div></div>
+        </div>
+        <!-- Fenêtre terminal -->
+        <div id="apiTerminal" style="
+          background:#0a0a0f;border:1px solid rgba(255,255,255,0.1);border-radius:12px;
+          font-family:'Courier New',monospace;font-size:12px;
+          min-height:160px;max-height:280px;overflow-y:auto;padding:14px 16px;
+          color:#e2e8f0;line-height:1.7;margin-bottom:12px;
+          box-shadow:inset 0 2px 12px rgba(0,0,0,0.4);
+        ">
+          <span style="color:rgba(255,255,255,0.25);">— Terminal prêt. Cliquez sur Tester pour lancer le diagnostic. —</span>
+        </div>
+        <!-- Input commande -->
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;flex:1;min-width:200px;background:#0a0a0f;border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:0 12px;">
+            <span style="color:#6ee7b7;font-family:monospace;font-size:13px;margin-right:8px;">$</span>
+            <input id="terminalInput" type="text" value="test-key" placeholder="test-key | test-model monmodele | ping"
+              style="flex:1;background:transparent;border:none;outline:none;color:#fff;font-family:'Courier New',monospace;font-size:12px;padding:9px 0;"
+              onkeydown="if(event.key==='Enter') runTerminalCmd()"/>
+          </div>
+          <button onclick="runTerminalCmd()" style="background:linear-gradient(135deg,#10b981,#06b6d4);border:none;border-radius:8px;padding:9px 18px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">▶ Exécuter</button>
+          <button onclick="clearTerminal()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:9px 14px;color:rgba(255,255,255,0.5);font-size:13px;cursor:pointer;">✕ Clear</button>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:rgba(255,255,255,0.3);">
+          Commandes : <code style="color:#a78bfa;">test-key</code> · <code style="color:#a78bfa;">test-model &lt;id&gt;</code> · <code style="color:#a78bfa;">show-key</code> · <code style="color:#a78bfa;">ping</code> · <code style="color:#a78bfa;">clear</code>
         </div>
       </div>
 
@@ -1915,13 +1954,14 @@ async function sendMessage(){
    ============================================================ */
 async function callOpenRouter(userMessage){
   const apiKey = getApiKey();
-  if(!apiKey) throw new Error('Aucune clé API configurée. Contactez l\'administrateur.');
+  const model = getActiveModel();
+  if(!apiKey) throw new Error('Aucune clé API configurée.');
+  console.log('[nobot] clé utilisée:', apiKey.slice(0,18)+'…', '| modèle:', model);
   const aiSettings = JSON.parse(localStorage.getItem('nobot_ai_settings')||'{}');
   const temp = Math.min(parseFloat(aiSettings.temp || 0.7), 2);
   const maxTokens = parseInt(aiSettings.maxTokens || 1024);
-  const model = getActiveModel();
   let systemPrompt = getGlobalSystemPrompt() + '\n\n' + MODES[currentMode].prompt;
-  if(smartSearchActive && smartSearchContext){ systemPrompt += '\n\nContexte personnalisé (priorité haute) : ' + smartSearchContext; }
+  if(smartSearchActive && smartSearchContext){ systemPrompt += '\n\nContexte personnalisé : ' + smartSearchContext; }
   const messages = [{role:'system', content: systemPrompt}];
   conversationHistory.slice(-10).forEach(h=>{
     messages.push({role: h.role==='assistant'?'assistant':'user', content: h.content});
@@ -1937,7 +1977,12 @@ async function callOpenRouter(userMessage){
     },
     body:JSON.stringify({model, messages, temperature:temp, max_tokens:maxTokens})
   });
-  if(!res.ok){ const err=await res.json().catch(()=>({})); throw new Error(err?.error?.message||`Erreur HTTP ${res.status}`); }
+  if(!res.ok){
+    const errBody = await res.json().catch(()=>({}));
+    console.error('[nobot] Erreur OpenRouter:', res.status, JSON.stringify(errBody));
+    const msg = errBody?.error?.message || errBody?.message || `Erreur HTTP ${res.status}`;
+    throw new Error(`${msg} (HTTP ${res.status})`);
+  }
   const data = await res.json();
   return data?.choices?.[0]?.message?.content || 'Aucune réponse reçue.';
 }
@@ -2065,6 +2110,84 @@ function resetApiCache(){
   localStorage.removeItem('nobot_admin_keys');
   localStorage.removeItem('nobot_api_keys_v2');
   showToast('Cache API réinitialisé ✓ — Clé par défaut restaurée');
+}
+
+/* ── Terminal de diagnostic API ── */
+function termLog(msg, color='#e2e8f0'){
+  const t = document.getElementById('apiTerminal');
+  if(!t) return;
+  const now = new Date().toLocaleTimeString('fr-FR');
+  const line = document.createElement('div');
+  line.innerHTML = `<span style="color:rgba(255,255,255,0.25);">[${now}]</span> <span style="color:${color};">${msg}</span>`;
+  t.appendChild(line);
+  t.scrollTop = t.scrollHeight;
+}
+function clearTerminal(){
+  const t = document.getElementById('apiTerminal');
+  if(t) t.innerHTML = '<span style="color:rgba(255,255,255,0.25);">— Terminal vidé —</span>';
+}
+async function runTerminalCmd(){
+  const inp = document.getElementById('terminalInput');
+  const raw = (inp?.value||'').trim();
+  const parts = raw.split(/\s+/);
+  const cmd = parts[0].toLowerCase();
+  termLog(`$ ${raw}`, '#a78bfa');
+
+  if(cmd === 'clear'){ clearTerminal(); return; }
+
+  if(cmd === 'ping'){
+    termLog('Ping OpenRouter…', '#94a3b8');
+    try{
+      const r = await fetch('https://openrouter.ai/api/v1/models',{method:'GET'});
+      termLog(r.ok ? `✅ OpenRouter joignable (HTTP ${r.status})` : `⚠️ HTTP ${r.status}`, r.ok?'#6ee7b7':'#fca5a5');
+    }catch(e){ termLog('❌ Impossible de joindre OpenRouter : '+e.message,'#fca5a5'); }
+    return;
+  }
+
+  if(cmd === 'show-key'){
+    const k = getApiKey();
+    termLog(`Clé active : ${k.slice(0,14)}…${k.slice(-6)} (${k.length} chars)`,'#fde68a');
+    termLog(`Modèle actif : ${getActiveModel()}`,'#fde68a');
+    return;
+  }
+
+  if(cmd === 'test-key' || cmd === 'test-model'){
+    const key = getApiKey();
+    const model = parts[1] || getActiveModel();
+    termLog(`Test en cours…  clé: ${key.slice(0,14)}…  modèle: ${model}`, '#94a3b8');
+    try{
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'Authorization':'Bearer '+key,
+          'HTTP-Referer': window.location.origin||'https://nobot.ai',
+          'X-Title':'nobot.ai'
+        },
+        body: JSON.stringify({
+          model,
+          messages:[{role:'user',content:'Réponds juste "OK" en un mot.'}],
+          max_tokens:10
+        })
+      });
+      const body = await res.json().catch(()=>({}));
+      if(res.ok){
+        const reply = body?.choices?.[0]?.message?.content||'(vide)';
+        termLog(`✅ Clé valide ! Réponse IA : "${reply.trim()}"`, '#6ee7b7');
+        termLog(`   Modèle confirmé : ${model}`, '#6ee7b7');
+      } else {
+        const errMsg = body?.error?.message || body?.message || JSON.stringify(body);
+        termLog(`❌ Erreur HTTP ${res.status} : ${errMsg}`, '#fca5a5');
+        if(res.status===401) termLog('   → Clé invalide ou révoquée sur OpenRouter','#fca5a5');
+        if(res.status===404) termLog('   → Modèle introuvable. Essaie : test-model google/gemini-2.0-flash-001','#fde68a');
+        if(res.status===402) termLog('   → Crédits insuffisants sur ton compte OpenRouter','#fde68a');
+      }
+    }catch(e){ termLog('❌ Erreur réseau : '+e.message,'#fca5a5'); }
+    return;
+  }
+
+  termLog(`Commande inconnue : "${cmd}"`, '#fca5a5');
+  termLog('Commandes disponibles : test-key · test-model &lt;id&gt; · show-key · ping · clear', '#94a3b8');
 }
 function addApiKeyRow(data={}){
   const list = document.getElementById('apiKeysList');
