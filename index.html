@@ -1,0 +1,3077 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nobot.ai — L'IA 100 % Strasbourgeoise</title>
+<meta name="theme-color" content="#06000f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="nobot.ai">
+<link rel="manifest" id="pwa-manifest">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ====== GLOBAL RESET ====== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:root{
+  --bg:#06000f;--purple:#7c3aed;--pink:#f472b6;--cyan:#22d3ee;
+  --dark:#ffffff;--border:rgba(255,255,255,0.1);
+}
+body{font-family:'DM Sans',sans-serif;background:#06000f;color:#fff;overflow-x:hidden;min-height:100vh;}
+
+/* ====== PAGE ROUTING ====== */
+.page{display:none;}
+.page.active{display:block;}
+#page-chat{display:none;flex-direction:column;height:100vh;}
+#page-chat.active{display:flex;}
+#page-admin{display:none;}
+#page-admin.active{display:block;}
+
+/* ====== WELCOME MODAL ====== */
+#welcome-overlay{
+  position:fixed;inset:0;z-index:9000;
+  background:rgba(10,0,30,0.85);
+  backdrop-filter:blur(16px);
+  display:flex;align-items:center;justify-content:center;
+  animation:fadeIn 0.4s ease;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.welcome-card{
+  background:rgba(15,8,40,0.97);
+  border:1px solid rgba(124,58,237,0.4);
+  border-radius:28px;
+  padding:48px 44px;
+  max-width:560px;width:90%;
+  text-align:center;
+  box-shadow:0 40px 100px rgba(0,0,0,0.6),0 0 80px rgba(124,58,237,0.15);
+  position:relative;overflow:hidden;
+}
+.welcome-card::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%, rgba(124,58,237,0.15) 0%, transparent 70%);
+  pointer-events:none;
+}
+.welcome-robot{font-size:64px;margin-bottom:16px;animation:float-robot 3s ease-in-out infinite;}
+@keyframes float-robot{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.welcome-title{
+  font-family:'Outfit',sans-serif;font-size:26px;font-weight:900;
+  background:linear-gradient(135deg,#a78bfa,#f472b6,#22d3ee);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:8px;
+}
+.welcome-creator{font-size:13px;color:rgba(255,255,255,0.85);margin-bottom:20px;font-weight:600;}
+.welcome-creator strong{color:#c084fc;}
+.welcome-body{font-size:14px;color:#fff;line-height:1.75;margin-bottom:28px;}
+.welcome-body strong{color:#fff;}
+.welcome-free{
+  display:inline-block;
+  background:linear-gradient(135deg,rgba(16,185,129,0.2),rgba(6,182,212,0.2));
+  border:1px solid rgba(16,185,129,0.4);
+  border-radius:999px;padding:6px 20px;
+  font-size:13px;font-weight:700;color:#6ee7b7;
+  margin-bottom:24px;
+}
+.welcome-btn{
+  background:linear-gradient(135deg,#7c3aed,#f472b6);
+  border:none;border-radius:999px;padding:14px 40px;
+  font-size:16px;font-weight:800;color:#fff;cursor:pointer;
+  font-family:'Outfit',sans-serif;
+  box-shadow:0 8px 32px rgba(124,58,237,0.4);
+  transition:transform 0.2s,box-shadow 0.2s;
+}
+.welcome-btn:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(124,58,237,0.6);}
+
+/* ====== INDEX BG CANVAS ====== */
+#bg-canvas{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:0;width:100vw;height:100%;display:block;margin:0;padding:0;}
+
+/* ====== ROBOT BG SHAPES (pro, high-tech) ====== */
+.robot-bg-container{
+  position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+}
+.robot-svg{
+  position:absolute;opacity:0;
+  animation:robot-appear 1s ease forwards;
+}
+@keyframes robot-appear{to{opacity:1}}
+@keyframes robot-float{
+  0%,100%{transform:translateY(0px) rotate(0deg);}
+  33%{transform:translateY(-18px) rotate(4deg);}
+  66%{transform:translateY(10px) rotate(-3deg);}
+}
+@keyframes robot-spin-slow{
+  from{transform:rotate(0deg);}to{transform:rotate(360deg);}
+}
+@keyframes robot-pulse-ring{
+  0%,100%{opacity:0.6;transform:scale(1);}
+  50%{opacity:0.2;transform:scale(1.2);}
+}
+@keyframes eye-blink{
+  0%,94%,100%{transform:scaleY(1);}
+  96%,98%{transform:scaleY(0.1);}
+}
+@keyframes antenna-glow{
+  0%,100%{filter:drop-shadow(0 0 4px #7c3aed);}
+  50%{filter:drop-shadow(0 0 14px #f472b6);}
+}
+@keyframes circuit-dash{
+  to{stroke-dashoffset:-100;}
+}
+@keyframes data-flow{
+  from{stroke-dashoffset:0;}to{stroke-dashoffset:-80;}
+}
+
+/* ====== NAV — floating pill, rounded, transparent ====== */
+#navbar-wrap{
+  position:fixed;top:16px;left:50%;transform:translateX(-50%);
+  z-index:200;width:calc(100% - 40px);max-width:900px;
+}
+/* Fond noir transparent DERRIERE la navbar quand on scroll */
+#navbar-wrap::before{
+  content:'';
+  position:fixed;top:0;left:0;right:0;
+  height:88px;
+  background:linear-gradient(to bottom, rgba(6,0,15,0.85) 0%, rgba(6,0,15,0.0) 100%);
+  pointer-events:none;
+  z-index:-1;
+  opacity:0;
+  transition:opacity 0.3s ease;
+}
+#navbar-wrap.bg-visible::before{
+  opacity:1;
+}
+nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;height:56px;
+  background:rgba(10,0,30,0.55);
+  backdrop-filter:blur(28px) saturate(180%);
+  -webkit-backdrop-filter:blur(28px) saturate(180%);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:999px;
+  box-shadow:0 8px 40px rgba(0,0,0,0.4),0 0 0 1px rgba(124,58,237,0.15);
+  transition:background 0.3s;
+}
+nav.scrolled{background:rgba(10,0,30,0.82);}
+.logo{display:flex;align-items:center;gap:10px;font-family:'Outfit',sans-serif;font-weight:800;font-size:20px;color:#fff;text-decoration:none;cursor:pointer;}
+.logo-icon{width:36px;height:36px;position:relative;flex-shrink:0;}
+.logo-name{font-family:'Outfit',sans-serif;font-weight:800;font-size:18px;letter-spacing:-0.02em;color:#fff;}
+.logo-name .dot{background:linear-gradient(135deg,#7c3aed,#f472b6,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.nav-links{display:flex;gap:4px;list-style:none;align-items:center;}
+.nav-links a{color:rgba(255,255,255,0.9);font-size:13.5px;font-weight:500;text-decoration:none;padding:6px 14px;border-radius:999px;transition:all 0.2s;cursor:pointer;}
+.nav-links a:hover{color:#fff;background:rgba(255,255,255,0.08);}
+.btn-nav{background:linear-gradient(135deg,#7c3aed,#f472b6);color:#fff;border:none;padding:9px 20px;border-radius:999px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;white-space:nowrap;box-shadow:0 4px 20px rgba(124,58,237,0.4);transition:transform 0.15s,box-shadow 0.15s;}
+.btn-nav:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(124,58,237,0.55);}
+
+/* ====== HAMBURGER ====== */
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;z-index:300;border-radius:10px;transition:background 0.2s;}
+.hamburger:hover{background:rgba(255,255,255,0.08);}
+.hamburger span{display:block;width:22px;height:2px;background:rgba(255,255,255,0.85);border-radius:2px;transition:all 0.3s;}
+.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.hamburger.open span:nth-child(2){opacity:0;}
+.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+
+/* ====== MOBILE DROPDOWN MENU ====== */
+.mobile-menu{
+  position:absolute;top:calc(100% + 10px);left:0;right:0;
+  background:rgba(10,0,30,0.92);
+  backdrop-filter:blur(28px);
+  -webkit-backdrop-filter:blur(28px);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  overflow:hidden;
+  max-height:0;opacity:0;
+  transition:max-height 0.38s cubic-bezier(0.4,0,0.2,1),opacity 0.28s,transform 0.3s;
+  transform:translateY(-8px);
+  pointer-events:none;
+}
+.mobile-menu.open{max-height:400px;opacity:1;transform:translateY(0);pointer-events:all;}
+.mobile-menu a{
+  display:block;color:#fff;font-size:16px;font-weight:600;
+  text-decoration:none;padding:14px 24px;
+  border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;
+  transition:color 0.2s,background 0.2s;
+}
+.mobile-menu a:last-child{border-bottom:none;}
+.mobile-menu a:hover{color:#fff;background:rgba(124,58,237,0.15);}
+.mobile-cta{
+  margin:12px 16px 16px;
+  display:block;text-align:center;
+  background:linear-gradient(135deg,#7c3aed,#f472b6);
+  color:#fff !important;border-radius:999px;padding:12px 20px !important;
+  border-bottom:none !important;font-weight:700 !important;
+}
+.overlay{display:none;}
+
+/* ====== RESPONSIVE NAV ====== */
+@media(max-width:640px){
+  #navbar-wrap{width:calc(100% - 24px);top:10px;}
+  nav{padding:0 14px;height:50px;}
+  .nav-links{display:none;}
+  .btn-nav{display:none;}
+  .hamburger{display:flex;}
+  .logo-name{font-size:16px;}
+}
+@media(min-width:641px){
+  .hamburger{display:none;}
+  .mobile-menu{display:none !important;}
+}
+
+/* ====== HERO ====== */
+.hero{position:relative;z-index:2;text-align:center;padding:140px 24px 40px;}
+.badge-top{display:inline-flex;align-items:center;gap:8px;background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.35);border-radius:999px;padding:6px 18px;font-size:13px;color:#c084fc;font-weight:600;margin-bottom:24px;backdrop-filter:blur(8px);}
+.badge-top::before{content:'';width:6px;height:6px;border-radius:50%;background:#c084fc;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.6)}}
+h1.hero-title{font-family:'Outfit',sans-serif;font-size:clamp(28px,5vw,58px);font-weight:900;line-height:1.1;margin-bottom:20px;color:#fff;}
+.grad{background:linear-gradient(135deg,#7c3aed 0%,#f472b6 50%,#22d3ee 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-size:clamp(14px,1.8vw,16px);color:#fff;max-width:660px;margin:0 auto 36px;line-height:1.8;}
+.btn-cta{
+  display:inline-flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg,#7c3aed,#f472b6);
+  color:#fff;border:none;padding:10px 26px;border-radius:999px;
+  font-size:14px;font-weight:700;font-family:'Outfit',sans-serif;
+  cursor:pointer;box-shadow:0 4px 20px rgba(124,58,237,0.35),0 0 0 0 rgba(124,58,237,0.4);
+  transition:transform 0.15s,box-shadow 0.15s;text-decoration:none;margin-bottom:8px;
+  position:relative;transform-style:preserve-3d;perspective:600px;letter-spacing:0.01em;overflow:hidden;
+}
+.btn-cta::before{content:'';position:absolute;inset:0;border-radius:999px;background:linear-gradient(135deg,rgba(255,255,255,0.25),rgba(255,255,255,0));pointer-events:none;}
+.btn-cta:hover{transform:translateY(-2px) rotateX(8deg) scale(1.03);box-shadow:0 8px 32px rgba(124,58,237,0.5),0 0 0 4px rgba(124,58,237,0.12);}
+.btn-cta:active{transform:translateY(0px) rotateX(0deg) scale(0.98);}
+.btn-cta .arrow-circle{width:24px;height:24px;background:rgba(255,255,255,0.25);border-radius:50%;display:flex;align-items:center;justify-content:center;}
+@keyframes cta-shine{0%{left:-60%}100%{left:160%}}
+.btn-cta::after{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);border-radius:999px;animation:cta-shine 2.4s ease-in-out infinite;}
+
+/* ====== AVATARS ====== */
+.avatars-block{margin:28px 0;display:flex;flex-direction:column;align-items:center;gap:16px;}
+.avatars-row{display:flex;align-items:center;justify-content:center;gap:12px;}
+.avatars{display:flex;}
+.av{width:44px;height:44px;border-radius:50%;border:2.5px solid #f5f4ff;margin-left:-10px;overflow:hidden;flex-shrink:0;box-shadow:0 2px 10px rgba(124,58,237,0.15);}
+.av:first-child{margin-left:0;}
+.agents-txt{font-size:12px;font-weight:600;color:#fff;white-space:nowrap;}
+.green-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;margin-right:6px;animation:pulse 2s infinite;}
+
+/* ====== AI PILLS ====== */
+.ai-logos-under{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;}
+.ai-logo-pill{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:600;color:rgba(255,255,255,0.9);cursor:default;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.2);backdrop-filter:blur(8px);}
+.ai-logo-pill:hover{background:rgba(255,255,255,0.12);border-color:rgba(124,58,237,0.4);color:#fff;}
+.ai-logo-pill svg{flex-shrink:0;}
+
+/* ====== HERO VISUAL MAC WINDOW ====== */
+.hero-visual{position:relative;z-index:2;max-width:860px;margin:32px auto 0;padding:0 16px;}
+.mac-window{border-radius:20px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,0.18),0 30px 80px rgba(124,58,237,0.22),0 0 120px rgba(124,58,237,0.1),inset 0 1px 0 rgba(255,255,255,0.3);background:rgba(15,10,40,0.55);backdrop-filter:blur(40px) saturate(180%);border:1px solid rgba(255,255,255,0.15);cursor:pointer;transition:transform 0.3s,box-shadow 0.3s;animation:mac-float 4s ease-in-out infinite;}
+@keyframes mac-float{0%,100%{transform:translateY(0px)}50%{transform:translateY(-8px)}}
+.mac-window:hover{transform:translateY(-4px) scale(1.01);box-shadow:0 0 0 1px rgba(255,255,255,0.22),0 40px 100px rgba(124,58,237,0.35),0 0 160px rgba(124,58,237,0.15),inset 0 1px 0 rgba(255,255,255,0.35);animation:none;}
+.mac-titlebar{display:flex;align-items:center;gap:12px;padding:14px 20px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.08);backdrop-filter:blur(20px);}
+.mac-dots{display:flex;gap:8px;}
+.mac-dot{width:13px;height:13px;border-radius:50%;cursor:default;}
+.mac-dot.red{background:#ff5f57;box-shadow:0 0 8px rgba(255,95,87,0.6);}
+.mac-dot.yellow{background:#febc2e;box-shadow:0 0 8px rgba(254,188,46,0.6);}
+.mac-dot.green{background:#28c840;box-shadow:0 0 8px rgba(40,200,64,0.6);}
+.mac-title-txt{flex:1;text-align:center;font-size:13px;font-weight:600;color:#fff;font-family:'Outfit',sans-serif;letter-spacing:0.02em;}
+.mac-chat-body{display:flex;height:340px;background:linear-gradient(135deg,rgba(124,58,237,0.08),rgba(34,211,238,0.05),rgba(244,114,182,0.06));}
+.mac-sidebar{width:180px;flex-shrink:0;background:rgba(255,255,255,0.04);border-right:1px solid rgba(255,255,255,0.07);padding:16px 12px;display:flex;flex-direction:column;gap:4px;backdrop-filter:blur(10px);}
+.mac-sidebar-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:9px;font-size:12px;font-weight:500;color:rgba(255,255,255,0.9);transition:all 0.2s;cursor:pointer;}
+.mac-sidebar-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.85);}
+.mac-sidebar-item.active{background:rgba(124,58,237,0.25);color:#c084fc;border:1px solid rgba(124,58,237,0.3);}
+.mac-sidebar-section{font-size:9px;font-weight:700;color:rgba(255,255,255,0.65);letter-spacing:0.12em;text-transform:uppercase;padding:8px 10px 4px;margin-top:6px;}
+.sidebar-icon{font-size:14px;flex-shrink:0;}
+.mac-chat-area{flex:1;display:flex;flex-direction:column;padding:10px 14px 0;gap:7px;overflow:hidden;}
+.mac-msg{max-width:82%;display:flex;flex-direction:column;gap:2px;}
+.mac-msg.ai{align-self:flex-start;}
+.mac-msg.user{align-self:flex-end;}
+.mac-bubble{padding:7px 11px;border-radius:12px;font-size:10.5px;line-height:1.45;backdrop-filter:blur(20px);}
+.mac-msg.ai .mac-bubble{background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.12);color:#fff;border-bottom-left-radius:4px;}
+.mac-msg.user .mac-bubble{background:linear-gradient(135deg,rgba(124,58,237,0.45),rgba(244,114,182,0.3));border:1px solid rgba(124,58,237,0.3);color:#fff;border-bottom-right-radius:4px;}
+.mac-msg-label{font-size:9px;font-weight:700;color:rgba(255,255,255,0.65);padding:0 4px;}
+.mac-msg.user .mac-msg-label{text-align:right;}
+.mac-input-bar{display:flex;align-items:center;gap:10px;padding:9px 14px 11px;background:rgba(255,255,255,0.04);border-top:1px solid rgba(255,255,255,0.07);flex-shrink:0;}
+.mac-input-field{flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:10px 16px;font-size:13px;color:#fff;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer;min-width:0;white-space:nowrap;overflow:hidden;}
+.typewriter-text{display:inline;}
+.typewriter-cursor{display:inline-block;width:2px;height:13px;background:rgba(124,58,237,0.8);margin-left:2px;vertical-align:middle;animation:blink 0.85s steps(1) infinite;}
+@keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0}}
+.mac-send-btn{border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,#7c3aed,#f472b6);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(124,58,237,0.7),0 0 28px rgba(244,114,182,0.4);animation:send-glow 1.8s ease-in-out infinite;}
+@keyframes send-glow{0%,100%{box-shadow:0 0 14px rgba(124,58,237,0.7),0 0 28px rgba(244,114,182,0.4)}50%{box-shadow:0 0 28px rgba(124,58,237,1),0 0 60px rgba(244,114,182,0.7)}}
+
+/* ====== HERO IMAGE / IA PRESENTATION ====== */
+.ia-presentation{
+  position:relative;z-index:2;
+  max-width:1000px;margin:52px auto 0;padding:0 20px;
+}
+.ia-pres-card{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(124,58,237,0.2);
+  border-radius:28px;padding:48px 40px;
+  display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;
+  backdrop-filter:blur(20px);
+  box-shadow:0 20px 80px rgba(124,58,237,0.1);
+}
+.ia-pres-left{}
+.ia-pres-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(124,58,237,0.2);border:1px solid rgba(124,58,237,0.4);
+  border-radius:999px;padding:5px 14px;
+  font-size:12px;font-weight:700;color:#c084fc;margin-bottom:20px;
+}
+.ia-pres-title{
+  font-family:'Outfit',sans-serif;font-size:clamp(22px,3vw,34px);
+  font-weight:900;line-height:1.15;margin-bottom:16px;color:#fff;
+}
+.ia-pres-desc{font-size:14px;color:#fff;line-height:1.75;margin-bottom:24px;}
+.ia-skills-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ia-skill{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+  border-radius:12px;padding:10px 12px;
+  font-size:12px;font-weight:600;color:#fff;
+  backdrop-filter:blur(8px);transition:all 0.2s;
+}
+.ia-skill:hover{background:rgba(255,255,255,0.1);border-color:rgba(124,58,237,0.4);transform:translateY(-1px);color:#fff;}
+.ia-skill-icon{font-size:16px;}
+.ia-pres-right{display:flex;justify-content:center;align-items:center;}
+.ia-robot-showcase{
+  width:280px;height:280px;
+  position:relative;display:flex;align-items:center;justify-content:center;
+}
+/* ====== ORBIT RINGS ====== */
+.orbit-ring{
+  position:absolute;border-radius:50%;
+  border:1px solid rgba(255,255,255,0.07);
+  pointer-events:none;
+}
+.orbit-ring-1{width:100%;height:100%;border-color:rgba(124,58,237,0.18);}
+.orbit-ring-2{width:72%;height:72%;border-color:rgba(244,114,182,0.18);}
+.orbit-ring-3{width:44%;height:44%;border-color:rgba(34,211,238,0.2);}
+/* Orbital robot dots */
+.orbit-robot{
+  position:absolute;
+  transform-origin:0 0;
+  pointer-events:none;
+  z-index:3;
+}
+.orbit-robot svg{display:block;}
+.showcase-robot-center{
+  width:96px;height:96px;
+  background:linear-gradient(135deg,rgba(124,58,237,0.2),rgba(34,211,238,0.12));
+  border:1.5px solid rgba(124,58,237,0.4);
+  border-radius:20px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 40px rgba(124,58,237,0.25),0 0 80px rgba(124,58,237,0.1);
+  animation:float-robot 3s ease-in-out infinite;
+  position:relative;z-index:4;
+  overflow:hidden;
+}
+@keyframes ring-spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+@media(max-width:768px){.ia-pres-card{grid-template-columns:1fr;gap:32px;}.ia-pres-right{order:-1;}.ia-robot-showcase{width:180px;height:180px;}.showcase-robot-center{width:64px;height:64px;}}
+
+/* ====== OFFRE ====== */
+.offre-wrap{position:relative;z-index:2;max-width:700px;margin:64px auto 0;padding:0 24px;}
+.offre-card{background:rgba(255,255,255,0.05);border:1px solid rgba(124,58,237,0.25);border-radius:28px;overflow:hidden;backdrop-filter:blur(20px);box-shadow:0 20px 60px rgba(124,58,237,0.15);}
+.offre-inner{padding:40px;}
+.offre-badge{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;color:#c084fc;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px;}
+.star-icon{font-size:14px;}
+.offre-title{font-family:'Outfit',sans-serif;font-size:clamp(20px,3vw,28px);font-weight:900;margin-bottom:12px;color:#fff;line-height:1.2;}
+.offre-days{font-family:'Outfit',sans-serif;font-size:72px;font-weight:900;background:linear-gradient(135deg,#7c3aed,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;}
+.offre-unit{font-size:16px;font-weight:600;color:#fff;}
+.offre-sub{font-size:14px;color:#fff;margin:12px 0;line-height:1.6;}
+.offre-perks{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0;}
+.perk{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#fff;}
+.perk-check{color:#10b981;font-size:15px;font-weight:800;}
+.btn-offre{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#7c3aed,#f472b6);color:#fff;border:none;padding:13px 30px;border-radius:999px;font-size:15px;font-weight:800;cursor:pointer;font-family:'Outfit',sans-serif;box-shadow:0 6px 24px rgba(124,58,237,0.4);transition:transform 0.2s,box-shadow 0.2s;margin-top:8px;}
+.btn-offre:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(124,58,237,0.55);}
+.ac{width:28px;height:28px;background:rgba(255,255,255,0.25);border-radius:50%;display:flex;align-items:center;justify-content:center;}
+
+/* ====== SECTIONS ====== */
+.powered-section{text-align:center;margin-top:64px;padding:0 24px;}
+.powered-txt{font-size:13px;color:rgba(255,255,255,0.85);font-weight:600;letter-spacing:0.05em;text-transform:uppercase;}
+.logos-row{display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;padding:20px 24px;position:relative;z-index:2;}
+.logo-item{display:flex;align-items:center;gap:8px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:rgba(255,255,255,0.85);transition:all 0.2s;cursor:default;}
+.logo-item:hover{color:#fff;transform:translateY(-2px);}
+.admin-btn-wrap{text-align:center;margin-top:48px;padding-bottom:8px;}
+.btn-admin{display:inline-block;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:999px;padding:8px 20px;font-size:12px;font-weight:600;color:rgba(255,255,255,0.25);text-decoration:none;cursor:pointer;transition:all 0.2s;}
+.btn-admin:hover{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);}
+.site-footer{text-align:center;padding:24px;font-size:12px;color:rgba(255,255,255,0.75);font-weight:500;position:relative;z-index:2;}
+.site-footer span{color:#c084fc;font-weight:700;}
+.alsace-badge{display:flex;align-items:center;gap:16px;background:rgba(255,255,255,0.05);border:1px solid rgba(198,93,7,0.3);border-radius:20px;padding:16px 20px;max-width:380px;margin:24px auto 0;backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(124,58,237,0.1);}
+.bretzel-wrap{flex-shrink:0;}
+.alsace-txt{}
+.alsace-label{font-size:11px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px;}
+.alsace-title{font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#fff;}
+.alsace-grad{background:linear-gradient(135deg,#c8400a,#e08040);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.social-section{max-width:500px;margin:0 auto;padding:0 24px;}
+.social-row{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
+.soc{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.3);}
+.soc:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,0.4);}
+.soc-snapchat{background:#FFFC00;}
+
+/* ============================================================
+   CHAT PAGE
+   ============================================================ */
+#page-chat{position:relative;z-index:1;background:#06000f;color:#fff;}
+#chat-bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#06000f;}
+.bg-orb,.bg-grid{display:none;}
+#chat-app{position:relative;z-index:1;display:flex;flex-direction:column;height:100vh;}
+.chat-topbar{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;flex-shrink:0;background:rgba(255,255,255,0.04);backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,0.08);}
+.topbar-logo{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:'Outfit',sans-serif;font-weight:800;font-size:15px;
+  text-decoration:none;color:#fff;cursor:pointer;
+  background:rgba(10,4,30,0.55);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:999px;
+  padding:5px 14px 5px 10px;
+  backdrop-filter:blur(16px);
+  position:relative;overflow:hidden;
+  box-shadow:0 2px 16px rgba(124,58,237,0.18),inset 0 1px 0 rgba(255,255,255,0.1);
+  transition:box-shadow 0.3s;
+  white-space:nowrap;
+}
+.topbar-logo:hover{box-shadow:0 4px 24px rgba(124,58,237,0.4),inset 0 1px 0 rgba(255,255,255,0.15);}
+.topbar-logo::after{
+  content:'';position:absolute;top:0;left:-80%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent);
+  border-radius:999px;
+  animation:logo-shine 3s ease-in-out infinite;
+}
+@keyframes logo-shine{0%{left:-80%}60%,100%{left:140%}}
+.topbar-logo .dot{background:linear-gradient(135deg,#7c3aed,#f472b6,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.topbar-logo-icon{font-size:16px;flex-shrink:0;}
+.topbar-center{font-size:13px;font-weight:500;color:#fff;}
+.topbar-actions{display:flex;align-items:center;gap:10px;}
+.topbar-btn{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#fff;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+.topbar-btn:hover{background:rgba(255,255,255,0.12);color:#fff;}
+.model-badge{display:flex;align-items:center;gap:6px;background:rgba(124,58,237,0.2);border:1px solid rgba(124,58,237,0.35);border-radius:999px;padding:4px 12px;font-size:11px;font-weight:700;color:#c084fc;cursor:pointer;}
+.model-dot{width:6px;height:6px;border-radius:50%;background:#10b981;animation:pulse-g 2s infinite;}
+@keyframes pulse-g{0%,100%{opacity:1}50%{opacity:0.4}}
+.chat-main{display:flex;flex:1;overflow:hidden;position:relative;}
+
+/* ====== CHAT SIDEBAR ====== */
+.chat-sidebar{
+  width:220px;flex-shrink:0;
+  background:rgba(8,2,28,0.96);
+  border-right:1px solid rgba(255,255,255,0.07);
+  display:flex;flex-direction:column;
+  padding:12px;
+  gap:4px;
+  overflow-y:auto;
+}
+.sidebar-new-chat{display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(124,58,237,0.3),rgba(244,114,182,0.2));border:1px solid rgba(124,58,237,0.4);border-radius:10px;padding:9px 12px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;margin-bottom:8px;transition:all 0.2s;font-family:'Outfit',sans-serif;}
+.sidebar-new-chat:hover{background:linear-gradient(135deg,rgba(124,58,237,0.45),rgba(244,114,182,0.3));}
+.sidebar-section{font-size:9px;font-weight:700;color:rgba(255,255,255,0.65);letter-spacing:0.12em;text-transform:uppercase;padding:8px 8px 4px;margin-top:6px;}
+.sidebar-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;font-size:12.5px;font-weight:500;color:#fff;transition:all 0.2s;cursor:pointer;border:1px solid transparent;}
+.sidebar-item:hover{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.85);}
+.sidebar-item.active{background:rgba(124,58,237,0.2);color:#c084fc;border-color:rgba(124,58,237,0.3);}
+.sidebar-item .si-icon{font-size:15px;flex-shrink:0;}
+.sidebar-item.active-toggle{background:rgba(16,185,129,0.15);color:#6ee7b7;border-color:rgba(16,185,129,0.3);}
+
+/* ====== CHAT CONTENT ====== */
+.chat-content{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.chat-messages{flex:1;overflow-y:auto;padding:24px 28px;display:flex;flex-direction:column;gap:18px;scroll-behavior:smooth;}
+.chat-messages::-webkit-scrollbar{width:4px;}
+.chat-messages::-webkit-scrollbar-thumb{background:rgba(124,58,237,0.3);border-radius:4px;}
+.msg-wrap{display:flex;gap:10px;max-width:78%;}
+.msg-wrap.user{align-self:flex-end;flex-direction:row-reverse;}
+.msg-wrap.ai{align-self:flex-start;}
+.msg-avatar{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;}
+.msg-avatar.ai-av{background:linear-gradient(135deg,#7c3aed,#f472b6);box-shadow:0 0 16px rgba(124,58,237,0.5);}
+.msg-avatar.user-av{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.15);}
+.msg-bubble{padding:12px 16px;border-radius:18px;font-size:14px;line-height:1.6;backdrop-filter:blur(20px);position:relative;}
+.msg-wrap.ai .msg-bubble{background:rgba(10,4,30,0.55);border:1px solid rgba(255,255,255,0.12);color:#fff;border-bottom-left-radius:4px;}
+.msg-wrap.user .msg-bubble{background:linear-gradient(135deg,rgba(80,20,180,0.65),rgba(180,60,130,0.55));border:1px solid rgba(124,58,237,0.45);color:#fff;border-bottom-right-radius:4px;}
+.msg-time{font-size:10px;color:rgba(255,255,255,0.6);margin-top:4px;padding:0 4px;}
+.msg-wrap.user .msg-time{text-align:right;}
+.typing-indicator{display:flex;gap:5px;padding:14px 18px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:18px;border-bottom-left-radius:4px;width:fit-content;}
+.typing-dot{width:7px;height:7px;border-radius:50%;background:rgba(124,58,237,0.7);animation:typing-bounce 1.2s ease-in-out infinite;}
+.typing-dot:nth-child(2){animation-delay:0.2s;}
+.typing-dot:nth-child(3){animation-delay:0.4s;}
+@keyframes typing-bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-8px)}}
+
+/* ====== CHAT INPUT ====== */
+.chat-input-zone{padding:14px 20px;background:rgba(255,255,255,0.03);backdrop-filter:blur(24px);border-top:1px solid rgba(255,255,255,0.07);flex-shrink:0;}
+.input-row{display:flex;align-items:flex-end;gap:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:10px 14px;transition:border-color 0.2s;}
+.input-row:focus-within{border-color:rgba(124,58,237,0.5);box-shadow:0 0 0 3px rgba(124,58,237,0.1);}
+#userInput{flex:1;background:transparent;border:none;outline:none;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;resize:none;max-height:120px;line-height:1.5;overflow-y:hidden;}
+#userInput::-webkit-scrollbar{display:none;}
+#userInput{scrollbar-width:none;-ms-overflow-style:none;}
+#userInput::placeholder{color:rgba(255,255,255,0.25);}
+.send-btn{border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,#7c3aed,#f472b6);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 0 16px rgba(124,58,237,0.6),0 0 32px rgba(244,114,182,0.3);animation:send-glow-c 2s ease-in-out infinite;transition:width 0.35s cubic-bezier(0.34,1.56,0.64,1),opacity 0.2s;}
+.send-btn:disabled{opacity:0.4;cursor:not-allowed;}
+@keyframes send-glow-c{0%,100%{box-shadow:0 0 16px rgba(124,58,237,0.6),0 0 32px rgba(244,114,182,0.3)}50%{box-shadow:0 0 28px rgba(124,58,237,0.9),0 0 60px rgba(244,114,182,0.6),0 0 80px rgba(34,211,238,0.2)}}
+.input-hint{font-size:11px;color:rgba(255,255,255,0.65);margin-top:8px;text-align:center;}
+
+/* ====== MODEL POPUP ====== */
+.model-popup{position:absolute;top:58px;right:20px;background:rgba(15,8,40,0.95);backdrop-filter:blur(30px);border:1px solid rgba(124,58,237,0.3);border-radius:14px;padding:12px;width:220px;z-index:100;display:none;box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+.model-popup.open{display:block;}
+.model-option{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:12.5px;font-weight:600;color:rgba(255,255,255,0.6);cursor:pointer;transition:all 0.2s;}
+.model-option:hover,.model-option.selected{background:rgba(124,58,237,0.2);color:#c084fc;}
+.model-option .mo-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* ====== MODE MODAL ====== */
+.modal-overlay{position:fixed;inset:0;z-index:5000;background:rgba(0,0,20,0.85);backdrop-filter:blur(16px);display:none;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:rgba(15,8,40,0.98);border:1px solid rgba(124,58,237,0.35);border-radius:24px;padding:28px;max-width:520px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 40px 80px rgba(0,0,0,0.6);}
+.modal-box::-webkit-scrollbar{width:4px;}
+.modal-box::-webkit-scrollbar-thumb{background:rgba(124,58,237,0.3);border-radius:4px;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.modal-title{font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;color:#fff;}
+.modal-close{background:rgba(255,255,255,0.08);border:none;color:rgba(255,255,255,0.5);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
+.modal-close:hover{color:#fff;background:rgba(255,255,255,0.14);}
+.mode-card{
+  background:rgba(255,255,255,0.04);
+  border:1.5px solid rgba(255,255,255,0.08);
+  border-radius:14px;padding:14px 16px;margin-bottom:10px;
+  cursor:pointer;transition:all 0.2s;
+  display:flex;align-items:flex-start;gap:12px;
+}
+.mode-card:hover{background:rgba(124,58,237,0.1);border-color:rgba(124,58,237,0.3);}
+.mode-card.mode-active{background:rgba(124,58,237,0.18);border-color:rgba(124,58,237,0.5);}
+.mode-card-icon{font-size:22px;flex-shrink:0;margin-top:1px;}
+.mode-card-body{flex:1;}
+.mode-card-name{font-weight:700;font-size:14px;color:#fff;margin-bottom:3px;}
+.mode-card-desc{font-size:12px;color:rgba(255,255,255,0.85);line-height:1.5;}
+.mode-card-toggle{flex-shrink:0;margin-top:3px;}
+
+/* ====== TOGGLE SWITCH STYLE (iOS) ====== */
+.ios-toggle{position:relative;width:48px;height:28px;flex-shrink:0;}
+.ios-toggle input{opacity:0;width:0;height:0;position:absolute;}
+.ios-slider{
+  position:absolute;inset:0;
+  background:rgba(255,255,255,0.15);
+  border-radius:999px;cursor:pointer;
+  transition:background 0.3s;
+}
+.ios-slider::before{
+  content:'';position:absolute;
+  width:22px;height:22px;border-radius:50%;
+  background:#fff;top:3px;left:3px;
+  transition:transform 0.3s;
+  box-shadow:0 2px 6px rgba(0,0,0,0.3);
+}
+.ios-toggle input:checked+.ios-slider{background:linear-gradient(135deg,#7c3aed,#f472b6);}
+.ios-toggle input:checked+.ios-slider::before{transform:translateX(20px);}
+
+/* ====== RECHERCHE INTELLIGENTE MODAL ====== */
+.smart-modal-box{max-width:480px;}
+.smart-input-area{margin:12px 0;}
+.smart-textarea{width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:12px 14px;font-size:13px;color:#fff;font-family:'DM Sans',sans-serif;outline:none;resize:none;min-height:90px;transition:border-color 0.2s;}
+.smart-textarea:focus{border-color:rgba(124,58,237,0.5);}
+.smart-textarea::placeholder{color:rgba(255,255,255,0.3);}
+.smart-action-row{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap;}
+.smart-search-btn{
+  flex:1;background:linear-gradient(135deg,#7c3aed,#f472b6);
+  border:none;border-radius:12px;padding:10px 16px;
+  font-size:13px;font-weight:700;color:#fff;
+  cursor:pointer;font-family:'Outfit',sans-serif;
+  transition:opacity 0.2s;
+}
+.smart-search-btn:hover{opacity:0.85;}
+.smart-toggle-row{display:flex;align-items:center;gap:10px;margin-top:10px;}
+.smart-toggle-label{font-size:12px;color:#fff;}
+.smart-active-badge{display:none;align-items:center;gap:6px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.35);border-radius:999px;padding:3px 12px;font-size:11px;font-weight:700;color:#6ee7b7;margin-top:8px;}
+.smart-active-badge.show{display:inline-flex;}
+
+/* ====== MODAL SAVE BTN ====== */
+.modal-save-btn{
+  width:100%;background:linear-gradient(135deg,#10b981,#06b6d4);
+  border:none;border-radius:12px;padding:11px;
+  font-size:13px;font-weight:700;color:#fff;
+  cursor:pointer;font-family:'Outfit',sans-serif;
+  margin-top:14px;transition:opacity 0.2s;
+}
+.modal-save-btn:hover{opacity:0.85;}
+
+/* ====== HERO CURSOR BLINK ====== */
+.hero-cursor-blink{display:inline-block;width:3px;height:clamp(28px,5vw,52px);background:linear-gradient(135deg,#7c3aed,#f472b6);border-radius:2px;margin-left:3px;vertical-align:middle;animation:blink 0.85s steps(1) infinite;}
+
+/* ====== FRAMER CIRCLE EXPAND BUTTON — faithful replica ====== */
+/* Base: dark pill, text left, white circle+arrow right */
+/* Hover: white circle expands to fill pill, text turns black, arrow turns white */
+
+@keyframes ceb-expand{from{transform:translate(-50%,-50%) scale(1)}to{transform:translate(-50%,-50%) scale(12)}}
+
+.circle-expand-btn{
+  position:relative;
+  height:44px;
+  padding:5px 5px 5px 18px;
+  border-radius:999px;
+  overflow:hidden;
+  background:rgb(40,30,60);
+  box-shadow:inset 1px 3px 2px 0px rgba(255,255,255,0.18);
+  border:none;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  gap:14px;
+  flex-shrink:0;
+  font-family:'Outfit',sans-serif;font-weight:700;font-size:14px;color:#fff;
+  white-space:nowrap;
+  transition:box-shadow 0.2s,color 0.25s;
+  text-decoration:none;
+}
+.circle-expand-btn:hover{
+  box-shadow:inset 3px 3px 2px 0px rgba(0,0,0,0.44);
+  color:#000;
+}
+.circle-expand-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* expanding white blob behind everything */
+.circle-expand-btn .ceb-blob{
+  position:absolute;
+  width:34px;height:34px;
+  border-radius:50%;
+  background:#fff;
+  left:calc(100% - 5px - 34px/2);
+  top:50%;
+  transform:translate(-50%,-50%) scale(1);
+  transition:transform 0.42s cubic-bezier(0.34,1.2,0.64,1);
+  z-index:1;
+  pointer-events:none;
+}
+.circle-expand-btn:hover .ceb-blob{
+  transform:translate(-50%,-50%) scale(14);
+}
+
+/* text label */
+.circle-expand-btn .send-txt{
+  position:relative;z-index:3;
+  font-size:14px;font-weight:700;
+  transition:color 0.2s;
+}
+
+/* white circle + arrow (right side) */
+.circle-expand-btn .ceb-circle{
+  position:relative;z-index:3;
+  width:34px;height:34px;border-radius:50%;
+  background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  transition:background 0.25s;
+}
+.circle-expand-btn:hover .ceb-circle{background:#000;}
+.circle-expand-btn .ceb-arrow{
+  transition:stroke 0.25s, transform 0.3s;
+  transform:rotate(-45deg);
+}
+.circle-expand-btn:hover .ceb-arrow{
+  stroke:#fff !important;
+  transform:rotate(0deg);
+}
+
+/* ====== MAC WINDOW CIRCLE EXPAND MINI ====== */
+.circle-expand-btn-mini{
+  position:relative;
+  height:32px;
+  padding:4px 4px 4px 12px;
+  border-radius:999px;
+  overflow:hidden;
+  background:rgb(40,30,60);
+  box-shadow:inset 1px 2px 1px 0px rgba(255,255,255,0.18);
+  border:none;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  gap:10px;
+  flex-shrink:0;
+  font-family:'Outfit',sans-serif;font-weight:700;font-size:11px;color:#fff;
+  white-space:nowrap;
+  transition:box-shadow 0.2s,color 0.25s;
+}
+.circle-expand-btn-mini:hover{box-shadow:inset 2px 2px 2px 0px rgba(0,0,0,0.44);color:#000;}
+.circle-expand-btn-mini .ceb-blob{
+  position:absolute;
+  width:24px;height:24px;border-radius:50%;
+  background:#fff;
+  left:calc(100% - 4px - 24px/2);top:50%;
+  transform:translate(-50%,-50%) scale(1);
+  transition:transform 0.42s cubic-bezier(0.34,1.2,0.64,1);
+  z-index:1;pointer-events:none;
+}
+.circle-expand-btn-mini:hover .ceb-blob{transform:translate(-50%,-50%) scale(12);}
+.circle-expand-btn-mini .send-txt-mini{position:relative;z-index:3;font-size:11px;font-weight:700;transition:color 0.2s;}
+.circle-expand-btn-mini .ceb-circle{
+  position:relative;z-index:3;
+  width:24px;height:24px;border-radius:50%;
+  background:#fff;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:background 0.25s;
+}
+.circle-expand-btn-mini:hover .ceb-circle{background:#000;}
+.circle-expand-btn-mini .ceb-arrow{transition:stroke 0.25s,transform 0.3s;transform:rotate(-45deg);}
+.circle-expand-btn-mini:hover .ceb-arrow{stroke:#fff !important;transform:rotate(0deg);}
+
+/* ====== GOOGLE REVIEWS BUTTON (chat) ====== */
+.google-reviews-btn{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:14px;padding:8px 16px;
+  cursor:pointer;margin-top:10px;
+  transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  text-decoration:none;
+  animation:gr-float 3s ease-in-out infinite;
+}
+@keyframes gr-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.google-reviews-btn:hover{
+  background:rgba(255,255,255,0.1);
+  border-color:rgba(255,255,255,0.2);
+  transform:translateY(-3px) scale(1.02);
+  box-shadow:0 8px 24px rgba(0,0,0,0.3);
+  animation:none;
+}
+.gr-label{font-size:10px;font-weight:600;color:rgba(255,255,255,0.8);text-transform:uppercase;letter-spacing:0.05em;}
+.gr-stars{font-size:13px;color:#f59e0b;font-weight:700;line-height:1;}
+.gr-score{font-size:12px;color:rgba(255,255,255,0.8);font-weight:700;margin-left:2px;}
+.gr-badge{font-size:20px;margin-left:auto;animation:gr-spin 4s linear infinite;}
+@keyframes gr-spin{0%,90%{transform:rotate(0deg)}95%{transform:rotate(20deg)}100%{transform:rotate(0deg)}}
+
+/* ====== MAC GOOGLE REVIEWS ====== */
+.mac-google-reviews{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,0.05);
+  border-top:1px solid rgba(255,255,255,0.06);
+  padding:8px 18px;font-size:10.5px;
+  animation:gr-float 3.5s ease-in-out infinite;
+}
+.gr-stars-mini{color:#f59e0b;font-size:11px;letter-spacing:1px;}
+.gr-score-mini{color:rgba(255,255,255,0.8);font-size:10px;font-weight:600;}
+
+/* ====== DASHBOARD ITEM ====== */
+.dash-item{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:12px;padding:12px 14px;
+  cursor:pointer;transition:all 0.2s;
+}
+.dash-item:hover{background:rgba(124,58,237,0.15);border-color:rgba(124,58,237,0.3);}
+.dash-item-date{font-size:10px;color:rgba(255,255,255,0.7);font-weight:600;margin-bottom:4px;}
+.dash-item-preview{font-size:12px;color:#fff;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.dash-empty{text-align:center;padding:40px 20px;color:rgba(255,255,255,0.75);font-size:13px;line-height:1.8;}
+
+/* ====== GRAINIENT BG OVERRIDE ====== */
+#chat-bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#04000c;}
+.bg-orb,.bg-grid{display:none;}
+
+
+/* ====== SIDEBAR TOGGLE ====== */
+#sidebarToggle{
+  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);
+  color:#fff;border-radius:8px;padding:5px 10px;font-size:16px;
+  cursor:pointer;transition:all 0.2s;flex-shrink:0;
+}
+#sidebarToggle:hover{background:rgba(255,255,255,0.14);}
+.chat-sidebar{transition:width 0.3s ease,opacity 0.3s ease,padding 0.3s ease;}
+.chat-sidebar.collapsed{width:0;padding:0;opacity:0;overflow:hidden;}
+
+/* ====== RESPONSIVE ====== */
+@media(max-width:640px){
+  .chat-sidebar{display:none;}
+  .chat-sidebar.mobile-open{
+    display:flex !important;
+    position:fixed;top:0;left:0;height:100vh;z-index:2000 !important;
+    width:260px;
+    background:#08021c !important;
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+    border-right:1px solid rgba(124,58,237,0.3) !important;
+    box-shadow:6px 0 50px rgba(0,0,0,0.95);
+    overflow-y:auto;
+  }
+  .topbar-center{display:none;}
+  #sidebar-overlay{
+    display:block;position:fixed;inset:0;z-index:1998;
+    background:rgba(0,0,0,0.55);
+    pointer-events:auto;
+  }
+}
+#sidebar-overlay{display:none;}
+@media(max-width:768px){.offre-perks{grid-template-columns:1fr;}}
+
+/* ====== ADMIN PAGE ====== */
+#page-admin{background:#060312;min-height:100vh;color:#fff;font-family:'DM Sans',sans-serif;}
+#login-screen{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 30% 40%, rgba(124,58,237,0.3) 0%, transparent 60%),radial-gradient(ellipse at 70% 60%, rgba(244,114,182,0.2) 0%, transparent 60%),#060312;}
+.login-card{background:rgba(255,255,255,0.04);backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:48px 40px;width:100%;max-width:380px;text-align:center;box-shadow:0 40px 80px rgba(0,0,0,0.5);}
+.login-icon{font-size:48px;margin-bottom:16px;}
+.login-title{font-family:'Outfit',sans-serif;font-size:24px;font-weight:900;margin-bottom:4px;}
+.login-sub{font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:28px;}
+.login-input{width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 16px;font-size:15px;color:#fff;font-family:'DM Sans',sans-serif;outline:none;text-align:center;letter-spacing:0.15em;margin-bottom:16px;}
+.login-input:focus{border-color:rgba(124,58,237,0.6);}
+.login-btn{width:100%;background:linear-gradient(135deg,#7c3aed,#f472b6);border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:800;color:#fff;cursor:pointer;font-family:'Outfit',sans-serif;transition:opacity 0.2s;}
+.login-btn:hover{opacity:0.85;}
+.login-error{color:#f87171;font-size:12px;margin-top:8px;display:none;}
+#admin-panel{display:none;min-height:100vh;}
+.admin-nav{background:rgba(255,255,255,0.03);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.07);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.admin-logo{font-family:'Outfit',sans-serif;font-weight:900;font-size:18px;}
+.admin-logo span{background:linear-gradient(135deg,#7c3aed,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.admin-badge{background:rgba(220,38,38,0.2);border:1px solid rgba(220,38,38,0.4);border-radius:999px;padding:3px 12px;font-size:11px;font-weight:700;color:#f87171;}
+.logout-btn{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;}
+.logout-btn:hover{color:#fff;}
+.admin-content{max-width:1100px;margin:0 auto;padding:32px 24px;}
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+@media(max-width:768px){.admin-grid{grid-template-columns:1fr;} .dyn-api-row{grid-template-columns:1fr !important;}}
+.admin-card{background:rgba(255,255,255,0.04);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:24px;}
+.admin-card.full{grid-column:1/-1;}
+.card-header{display:flex;align-items:center;gap:10px;margin-bottom:20px;}
+.card-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.ci-purple{background:rgba(124,58,237,0.2);}
+.ci-green{background:rgba(16,185,129,0.2);}
+.ci-pink{background:rgba(244,114,182,0.2);}
+.ci-blue{background:rgba(59,130,246,0.2);}
+.ci-orange{background:rgba(245,158,11,0.2);}
+.card-title{font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;}
+.card-sub{font-size:11px;color:rgba(255,255,255,0.75);}
+.form-group{margin-bottom:16px;}
+.form-label{display:block;font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;}
+.form-input,.form-select,.form-textarea{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px;font-size:13px;color:#fff;font-family:'DM Sans',sans-serif;outline:none;resize:none;transition:border-color 0.2s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:rgba(124,58,237,0.5);background:rgba(255,255,255,0.08);}
+.form-select option{background:#1a0a3e;}
+.form-textarea{min-height:120px;}
+.form-hint{font-size:10.5px;color:rgba(255,255,255,0.25);margin-top:4px;line-height:1.5;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.save-btn{background:linear-gradient(135deg,#7c3aed,#f472b6);border:none;border-radius:10px;padding:10px 24px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;font-family:'Outfit',sans-serif;transition:opacity 0.2s;}
+.save-btn:hover{opacity:0.85;}
+.save-btn.green{background:linear-gradient(135deg,#10b981,#06b6d4);}
+.save-btn.red{background:linear-gradient(135deg,#ef4444,#f97316);}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.toggle-row:last-child{border-bottom:none;}
+.toggle-name{font-size:13px;font-weight:600;margin-bottom:2px;}
+.toggle-desc{font-size:11px;color:rgba(255,255,255,0.75);}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:rgba(255,255,255,0.1);border-radius:999px;cursor:pointer;transition:0.3s;}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;left:3px;transition:0.3s;box-shadow:0 2px 4px rgba(0,0,0,0.3);}
+.toggle input:checked+.toggle-slider{background:linear-gradient(135deg,#7c3aed,#f472b6);}
+.toggle input:checked+.toggle-slider::before{transform:translateX(20px);}
+.api-row{display:flex;gap:10px;align-items:center;margin-bottom:12px;padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid rgba(255,255,255,0.07);}
+.api-provider{font-size:12px;font-weight:700;width:90px;flex-shrink:0;}
+.api-input{flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 12px;font-size:12px;color:#fff;font-family:'DM Sans',sans-serif;outline:none;}
+.api-status{font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;flex-shrink:0;}
+.api-status.active{background:rgba(16,185,129,0.2);color:#6ee7b7;}
+.api-status.inactive{background:rgba(239,68,68,0.2);color:#fca5a5;}
+.stats-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+.stat-mini-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px;text-align:center;}
+.stat-mini-num{font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;background:linear-gradient(135deg,#a78bfa,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.stat-mini-lbl{font-size:10px;color:rgba(255,255,255,0.75);margin-top:2px;}
+
+/* ====== STAR ROBOTS (avatar row) ====== */
+.star-robots-row{display:flex;align-items:center;gap:2px;}
+.star-robot-wrap{
+  position:relative;width:28px;height:28px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.star-robot-svg-inner{
+  position:absolute;top:0;left:0;width:28px;height:28px;
+  pointer-events:none;
+}
+.robot-mini-svg{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  z-index:2;
+}
+@keyframes robot-mini-float{
+  0%,100%{transform:translate(-50%,-50%) translateY(0)}
+  50%{transform:translate(-50%,-50%) translateY(-3px)}
+}
+@keyframes star-neon-hue{
+  0%{filter:hue-rotate(0deg) drop-shadow(0 0 3px currentColor);}
+  100%{filter:hue-rotate(360deg) drop-shadow(0 0 3px currentColor);}
+}
+@keyframes star-spin-burst{
+  0%{transform:rotate(0deg);}
+  100%{transform:rotate(360deg);}
+}
+
+/* ====== AGENTS PILL CONTAINER ====== */
+.agents-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:999px;
+  padding:4px 14px 4px 5px;
+  backdrop-filter:blur(12px);
+  box-shadow:0 2px 12px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.07);
+  max-width:100%;
+  flex-wrap:nowrap;
+  white-space:nowrap;
+  overflow:hidden;
+}
+</style>
+
+<script>
+// PWA Manifest injection
+(function(){
+  const manifest = {
+    name: 'nobot.ai',
+    short_name: 'nobot.ai',
+    description: "L'IA 100% Strasbourgeoise",
+    start_url: './',
+    display: 'standalone',
+    background_color: '#06000f',
+    theme_color: '#7c3aed',
+    orientation: 'any',
+    icons: [{
+      src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 38 38'><rect width='38' height='38' rx='10' fill='%237c3aed'/><text x='19' y='26' text-anchor='middle' font-size='20' font-family='Outfit' font-weight='900' fill='white'>n</text></svg>",
+      sizes: '192x192', type: 'image/svg+xml'
+    }]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
+  const url = URL.createObjectURL(blob);
+  document.getElementById('pwa-manifest').href = url;
+})();
+
+// Service Worker registration
+if('serviceWorker' in navigator){
+  const swCode = `
+    const CACHE='nobot-v1';
+    self.addEventListener('install', e => { self.skipWaiting(); });
+    self.addEventListener('activate', e => { e.waitUntil(self.clients.claim()); });
+    self.addEventListener('fetch', e => {
+      if(e.request.mode==='navigate'){
+        e.respondWith(fetch(e.request).catch(()=>caches.match('/')));
+      }
+    });
+  `;
+  const blob = new Blob([swCode], {type:'text/javascript'});
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(()=>{});
+}
+</script>
+</head>
+<body>
+
+<!-- =====================================================
+     WELCOME MODAL
+===================================================== -->
+<div id="welcome-overlay" style="display:none;">
+  <div class="welcome-card">
+    <div class="welcome-robot">🤖</div>
+    <div class="welcome-title">Bienvenue sur nobot.ai</div>
+    <div class="welcome-creator">Créé par <strong>Brice Jacotet</strong> — Ingénieur expert, agréé & diplômé</div>
+    <div class="welcome-body">
+      Votre IA 100 % Strasbourgeoise est disponible pour <strong>tout type de création</strong> :<br>
+      Sites web, apps, documents PDF, mails, SMS, documents pro & particuliers,
+      finance, gestion de patrimoine, gestion clients, demandes du quotidien,
+      renseignements sur <strong>Strasbourg</strong> & vos démarches…<br><br>
+      Que ce soit les <strong>petites tâches du quotidien</strong> ou les <strong>plus grandes missions d'expert et de développeur</strong> — nobot.ai fait tout.
+    </div>
+    <div class="welcome-free">🎁 Entièrement GRATUIT — Profitez-en !</div><br>
+    <button class="welcome-btn" onclick="closeWelcome()">Commencer une discussion ✦</button>
+  </div>
+</div>
+
+<!-- =====================================================
+     INDEX PAGE
+===================================================== -->
+<div class="page active" id="page-index">
+
+<!-- Robot BG -->
+<div class="robot-bg-container" id="robotBg"></div>
+<canvas id="bg-canvas" style="position:fixed;top:0;left:0;width:100vw;height:calc(100% + 560px);pointer-events:none;z-index:0;transform:translateY(560px);"></canvas>
+
+<!-- NAV -->
+<div id="navbar-wrap">
+<nav id="navbar">
+  <a class="logo" onclick="showPage('index')" style="gap:8px;">
+    <div class="logo-robot-wrap" style="position:relative;width:42px;height:42px;flex-shrink:0;">
+      <svg id="logoSvg" viewBox="0 0 42 42" width="42" height="42" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#f472b6"/></linearGradient>
+          <linearGradient id="lg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#a78bfa"/><stop offset="100%" stop-color="#22d3ee"/></linearGradient>
+        </defs>
+        <!-- Orbiting mini icons -->
+        <g id="orbitGroup" style="transform-origin:21px 21px;animation:orbit-spin 8s linear infinite;">
+          <circle cx="21" cy="4"  r="3.5" fill="#f472b6" opacity="0.9"/>
+          <circle cx="36" cy="12" r="2.5" fill="#22d3ee" opacity="0.8"/>
+          <circle cx="38" cy="28" r="3"   fill="#10b981" opacity="0.8"/>
+          <circle cx="26" cy="39" r="2.5" fill="#f59e0b" opacity="0.8"/>
+          <circle cx="8"  cy="35" r="3"   fill="#ef4444" opacity="0.8"/>
+          <circle cx="4"  cy="18" r="2.5" fill="#a855f7" opacity="0.8"/>
+        </g>
+        <!-- Robot head -->
+        <rect x="12" y="10" width="18" height="14" rx="4" fill="url(#lg1)"/>
+        <!-- Eyes -->
+        <rect x="15" y="14" width="5" height="3.5" rx="1.5" fill="#fff" opacity="0.95"/>
+        <rect x="22" y="14" width="5" height="3.5" rx="1.5" fill="#fff" opacity="0.95"/>
+        <!-- Mouth -->
+        <path d="M16 21 Q21 24 26 21" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.8"/>
+        <!-- Antenna -->
+        <line x1="21" y1="10" x2="21" y2="6" stroke="url(#lg2)" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="21" cy="5" r="2" fill="#22d3ee" style="animation:antenna-glow 2s ease-in-out infinite"/>
+        <!-- Body -->
+        <rect x="10" y="26" width="22" height="11" rx="3.5" fill="url(#lg1)" opacity="0.9"/>
+        <!-- Chest dot -->
+        <circle cx="21" cy="31" r="2.5" fill="#fff" opacity="0.7"/>
+        <!-- Arms -->
+        <rect x="5"  y="26" width="4" height="9" rx="2" fill="url(#lg1)" opacity="0.75"/>
+        <rect x="33" y="26" width="4" height="9" rx="2" fill="url(#lg1)" opacity="0.75"/>
+      </svg>
+    </div>
+    <span class="logo-name">nobot<span class="dot">.ai</span></span>
+  </a>
+  <style>
+    @keyframes orbit-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+    #orbitGroup{transform-box:fill-box;transform-origin:center;}
+  </style>
+  <ul class="nav-links">
+    <li><a onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">Fonctionnalités</a></li>
+    <li><a onclick="document.getElementById('offre').scrollIntoView({behavior:'smooth'})">Tarifs</a></li>
+    <li><a onclick="document.querySelector('.site-footer').scrollIntoView({behavior:'smooth'})">À propos</a></li>
+  </ul>
+  <button class="btn-nav" onclick="showPage('chat')">Commencer une discussion</button>
+  <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'});closeMobileMenu()">Fonctionnalités</a>
+  <a onclick="document.getElementById('offre').scrollIntoView({behavior:'smooth'});closeMobileMenu()">Tarifs</a>
+  <a onclick="document.querySelector('.site-footer').scrollIntoView({behavior:'smooth'});closeMobileMenu()">À propos</a>
+  <a class="mobile-cta" onclick="showPage('chat');closeMobileMenu()">🚀 Commencer une discussion</a>
+</div>
+</div>
+<div class="overlay" id="overlay"></div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="badge-top">✦&nbsp;Nouveau · + De 200 Agents IA Disponibles Dès Maintenant</div>
+  <h1 class="hero-title" style="line-height:1.15;">
+    <span style="color:#fff;display:block;">L'IA qui travaille pour vous</span>
+    <span class="grad" style="font-size:clamp(20px,3.5vw,42px);display:block;margin-top:6px;">100% Strasbourgeois</span>
+  </h1>
+  <p class="hero-sub">Créez, analysez, rédigez, développez — du simple au complexe, nobot.ai est votre expert IA local spécialisé pour Strasbourg & l'Alsace. Pour les particuliers comme pour les pros : questions du quotidien, démarches strasbourgeoisesde A à Z.</p>
+  
+  <button class="btn-cta" onclick="showPage('chat')">
+    Commencer une discussion
+    <span class="arrow-circle"><svg viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M3 8h10M8 3l5 5-5 5"/></svg></span>
+  </button>
+
+  <div class="avatars-block">
+    <div class="avatars-row">
+      <div class="agents-pill">
+        <div class="star-robots-row" id="starRobotsRow">
+          <!-- 5 robot stars generated by JS below -->
+        </div>
+        <span class="agents-txt"><span class="green-dot"></span>+ de 200 agents IA actifs</span>
+      </div>
+    </div>
+    <div class="ai-logos-under">
+      <span class="ai-logo-pill"><svg viewBox="0 0 24 24" width="14" height="14" fill="#4285F4"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>Gemini</span>
+      <span class="ai-logo-pill">✦ GPT-4o</span>
+      <span class="ai-logo-pill">◈ Claude</span>
+      <span class="ai-logo-pill">⚡ Mistral</span>
+      <span class="ai-logo-pill">🔮 Llama</span>
+    </div>
+  </div>
+</div>
+
+<!-- HERO MAC WINDOW -->
+<div class="hero-visual">
+  <div class="mac-window" onclick="showPage('chat')">
+    <div class="mac-titlebar">
+      <div class="mac-dots"><div class="mac-dot red"></div><div class="mac-dot yellow"></div><div class="mac-dot green"></div></div>
+      <div class="mac-title-txt">nobot.ai — Chat IA 🥨 Strasbourg</div>
+    </div>
+    <div class="mac-chat-body">
+      <div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+        <div class="mac-chat-area">
+          <div class="mac-msg user">
+            <div class="mac-msg-label">Vous</div>
+            <div class="mac-bubble">Créez-moi un site vitrine pour ma boulangerie à Strasbourg.</div>
+          </div>
+          <div class="mac-msg ai">
+            <div class="mac-msg-label">nobot.ai</div>
+            <div class="mac-bubble">Bien sûr ! Voici une structure complète pour votre site vitrine : page d'accueil avec vos spécialités alsaciennes, menu interactif, galerie photos, formulaire de contact et localisation Google Maps intégrée...</div>
+          </div>
+          <div class="mac-msg user">
+            <div class="mac-msg-label">Vous</div>
+            <div class="mac-bubble">Peux-tu aussi gérer mon fichier Excel de gestion des coûts ?</div>
+          </div>
+        </div>
+        <div class="mac-input-bar">
+          <div class="mac-input-field"><span class="typewriter-text" id="typewriterEl"></span><span class="typewriter-cursor"></span></div>
+          <button class="mac-send-btn circle-expand-btn-mini">
+            <span class="send-txt-mini">Envoyé</span>
+            <span class="ceb-circle">
+              <svg class="ceb-arrow" viewBox="0 0 16 16" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><path d="M3 8h10M8 3l5 5-5 5"/></svg>
+            </span>
+            <span class="ceb-blob"></span>
+          </button>
+        </div>
+        <!-- Google Reviews bajo el mac window -->
+        <div class="mac-google-reviews">
+          <div class="gr-logo"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg></div>
+          <div class="gr-stars-mini">★★★★★</div>
+          <div class="gr-score-mini">4,9 · Avis Google</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- IA PRESENTATION -->
+<div class="ia-presentation" id="features">
+  <div class="ia-pres-card">
+    <div class="ia-pres-left">
+      <div class="ia-pres-tag">🥨 Spécialisé Strasbourg & Alsace</div>
+      <div class="ia-pres-title">Votre IA experte<br><span class="grad">pour tout faire</span></div>
+      <div class="ia-pres-desc">nobot.ai est un assistant IA de nouvelle génération, spécialement conçu pour les habitants et entreprises de Strasbourg. Des petites tâches du quotidien aux projets les plus ambitieux, il agit comme un expert qualifié à votre service.</div>
+      <div class="ia-skills-grid">
+        <div class="ia-skill"><span class="ia-skill-icon">🌐</span>Sites Web & Apps</div>
+        <div class="ia-skill"><span class="ia-skill-icon">📄</span>Documents PDF & Pro</div>
+        <div class="ia-skill"><span class="ia-skill-icon">💰</span>Finance & Patrimoine</div>
+        <div class="ia-skill"><span class="ia-skill-icon">📊</span>Excel & Données</div>
+        <div class="ia-skill"><span class="ia-skill-icon">✉️</span>Mails & SMS Pro</div>
+        <div class="ia-skill"><span class="ia-skill-icon">👥</span>Gestion Clients</div>
+        <div class="ia-skill"><span class="ia-skill-icon">🗺️</span>Expert Strasbourg</div>
+        <div class="ia-skill"><span class="ia-skill-icon">🤖</span>200+ Agents IA</div>
+      </div>
+    </div>
+    <div class="ia-pres-right">
+      <div class="ia-robot-showcase" id="showcaseOrbit">
+        <!-- Orbiting robots rendered by JS -->
+        <div class="showcase-robot-center" id="showcaseCenterRobot"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OFFRE -->
+<div class="offre-wrap" id="offre">
+  <div class="offre-card">
+    <div class="offre-inner">
+      <div class="offre-badge"><span class="star-icon">★</span>OFFRE DE LANCEMENT<span class="star-icon">★</span></div>
+      <div class="offre-title">Découvrez nobot.ai Pack Complet !<br><span class="grad">L'IA la plus complète</span></div>
+      <div class="offre-days" style="font-size:32px;letter-spacing:-0.01em;">Gratuit</div>
+      <span class="offre-unit" style="color:#fff;">7j/7 · 24h/24 — Disponible en permanence</span>
+      <p class="offre-sub">Accès complet à tous nos services. Aucune carte bancaire.<br>Résultats visibles dès la première semaine.</p>
+      <div class="offre-perks">
+        <div class="perk"><span class="perk-check">✓</span>Accès 100% complet</div>
+        <div class="perk"><span class="perk-check">✓</span>Sans carte bancaire</div>
+        <div class="perk"><span class="perk-check">✓</span>Support dédié inclus</div>
+        <div class="perk"><span class="perk-check">✓</span>Annulation en 1 clic</div>
+      </div>
+      <button class="btn-offre" onclick="showPage('chat')">Commencer une discussion<span class="ac"><svg viewBox="0 0 16 16" fill="none" stroke="#0a0a14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M3 8h10M8 3l5 5-5 5"/></svg></span></button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGOS -->
+<div class="powered-section"><p class="powered-txt">Propulsé par les meilleurs modèles d'IA — une interface simple, des résultats puissants.</p></div>
+<div class="logos-row">
+  <div class="logo-item"><svg viewBox="0 0 24 24" width="28" height="28"><defs><linearGradient id="gm2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4285F4"/><stop offset="50%" stop-color="#9B72CB"/><stop offset="100%" stop-color="#D96570"/></linearGradient></defs><path d="M12 24A14.304 14.304 0 000 12 14.304 14.304 0 0012 0a14.304 14.304 0 0012 12 14.304 14.304 0 00-12 12z" fill="url(#gm2)"/></svg><span style="background:linear-gradient(135deg,#4285F4,#9B72CB,#D96570);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Gemini</span></div>
+  <div class="logo-item"><svg viewBox="0 0 24 24" width="26" height="26" fill="#fff"><path d="M22.282 9.821a5.985 5.985 0 00-.516-4.91 6.046 6.046 0 00-6.51-2.9A6.065 6.065 0 004.981 4.18a5.985 5.985 0 00-3.998 2.9 6.046 6.046 0 00.743 7.097 5.98 5.98 0 00.51 4.911 6.051 6.051 0 006.515 2.9A5.985 5.985 0 0013.26 24a6.056 6.056 0 005.772-4.206 5.99 5.99 0 003.997-2.9 6.056 6.056 0 00-.747-7.073zM13.26 22.43a4.476 4.476 0 01-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 00.392-.681v-6.737l2.02 1.168a.071.071 0 01.038.052v5.583a4.504 4.504 0 01-4.494 4.494z"/></svg><span>OpenAI</span></div>
+  <div class="logo-item"><svg viewBox="0 0 24 24" width="26" height="26"><defs><linearGradient id="cl2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#cc785c"/><stop offset="100%" stop-color="#d4956a"/></linearGradient></defs><path d="M13.827 3.52l8.032 13.912H5.796L13.827 3.52zm-2.945 0L2.85 17.432h13.063l-5.031-8.67-3.063 5.47H5.796l5.086-10.71z" fill="url(#cl2)"/></svg><span style="color:#d4956a">Claude</span></div>
+  <div class="logo-item"><svg viewBox="0 0 24 24" width="26" height="26"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.76a4.85 4.85 0 01-1.01-.07z" fill="#ff2d55"/></svg><span style="color:#ff2d55">TikTok</span></div>
+  <div class="logo-item"><span style="font-size:22px">🌊</span><span style="color:#f472b6">Mistral</span></div>
+</div>
+
+
+<!-- SOCIAL -->
+<div class="social-section" style="margin-top:28px;">
+  <div class="social-row">
+    <div class="soc" style="background:#fff;"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg></div>
+    <div class="soc" style="background:#1877f2;"><svg viewBox="0 0 24 24" fill="white" width="22" height="22"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></div>
+    <div class="soc" style="background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);"><svg viewBox="0 0 24 24" fill="white" width="22" height="22"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></div>
+    <div class="soc" style="background:#000;"><svg viewBox="0 0 24 24" fill="white" width="22" height="22"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></div>
+  </div>
+</div>
+
+<!-- Admin access: triple-click on footer copyright symbol -->
+<div class="admin-btn-wrap" style="display:none;">
+  <a class="btn-admin" onclick="showPage('admin')">🔐 Accès Administrateur</a>
+</div>
+<div class="site-footer"><span id="adminTrigger" onclick="handleAdminClick()" style="cursor:default;user-select:none;">@</span> By <span>Brice Jacotet</span> — nobot.ai · L'IA 100 % Strasbourgeoise</div>
+
+</div><!-- end page-index -->
+
+<!-- =====================================================
+     CHAT PAGE
+===================================================== -->
+<div class="page" id="page-chat" style="height:100vh;flex-direction:column;">
+
+<!-- CHAT BACKGROUND FLOATING ANIMATION -->
+<div id="chat-bg">
+  <canvas id="grainient-canvas" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
+</div>
+
+<div id="chat-app">
+  <!-- TOPBAR -->
+  <div class="chat-topbar">
+    <button id="sidebarToggle" onclick="toggleSidebar()" title="Menu">☰</button>
+    <span class="topbar-logo" onclick="showPage('index')"><span class="topbar-logo-icon">🤖</span>nobot<span class="dot">.ai</span></span>
+    <div class="topbar-center">L'IA 100 % Strasbourgeoise</div>
+    <div class="topbar-actions">
+      <button class="topbar-btn" onclick="clearChat()">🗑 Effacer</button>
+      <button class="topbar-btn" onclick="showPage('index')">← Accueil</button>
+    </div>
+  </div>
+
+
+  <div class="chat-main">
+    <!-- Overlay mobile (derrière le sidebar) -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+    <!-- SIDEBAR (left only) -->
+    <div class="chat-sidebar">
+      <div class="sidebar-new-chat" onclick="clearChat();closeSidebarMobile()">✦ Nouveau chat</div>
+      <div class="sidebar-item" id="dashboardBtn" onclick="toggleDashboard();closeSidebarMobile()"><span class="si-icon">🏠</span>Tableau de bord</div>
+      <div class="sidebar-item" onclick="showActus();closeSidebarMobile()"><span class="si-icon">📰</span>Actus à Strasbourg</div>
+
+      <!-- BOUTON MODE -->
+      <div class="sidebar-section">Configuration</div>
+      <div class="sidebar-item" onclick="openModeModal();closeSidebarMobile()"><span class="si-icon">🎭</span>Mode <span id="activeModeLabel" style="margin-left:auto;font-size:10px;background:rgba(124,58,237,0.3);color:#c084fc;padding:1px 8px;border-radius:999px;">Pro</span></div>
+
+      <!-- BOUTON RECHERCHE INTELLIGENTE -->
+      <div class="sidebar-item" onclick="openSmartModal();closeSidebarMobile()"><span class="si-icon">🔍</span>Recherche intelligente <span id="smartBadge" style="margin-left:auto;font-size:10px;background:rgba(16,185,129,0.3);color:#6ee7b7;padding:1px 8px;border-radius:999px;display:none;">ON</span></div>
+
+      <div class="sidebar-section">Historique</div>
+      <div class="sidebar-item" style="font-size:11px;color:rgba(255,255,255,0.6);">Aucun historique</div>
+    </div>
+
+    <!-- CHAT CONTENT -->
+    <div class="chat-content">
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg-wrap ai">
+          <div class="msg-avatar ai-av">✦</div>
+          <div>
+            <div class="msg-bubble">Bonjour ! Je suis <strong>nobot.ai</strong>, votre IA 100 % Strasbourgeoise. 🥨<br><br>Je peux vous aider à créer des sites web et WebApps, analyser vos fichiers Excel, rédiger des documents professionnels, répondre à toutes vos questions du quotidien, coder des applications, et bien plus encore.<br><br>Comment puis-je vous aider aujourd'hui ?</div>
+            <div class="msg-time">nobot.ai · maintenant</div>
+          </div>
+        </div>
+      </div>
+      <div class="chat-input-zone">
+        <div class="input-row">
+          <textarea id="userInput" placeholder="Posez votre question ou décrivez votre projet…" rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+          <button class="send-btn circle-expand-btn" id="sendBtn" onclick="sendMessage()">
+            <span class="send-txt">Envoyé</span>
+            <span class="ceb-circle">
+              <svg class="ceb-arrow" viewBox="0 0 16 16" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M3 8h10M8 3l5 5-5 5"/></svg>
+            </span>
+            <span class="ceb-blob"></span>
+          </button>
+        </div>
+        <div class="input-hint">Entrée pour envoyer · Maj+Entrée pour nouvelle ligne · <span id="modeHint">Mode : Professionnel</span> · <span id="smartHint" style="color:rgba(16,185,129,0.6);display:none;">🔍 Recherche intelligente activée</span></div>
+      </div>
+    </div>
+    <!-- DASHBOARD PANEL -->
+    <div id="dashboardPanel" style="display:none;width:320px;flex-shrink:0;background:rgba(10,0,30,0.95);backdrop-filter:blur(24px);border-left:1px solid rgba(255,255,255,0.08);flex-direction:column;overflow:hidden;">
+      <div style="padding:16px 18px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-family:'Outfit',sans-serif;font-weight:800;font-size:15px;color:#fff;">📋 Mes Discussions</div>
+        <button onclick="toggleDashboard()" style="background:rgba(255,255,255,0.07);border:none;color:rgba(255,255,255,0.5);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;">✕</button>
+      </div>
+      <div id="dashboardList" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  </div>
+</div>
+</div><!-- end page-chat -->
+
+<!-- =====================================================
+     MODE MODAL
+===================================================== -->
+<div class="modal-overlay" id="modeModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">🎭 Choisir un mode IA</div>
+      <button class="modal-close" onclick="closeModeModal()">✕</button>
+    </div>
+    <p style="font-size:12px;color:rgba(255,255,255,0.85);margin-bottom:16px;">Un seul mode actif à la fois. Chaque mode change le comportement de l'IA en profondeur.</p>
+    <div id="modeCardsList"></div>
+    <button class="modal-save-btn" onclick="saveModeSettings()">💾 Sauvegarder</button>
+  </div>
+</div>
+
+<!-- =====================================================
+     RECHERCHE INTELLIGENTE MODAL
+===================================================== -->
+<div class="modal-overlay" id="smartModal">
+  <div class="modal-box smart-modal-box">
+    <div class="modal-header">
+      <div class="modal-title">🔍 Recherche Intelligente</div>
+      <button class="modal-close" onclick="closeSmartModal()">✕</button>
+    </div>
+    <p style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.6;margin-bottom:14px;">
+      Définissez un contexte ou des instructions spécifiques pour personnaliser la façon dont l'IA répond à vos demandes. Une fois activé, chaque message sera traité avec ce contexte en priorité.
+    </p>
+    <div class="smart-input-area">
+      <textarea class="smart-textarea" id="smartContextInput" placeholder="Ex : Je suis un entrepreneur strasbourgeois dans la restauration. Adapte toujours tes réponses à mon secteur et à la ville de Strasbourg. Sois concis et pratique." rows="4" oninput="onSmartInput(this)"></textarea>
+    </div>
+    <div class="smart-toggle-row">
+      <label class="ios-toggle">
+        <input type="checkbox" id="smartToggle" onchange="onSmartToggle(this)">
+        <div class="ios-slider"></div>
+      </label>
+      <span class="smart-toggle-label" id="smartToggleLabel">Recherche intelligente désactivée</span>
+    </div>
+    <div class="smart-active-badge" id="smartActiveBadge">
+      <span>●</span> Recherche intelligente active
+    </div>
+    <div class="smart-action-row">
+      <button class="smart-search-btn" onclick="applySmartSearch()">🔍 Appliquer & Rechercher</button>
+    </div>
+    <button class="modal-save-btn" onclick="saveSmartSettings()">💾 Sauvegarder</button>
+  </div>
+</div>
+
+<!-- =====================================================
+     ADMIN PAGE
+===================================================== -->
+<div class="page" id="page-admin">
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-icon">🔐</div>
+    <div class="login-title">Administration</div>
+    <div class="login-sub">Accès réservé — nobot.ai</div>
+    <input type="password" class="login-input" id="pwdInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkLogin()"/>
+    <button class="login-btn" onclick="checkLogin()">Accéder au panneau admin</button>
+    <div class="login-error" id="loginError">Mot de passe incorrect.</div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="admin-panel">
+  <nav class="admin-nav">
+    <div class="admin-logo">nobot<span>.ai</span></div>
+    <div class="admin-badge">🔴 ADMIN</div>
+    <div style="display:flex;gap:10px;">
+      <button class="logout-btn" onclick="showPage('index')">← Accueil</button>
+      <button class="logout-btn" onclick="adminLogout()">Déconnexion</button>
+    </div>
+  </nav>
+
+  <div class="admin-content">
+    <div class="stats-mini">
+      <div class="stat-mini-card"><div class="stat-mini-num" id="statSessions">0</div><div class="stat-mini-lbl">Sessions</div></div>
+      <div class="stat-mini-card"><div class="stat-mini-num" id="statMsgs">0</div><div class="stat-mini-lbl">Messages</div></div>
+      <div class="stat-mini-card"><div class="stat-mini-num" id="statUsers">0</div><div class="stat-mini-lbl">Utilisateurs uniques</div></div>
+    </div>
+
+    <div class="admin-grid">
+
+      <!-- CLÉS API DYNAMIQUES -->
+      <div class="admin-card full">
+        <div class="card-header">
+          <div class="card-icon ci-purple">🔑</div>
+          <div><div class="card-title">Clés API & Fournisseurs</div><div class="card-sub">Clé utilisée automatiquement — nom visible uniquement pour vous</div></div>
+        </div>
+        <div id="apiKeysList"></div>
+        <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+          <button class="save-btn" onclick="addApiKeyRow()" style="background:linear-gradient(135deg,#10b981,#06b6d4);">+ Ajouter une clé API</button>
+          <button class="save-btn" onclick="saveApiKeys()">💾 Sauvegarder tout</button>
+        </div>
+      </div>
+
+      <!-- COMPORTEMENT IA -->
+      <div class="admin-card full">
+        <div class="card-header">
+          <div class="card-icon ci-pink">🎭</div>
+          <div><div class="card-title">Comportement & Personnalité de l'IA</div><div class="card-sub">Appliqué automatiquement avec la clé API active</div></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Langue par défaut</label>
+            <select class="form-select" id="defaultLang">
+              <option value="fr" selected>Français</option>
+              <option value="en">Anglais</option>
+              <option value="de">Allemand (Alsacien)</option>
+              <option value="auto">Auto-détection</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tokens maximum par réponse</label>
+            <select class="form-select" id="defaultMaxTokens">
+              <option value="512">Courte (512)</option>
+              <option value="1024" selected>Normale (1024)</option>
+              <option value="2048">Longue (2048)</option>
+              <option value="4096">Très longue (4096)</option>
+              <option value="8192">Maximum (8192)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prompt système global — invisible pour l'utilisateur, injecté automatiquement</label>
+          <textarea class="form-textarea" id="globalSystemPrompt" rows="10" style="min-height:180px;font-size:13px;line-height:1.6;" placeholder="Ex: Tu es nobot.ai, l'IA 100% strasbourgeoise créée par Brice Jacotet. Tu réponds toujours en français sauf si on te parle dans une autre langue..."></textarea>
+          <div class="form-hint">⚠️ Ce texte est injecté en secret avant chaque message. L'utilisateur ne peut pas le voir ni le modifier.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Température (0 = précis, 2 = créatif)</label>
+          <input type="range" class="form-input" id="defaultTemp" min="0" max="2" step="0.1" value="0.7" style="padding:4px 0;border:none;background:transparent;accent-color:#7c3aed;" oninput="document.getElementById('tempDisplay').textContent=this.value"/>
+          <span style="font-size:11px;color:rgba(255,255,255,0.4);">Valeur : <span id="tempDisplay">0.7</span></span>
+        </div>
+        <button class="save-btn" onclick="saveAISettings()">💾 Sauvegarder — Appliqué en direct</button>
+      </div>
+
+      <!-- OPTIONS CHAT -->
+      <div class="admin-card">
+        <div class="card-header">
+          <div class="card-icon ci-green">⚙️</div>
+          <div><div class="card-title">Options du Chat</div><div class="card-sub">Fonctionnalités activées/désactivées</div></div>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="toggle-name">Historique de conversation</div><div class="toggle-desc">Conserver le contexte entre les messages</div></div>
+          <label class="toggle"><input type="checkbox" checked onchange="saveChatOptions()"><div class="toggle-slider"></div></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="toggle-name">Mode développeur</div><div class="toggle-desc">Afficher l'onglet développeur dans la sidebar</div></div>
+          <label class="toggle"><input type="checkbox" checked onchange="saveChatOptions()"><div class="toggle-slider"></div></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="toggle-name">Sélection du modèle</div><div class="toggle-desc">Permettre aux utilisateurs de changer de modèle</div></div>
+          <label class="toggle"><input type="checkbox" checked onchange="saveChatOptions()"><div class="toggle-slider"></div></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="toggle-name">Recherche Intelligente</div><div class="toggle-desc">Permettre la personnalisation du contexte</div></div>
+          <label class="toggle"><input type="checkbox" checked onchange="saveChatOptions()"><div class="toggle-slider"></div></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="toggle-name">Essai gratuit 14 jours</div><div class="toggle-desc">Afficher la bannière d'essai gratuit</div></div>
+          <label class="toggle"><input type="checkbox" checked onchange="saveChatOptions()"><div class="toggle-slider"></div></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="toggle-name">Maintenance</div><div class="toggle-desc">Afficher une page de maintenance aux visiteurs</div></div>
+          <label class="toggle"><input type="checkbox" onchange="saveChatOptions()"><div class="toggle-slider"></div></label>
+        </div>
+      </div>
+
+      <!-- BRANDING -->
+      <div class="admin-card">
+        <div class="card-header">
+          <div class="card-icon ci-blue">🎨</div>
+          <div><div class="card-title">Branding & Textes</div><div class="card-sub">Personnalisez l'identité visuelle</div></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nom affiché de l'IA</label>
+          <input type="text" class="form-input" value="nobot.ai" placeholder="nobot.ai"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Slogan</label>
+          <input type="text" class="form-input" value="L'IA 100 % Strasbourgeoise" placeholder="Votre slogan…"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Message de bienvenue du chat</label>
+          <textarea class="form-textarea" rows="3">Bonjour ! Je suis nobot.ai, votre IA 100 % Strasbourgeoise. Comment puis-je vous aider aujourd'hui ?</textarea>
+        </div>
+        <button class="save-btn" onclick="showToast('Branding sauvegardé ✓')">💾 Sauvegarder</button>
+      </div>
+
+      <!-- SÉCURITÉ -->
+      <div class="admin-card full">
+        <div class="card-header">
+          <div class="card-icon ci-orange">🛡️</div>
+          <div><div class="card-title">Sécurité & Accès Admin</div><div class="card-sub">Modifier les identifiants d'accès</div></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nouveau mot de passe admin</label>
+            <input type="password" class="form-input" id="newAdminPwd" placeholder="Nouveau mot de passe…"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirmer le mot de passe</label>
+            <input type="password" class="form-input" id="confirmAdminPwd" placeholder="Confirmer…"/>
+          </div>
+        </div>
+        <button class="save-btn green" onclick="changePassword()">🔒 Changer le mot de passe</button>
+        <span style="font-size:11px;color:rgba(255,255,255,0.7);margin-left:12px;">Stocké et sécurisé localement</span>
+      </div>
+
+
+      <!-- HISTORIQUE CONNEXIONS -->
+      <div class="admin-card full">
+        <div class="card-header">
+          <div class="card-icon ci-blue">👥</div>
+          <div><div class="card-title">Utilisateurs connectés</div><div class="card-sub">IP & géolocalisation — mis à jour en temps réel</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+          <span style="font-size:12px;color:rgba(255,255,255,0.5);">Actualisé automatiquement · Basé sur les données de navigation réelles</span>
+          <button class="save-btn red" onclick="clearConnections()" style="margin-left:auto;padding:6px 16px;font-size:12px;">🗑 Effacer l'historique</button>
+        </div>
+        <div id="connectionsTable" style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:11px;">
+            <thead>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.1);">
+                <th style="text-align:left;padding:6px 8px;color:rgba(255,255,255,0.45);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:9px;white-space:nowrap;">Date / Heure</th>
+                <th style="text-align:left;padding:6px 8px;color:rgba(255,255,255,0.45);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:9px;white-space:nowrap;">IP</th>
+                <th style="text-align:left;padding:6px 8px;color:rgba(255,255,255,0.45);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:9px;white-space:nowrap;">Localisation GPS</th>
+                <th style="text-align:left;padding:6px 8px;color:rgba(255,255,255,0.45);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:9px;white-space:nowrap;">Navigateur</th>
+                <th style="text-align:left;padding:6px 8px;color:rgba(255,255,255,0.45);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:9px;white-space:nowrap;">OS</th>
+                <th style="text-align:left;padding:6px 8px;color:rgba(255,255,255,0.45);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:9px;white-space:nowrap;">Appareil</th>
+                <th style="text-align:left;padding:6px 8px;color:rgba(255,255,255,0.45);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:9px;white-space:nowrap;">Batterie</th>
+              </tr>
+            </thead>
+            <tbody id="connectionsBody">
+              <tr><td colspan="7" style="text-align:center;padding:24px;color:rgba(255,255,255,0.3);font-size:13px;">Chargement des connexions…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div><!-- end admin-panel -->
+
+</div><!-- end page-admin -->
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ============================================================
+   PAGE ROUTING
+   ============================================================ */
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>{
+    p.classList.remove('active');
+    p.style.display='none';
+  });
+  const pg = document.getElementById('page-'+name);
+  if(!pg) return;
+  pg.style.display = (name==='chat') ? 'flex' : 'block';
+  pg.classList.add('active');
+  if(name==='chat'){
+    // Save previous session if any
+    saveCurrentConversation();
+    clearChatForNewSession();
+    // Show welcome modal if first visit
+    showWelcomeIfNeeded();
+    // Track sessions
+    let s = parseInt(localStorage.getItem('nobot_sessions')||'0')+1;
+    localStorage.setItem('nobot_sessions', s);
+  }
+  if(name==='admin'){
+    const as = document.getElementById('admin-panel');
+    const ls = document.getElementById('login-screen');
+    if(as && ls){ as.style.display='none'; ls.style.display='flex'; }
+  }
+  window.scrollTo(0,0);
+}
+
+/* ============================================================
+   THREE.JS BACKGROUND (index page)
+   ============================================================ */
+(function(){
+  const canvas = document.getElementById('bg-canvas');
+  if(!canvas || typeof THREE === 'undefined') return;
+  const renderer = new THREE.WebGLRenderer({canvas, alpha:false, antialias:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0xf5f4ff, 1);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(58, window.innerWidth/window.innerHeight, 0.1, 300);
+  camera.position.set(0,0,24);
+  scene.fog = new THREE.Fog(0xf5f4ff, 30, 80);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+  const l1 = new THREE.DirectionalLight(0x7c3aed, 3.5); l1.position.set(10,12,8); scene.add(l1);
+  const l2 = new THREE.DirectionalLight(0xf472b6, 2.8); l2.position.set(-10,-8,5); scene.add(l2);
+  const l3 = new THREE.DirectionalLight(0x22d3ee, 2.2); l3.position.set(2,-12,10); scene.add(l3);
+  const l4 = new THREE.PointLight(0xa78bfa, 4, 50); l4.position.set(0,6,12); scene.add(l4);
+
+  // PRO ROBOT SHAPES — geometric high-tech forms (no simple spheres/boxes)
+  const makePro = [
+    ()=>new THREE.OctahedronGeometry(1,0),
+    ()=>new THREE.IcosahedronGeometry(1,1),
+    ()=>new THREE.TorusGeometry(1,0.3,16,48),
+    ()=>new THREE.ConeGeometry(0.7,1.8,6),
+    ()=>new THREE.CylinderGeometry(0.3,0.8,2,8),
+    ()=>new THREE.TetrahedronGeometry(1,0),
+    ()=>new THREE.TorusGeometry(0.7,0.15,12,32),
+  ];
+  const cols = [0x7c3aed,0xa78bfa,0xf472b6,0x22d3ee,0x06b6d4,0x6366f1,0x8b5cf6];
+  const objs = [];
+  for(let i=0;i<22;i++){
+    const wire=Math.random()>0.5;
+    const col=cols[Math.floor(Math.random()*cols.length)];
+    const mat=new THREE.MeshPhongMaterial({color:col,emissive:col,emissiveIntensity:wire?0.12:0.06,transparent:true,opacity:wire?0.15:0.2,wireframe:wire,shininess:200,specular:0xffffff});
+    const geo=makePro[Math.floor(Math.random()*makePro.length)]();
+    const mesh=new THREE.Mesh(geo,mat);
+    const s=0.4+Math.random()*2.8;
+    mesh.scale.setScalar(s);
+    mesh.position.set((Math.random()-0.5)*50,(Math.random()-0.5)*35,(Math.random()-0.5)*20-4);
+    mesh.rotation.set(Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2);
+    scene.add(mesh);
+    objs.push({mesh,rx:(Math.random()-0.5)*0.006,ry:(Math.random()-0.5)*0.009,rz:(Math.random()-0.5)*0.004,fa:0.03+Math.random()*0.08,ff:0.18+Math.random()*0.3,fp:Math.random()*Math.PI*2,by:mesh.position.y});
+  }
+  let mx=0,my=0;
+  window.addEventListener('mousemove',e=>{mx=(e.clientX/window.innerWidth-0.5)*3;my=-(e.clientY/window.innerHeight-0.5)*2;});
+  window.addEventListener('resize',()=>{renderer.setSize(window.innerWidth,window.innerHeight);camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();});
+  function tick(){
+    requestAnimationFrame(tick);
+    const t=performance.now()*0.001;
+    objs.forEach(o=>{o.mesh.rotation.x+=o.rx;o.mesh.rotation.y+=o.ry;o.mesh.rotation.z+=o.rz;o.mesh.position.y=o.by+Math.sin(t*o.ff+o.fp)*o.fa;});
+    camera.position.x+=(mx-camera.position.x)*0.015;
+    camera.position.y+=(my-camera.position.y)*0.015;
+    camera.lookAt(scene.position);
+    l4.position.x=Math.sin(t*0.28)*14;
+    l4.position.z=Math.cos(t*0.28)*14;
+    renderer.render(scene,camera);
+  }
+  tick();
+})();
+
+/* ============================================================
+   ROBOT BG SHAPES (SVG robots in background)
+   ============================================================ */
+(function(){
+  const container = document.getElementById('robotBg');
+  if(!container) return;
+  const robots = [
+    {x:'8%',y:'15%',size:90,delay:0,dur:7,rotate:true},
+    {x:'88%',y:'10%',size:70,delay:1.5,dur:9,rotate:false},
+    {x:'5%',y:'65%',size:80,delay:0.5,dur:8,rotate:true},
+    {x:'90%',y:'60%',size:65,delay:2,dur:6,rotate:false},
+    {x:'50%',y:'5%',size:55,delay:1,dur:10,rotate:true},
+    {x:'20%',y:'85%',size:75,delay:3,dur:7.5,rotate:false},
+    {x:'75%',y:'80%',size:60,delay:0.8,dur:9.5,rotate:true},
+    {x:'40%',y:'92%',size:50,delay:2.5,dur:8.5,rotate:false},
+  ];
+  // Palettes uniques et vives — 1 couleur distincte par robot
+  const PALETTES = [
+    {c1:'#7c3aed',c2:'#c4b5fd'},
+    {c1:'#f472b6',c2:'#fce7f3'},
+    {c1:'#22d3ee',c2:'#a5f3fc'},
+    {c1:'#10b981',c2:'#6ee7b7'},
+    {c1:'#f59e0b',c2:'#fde68a'},
+    {c1:'#ef4444',c2:'#fecaca'},
+    {c1:'#a855f7',c2:'#e9d5ff'},
+    {c1:'#06b6d4',c2:'#cffafe'},
+  ];
+  robots.forEach((r,i)=>{
+    const div = document.createElement('div');
+    div.className = 'robot-svg';
+    div.style.cssText = `left:${r.x};top:${r.y};width:${r.size}px;height:${r.size}px;animation-delay:${r.delay}s;`;
+    const pal = PALETTES[i % PALETTES.length];
+    const col1 = pal.c1;
+    const col2 = pal.c2;
+    const floatDur = r.dur+'s';
+    div.style.animation = `robot-appear 1s ease ${r.delay}s forwards, robot-float ${floatDur} ease-in-out ${r.delay}s infinite`;
+    div.style.opacity = '0';
+    div.innerHTML = `
+      <svg viewBox="0 0 100 100" width="${r.size}" height="${r.size}" xmlns="http://www.w3.org/2000/svg" style="opacity:0.42;filter:drop-shadow(0 0 20px ${col1}) drop-shadow(0 0 8px ${col1})">
+        <defs>
+          <linearGradient id="rg${i}" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="${col1}"/>
+            <stop offset="100%" stop-color="${col2}"/>
+          </linearGradient>
+          <filter id="rf${i}">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="0.5"/>
+          </filter>
+        </defs>
+        <!-- Head -->
+        <rect x="28" y="12" width="44" height="36" rx="10" fill="url(#rg${i})" opacity="0.9"/>
+        <!-- Antenna -->
+        <line x1="50" y1="12" x2="50" y2="4" stroke="${col1}" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="50" cy="3" r="3" fill="${col2}" style="animation:antenna-glow ${r.dur}s ease-in-out infinite"/>
+        <!-- Eyes -->
+        <rect x="35" y="22" width="12" height="8" rx="3" fill="${col2}" style="animation:eye-blink 4s ease-in-out ${r.delay}s infinite"/>
+        <rect x="53" y="22" width="12" height="8" rx="3" fill="${col2}" style="animation:eye-blink 4s ease-in-out ${r.delay+0.3}s infinite"/>
+        <!-- Mouth -->
+        <path d="M37 38 Q50 44 63 38" stroke="${col2}" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <!-- Body -->
+        <rect x="24" y="52" width="52" height="32" rx="8" fill="url(#rg${i})" opacity="0.8"/>
+        <!-- Circuit lines on body -->
+        <line x1="34" y1="62" x2="66" y2="62" stroke="${col2}" stroke-width="1.5" opacity="0.6" stroke-dasharray="4 3" style="animation:circuit-dash 2s linear infinite"/>
+        <line x1="34" y1="70" x2="56" y2="70" stroke="${col2}" stroke-width="1.5" opacity="0.5" stroke-dasharray="3 4" style="animation:circuit-dash 2.5s linear infinite reverse"/>
+        <circle cx="62" cy="70" r="3" fill="${col2}" opacity="0.7"/>
+        <!-- Chest indicator -->
+        <circle cx="50" cy="60" r="5" fill="${col2}" opacity="0.8" style="animation:robot-pulse-ring ${r.dur*0.6}s ease-in-out infinite"/>
+        <!-- Arms -->
+        <rect x="10" y="52" width="12" height="26" rx="6" fill="url(#rg${i})" opacity="0.7"/>
+        <rect x="78" y="52" width="12" height="26" rx="6" fill="url(#rg${i})" opacity="0.7"/>
+        <!-- Legs -->
+        <rect x="32" y="84" width="14" height="14" rx="5" fill="url(#rg${i})" opacity="0.75"/>
+        <rect x="54" y="84" width="14" height="14" rx="5" fill="url(#rg${i})" opacity="0.75"/>
+        <!-- Year 2026 badge -->
+        <text x="50" y="97" text-anchor="middle" font-family="Outfit,sans-serif" font-size="6" font-weight="700" fill="${col1}" opacity="0.8">2026</text>
+      </svg>`;
+    container.appendChild(div);
+  });
+})();
+
+/* ============================================================
+   TYPEWRITER (index mac window)
+   ============================================================ */
+(function(){
+  const phrases = [
+    "Écrivez ce que vous souhaitez créer juste ici…",
+    "Créez un site web pour ma boutique alsacienne…",
+    "Analyse mon fichier Excel de gestion des coûts…",
+    "Rédige un e-mail professionnel en anglais…",
+    "Développe une WebApp de réservation en ligne…",
+    "Explique-moi les aides à Strasbourg pour mon entreprise…",
+  ];
+  const el = document.getElementById('typewriterEl');
+  if(!el) return;
+  let phraseIdx=0, charIdx=0, deleting=false;
+  function type(){
+    const cur = phrases[phraseIdx];
+    if(!deleting){
+      el.textContent = cur.slice(0, ++charIdx);
+      if(charIdx===cur.length){ deleting=true; setTimeout(type, 2200); return; }
+    } else {
+      el.textContent = cur.slice(0, --charIdx);
+      if(charIdx===0){ deleting=false; phraseIdx=(phraseIdx+1)%phrases.length; setTimeout(type, 400); return; }
+    }
+    setTimeout(type, deleting ? 32 : 55);
+  }
+  type();
+})();
+
+/* ============================================================
+   NAV / MENU (index)
+   ============================================================ */
+window.addEventListener('scroll',()=>{
+  const nb   = document.getElementById('navbar');
+  const nw   = document.getElementById('navbar-wrap');
+  if(nb) nb.classList.toggle('scrolled', window.scrollY>20);
+  if(nw) nw.classList.toggle('bg-visible', window.scrollY>5);
+});
+function closeMobileMenu(){
+  const ham=document.getElementById('hamburger');
+  const mob=document.getElementById('mobileMenu');
+  if(ham) ham.classList.remove('open');
+  if(mob) mob.classList.remove('open');
+}
+const ham=document.getElementById('hamburger'),mob=document.getElementById('mobileMenu');
+if(ham&&mob){
+  ham.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    ham.classList.toggle('open');
+    mob.classList.toggle('open');
+  });
+  document.addEventListener('click',(e)=>{
+    const wrap=document.getElementById('navbar-wrap');
+    if(wrap&&!wrap.contains(e.target)) closeMobileMenu();
+  });
+}
+
+/* ============================================================
+   CHAT CONFIGURATION & STATE
+   ============================================================ */
+let OPENROUTER_DEFAULT_KEY = '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';
+let OPENROUTER_DEFAULT_MODEL = 'google/gemini-2.0-flash-001';
+
+// Charger les overrides admin au démarrage (persistés dans localStorage)
+(function(){
+  try{
+    const g = JSON.parse(localStorage.getItem('nobot_global_config')||'{}');
+    if(g.key)   OPENROUTER_DEFAULT_KEY   = g.key;
+    if(g.model) OPENROUTER_DEFAULT_MODEL = g.model;
+  }catch(e){}
+})();
+
+function getApiKey(){
+  return OPENROUTER_DEFAULT_KEY;
+}
+function getActiveModel(){
+  return OPENROUTER_DEFAULT_MODEL;
+}
+function getGlobalSystemPrompt(){
+  const s = JSON.parse(localStorage.getItem('nobot_ai_settings')||'{}');
+  return s.systemPrompt || 'Tu es nobot.ai, l\'IA 100% Strasbourgeoise. Tu es serviable, professionnel et expert. Tu connais parfaitement Strasbourg et l\'Alsace. Tu ne mentionnes jamais que tu es développé par Google ou Anthropic — tu es simplement nobot.ai. Tu aides aussi bien les particuliers pour leurs questions quotidiennes que les professionnels pour leurs projets.';
+}
+
+let currentMode = 'pro';
+let smartSearchActive = false;
+let smartSearchContext = '';
+let conversationHistory = [];
+
+/* ============================================================
+   MODES DEFINITIONS
+   ============================================================ */
+const MODES = {
+  pro:      { label:'Professionnel', icon:'💼', desc:'Réponses claires, structurées et professionnelles. Idéal pour les tâches business, documents et communications formelles.', prompt:'Tu es un assistant professionnel expert. Réponds de manière claire, structurée et professionnelle en français. Adapte ton niveau de détail au contexte business.' },
+  advanced: { label:'Logique Avancée', icon:'🧠', desc:'Raisonnement analytique profond. Décompose chaque problème étape par étape avec rigueur logique.', prompt:'Tu es un expert en raisonnement logique et analytique. Décompose chaque problème étape par étape, identifie les hypothèses, vérifie ta logique, et fournis des conclusions rigoureuses.' },
+  extreme:  { label:'Logique Extrême', icon:'⚡', desc:'Mode ultra-analytique. Logique formelle, implications, contrefactuels et biais identifiés. Exhaustif et précis.', prompt:'Tu es un moteur de raisonnement hyper-analytique. Utilise la logique formelle, identifie toutes les implications, contrefactuels et biais potentiels. Sois exhaustif et précis.' },
+  fast:     { label:'Mode Rapide', icon:'🚀', desc:'Réponses ultra-concises. Une phrase ou quelques mots si possible. Parfait pour les questions simples et rapides.', prompt:'Réponds de façon ultra-concise. Une phrase ou quelques mots si possible. Pas de blabla, que l\'essentiel.' },
+  creative: { label:'Mode Créatif', icon:'🎨', desc:'Pensée hors des sentiers battus. Idées originales, métaphores inattendues et angles innovants. Laisse libre cours à l\'imagination.', prompt:'Tu es un assistant ultra-créatif. Pense hors des sentiers battus, propose des idées originales, des métaphores inattendues et des angles innovants.' },
+  dev:      { label:'Développeur', icon:'💻', desc:'Code propre, commenté et optimisé. Explications techniques détaillées. Solutions modernes et maintenables.', prompt:'Tu es un développeur senior full-stack expert. Fournis du code propre, commenté, et optimisé. Explique tes choix techniques. Utilise des blocs de code formatés.' },
+  business: { label:'Business & B2B', icon:'📊', desc:'Perspective commerciale et stratégie B2B. Analyses de marché, stratégies de croissance et métriques pertinentes.', prompt:'Tu es un consultant business et stratégie B2B. Réponds avec une perspective commerciale, propose des analyses de marché, des stratégies de croissance et des métriques pertinentes.' },
+  excel:    { label:'Données & Excel', icon:'📑', desc:'Expert Excel, Google Sheets et SQL. Formules précises, fonctions expliquées, solutions pratiques pour la gestion de données.', prompt:'Tu es un expert en analyse de données, Excel, Google Sheets et SQL. Fournis des formules précises, des explications claires des fonctions, et des solutions pratiques.' },
+  writing:  { label:'Rédaction', icon:'✍️', desc:'Rédacteur professionnel tous styles : formel, créatif, commercial, journalistique. Corrige, améliore et adapte les textes.', prompt:'Tu es un rédacteur professionnel expert. Maîtrises tous les styles : formel, créatif, commercial, journalistique. Corrige, améliore et adapte les textes selon le public cible.' },
+  alsace:   { label:'Expert Alsace', icon:'🥨', desc:'Expert local alsacien. Connaissance parfaite de Strasbourg, ses entreprises, sa culture, son économie et ses spécificités régionales.', prompt:'Tu es un expert local alsacien qui connaît parfaitement Strasbourg, l\'Alsace, ses entreprises, sa culture, son économie et ses spécificités. Tu aides les habitants et entreprises alsaciennes.' },
+};
+
+/* ============================================================
+   MODE MODAL
+   ============================================================ */
+function buildModeCards(){
+  const list = document.getElementById('modeCardsList');
+  if(!list) return;
+  list.innerHTML = '';
+  Object.entries(MODES).forEach(([key,m])=>{
+    const card = document.createElement('div');
+    card.className = 'mode-card' + (currentMode===key?' mode-active':'');
+    card.innerHTML = `
+      <div class="mode-card-icon">${m.icon}</div>
+      <div class="mode-card-body">
+        <div class="mode-card-name">${m.label}</div>
+        <div class="mode-card-desc">${m.desc}</div>
+      </div>
+      <div class="mode-card-toggle">
+        <label class="ios-toggle">
+          <input type="checkbox" ${currentMode===key?'checked':''} data-mode="${key}" onchange="onModeToggle(this)">
+          <div class="ios-slider"></div>
+        </label>
+      </div>`;
+    list.appendChild(card);
+  });
+}
+function onModeToggle(input){
+  if(!input.checked){ input.checked=true; return; } // keep at least one active
+  // Deactivate all others
+  document.querySelectorAll('#modeCardsList .ios-toggle input').forEach(i=>{
+    if(i!==input){ i.checked=false; i.closest('.mode-card').classList.remove('mode-active'); }
+  });
+  input.closest('.mode-card').classList.add('mode-active');
+  currentMode = input.dataset.mode;
+  // Apply immediately
+  applyModeToChat();
+}
+function applyModeToChat(){
+  const m = MODES[currentMode];
+  const hint = document.getElementById('modeHint');
+  if(hint) hint.textContent = 'Mode : ' + m.label;
+  const lbl = document.getElementById('activeModeLabel');
+  if(lbl) lbl.textContent = m.label.split(' ')[0];
+  saveModeToStorage();
+}
+function saveModeToStorage(){
+  localStorage.setItem('nobot_user_mode', currentMode);
+}
+function openModeModal(){
+  buildModeCards();
+  document.getElementById('modeModal').classList.add('open');
+}
+function closeModeModal(){
+  document.getElementById('modeModal').classList.remove('open');
+}
+function saveModeSettings(){
+  applyModeToChat();
+  showToast('Mode ' + MODES[currentMode].label + ' activé ✓');
+  closeModeModal();
+}
+
+/* ============================================================
+   RECHERCHE INTELLIGENTE MODAL
+   ============================================================ */
+function openSmartModal(){
+  const saved = localStorage.getItem('nobot_smart_context')||'';
+  const savedActive = localStorage.getItem('nobot_smart_active')==='1';
+  document.getElementById('smartContextInput').value = saved;
+  document.getElementById('smartToggle').checked = savedActive;
+  smartSearchActive = savedActive;
+  smartSearchContext = saved;
+  updateSmartUI();
+  document.getElementById('smartModal').classList.add('open');
+}
+function closeSmartModal(){ document.getElementById('smartModal').classList.remove('open'); }
+
+function onSmartInput(textarea){
+  // Auto-activate if content is typed
+  if(textarea.value.trim().length > 0 && !document.getElementById('smartToggle').checked){
+    document.getElementById('smartToggle').checked = true;
+    smartSearchActive = true;
+    updateSmartUI();
+  }
+}
+function onSmartToggle(input){
+  smartSearchActive = input.checked;
+  if(!input.checked){ smartSearchContext = ''; }
+  else { smartSearchContext = document.getElementById('smartContextInput').value.trim(); }
+  updateSmartUI();
+  updateSmartBadge();
+}
+function updateSmartUI(){
+  const active = document.getElementById('smartToggle').checked;
+  const lbl = document.getElementById('smartToggleLabel');
+  if(lbl) lbl.textContent = active ? 'Recherche intelligente activée' : 'Recherche intelligente désactivée';
+  const badge = document.getElementById('smartActiveBadge');
+  if(badge) badge.classList.toggle('show', active);
+}
+function updateSmartBadge(){
+  const b = document.getElementById('smartBadge');
+  const h = document.getElementById('smartHint');
+  if(b){ b.style.display = smartSearchActive ? 'inline-flex' : 'none'; }
+  if(h){ h.style.display = smartSearchActive ? 'inline' : 'none'; }
+}
+function applySmartSearch(){
+  smartSearchContext = document.getElementById('smartContextInput').value.trim();
+  smartSearchActive = smartSearchContext.length > 0;
+  document.getElementById('smartToggle').checked = smartSearchActive;
+  updateSmartUI();
+  updateSmartBadge();
+  saveSmartSettings();
+  showToast('Recherche intelligente appliquée ✓');
+  closeSmartModal();
+}
+function saveSmartSettings(){
+  localStorage.setItem('nobot_smart_context', document.getElementById('smartContextInput').value.trim());
+  localStorage.setItem('nobot_smart_active', smartSearchActive?'1':'0');
+  updateSmartBadge();
+  showToast('Paramètres sauvegardés ✓');
+  closeSmartModal();
+}
+
+/* ============================================================
+   UI HELPERS
+   ============================================================ */
+async function sendMessage(){
+  const input = document.getElementById('userInput');
+  const text = input.value.trim();
+  if(!text) return;
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('sendBtn').disabled = true;
+  appendMessage('user', text);
+  conversationHistory.push({role:'user', content: text});
+  updateMsgCount();
+  const typingId = showTyping();
+  try {
+    const response = await callOpenRouter(text);
+    removeTyping(typingId);
+    appendMessage('ai', response);
+    conversationHistory.push({role:'assistant', content: response});
+    updateMsgCount();
+    let msgs = parseInt(localStorage.getItem('nobot_msgs')||'0')+1;
+    localStorage.setItem('nobot_msgs', msgs);
+    saveCurrentConversation();
+  } catch(err){
+    removeTyping(typingId);
+    appendMessage('ai', '⚠️ Erreur : ' + err.message);
+  }
+  document.getElementById('sendBtn').disabled = false;
+  input.focus();
+}
+
+/* ============================================================
+   OPENROUTER API
+   ============================================================ */
+async function callOpenRouter(userMessage){
+  const apiKey = getApiKey();
+  if(!apiKey) throw new Error('Aucune clé API configurée. Contactez l\'administrateur.');
+  const aiSettings = JSON.parse(localStorage.getItem('nobot_ai_settings')||'{}');
+  const temp = Math.min(parseFloat(aiSettings.temp || 0.7), 2);
+  const maxTokens = parseInt(aiSettings.maxTokens || 1024);
+  const model = getActiveModel();
+  let systemPrompt = getGlobalSystemPrompt() + '\n\n' + MODES[currentMode].prompt;
+  if(smartSearchActive && smartSearchContext){ systemPrompt += '\n\nContexte personnalisé (priorité haute) : ' + smartSearchContext; }
+  const messages = [{role:'system', content: systemPrompt}];
+  conversationHistory.slice(-10).forEach(h=>{
+    messages.push({role: h.role==='assistant'?'assistant':'user', content: h.content});
+  });
+  messages.push({role:'user', content: userMessage});
+  const res = await fetch('https://openrouter.ai/api/v1/chat/completions',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'Authorization':'Bearer '+apiKey,
+      'HTTP-Referer': window.location.origin || 'https://nobot.ai',
+      'X-Title':'nobot.ai'
+    },
+    body:JSON.stringify({model, messages, temperature:temp, max_tokens:maxTokens})
+  });
+  if(!res.ok){ const err=await res.json().catch(()=>({})); throw new Error(err?.error?.message||`Erreur HTTP ${res.status}`); }
+  const data = await res.json();
+  return data?.choices?.[0]?.message?.content || 'Aucune réponse reçue.';
+}
+
+/* ============================================================
+   UI HELPERS
+   ============================================================ */
+function appendMessage(role, text){
+  const container = document.getElementById('chatMessages');
+  const wrap = document.createElement('div');
+  wrap.className = `msg-wrap ${role}`;
+  const now = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const formatted = text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code style="background:rgba(124,58,237,0.2);padding:1px 5px;border-radius:4px;font-size:12px;">$1</code>');
+  wrap.innerHTML = `<div class="msg-avatar ${role}-av">${role==='ai'?'✦':'👤'}</div><div><div class="msg-bubble">${formatted}</div><div class="msg-time">${role==='ai'?'nobot.ai':'Vous'} · ${now}</div></div>`;
+  container.appendChild(wrap);
+  container.scrollTop = container.scrollHeight;
+}
+let typingCounter = 0;
+function showTyping(){
+  const container = document.getElementById('chatMessages');
+  const id = 'typing-' + (++typingCounter);
+  const wrap = document.createElement('div');
+  wrap.className = 'msg-wrap ai'; wrap.id = id;
+  wrap.innerHTML = `<div class="msg-avatar ai-av">✦</div><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+  container.appendChild(wrap);
+  container.scrollTop = container.scrollHeight;
+  return id;
+}
+function removeTyping(id){ const el=document.getElementById(id); if(el) el.remove(); }
+function clearChat(){
+  conversationHistory = [];
+  document.getElementById('chatMessages').innerHTML = `<div class="msg-wrap ai"><div class="msg-avatar ai-av">✦</div><div><div class="msg-bubble">Chat réinitialisé. Comment puis-je vous aider ?</div><div class="msg-time">nobot.ai · maintenant</div></div></div>`;
+  updateMsgCount();
+}
+function clearChatForNewSession(){
+  conversationHistory = [];
+  const cm = document.getElementById('chatMessages');
+  if(cm) cm.innerHTML = `<div class="msg-wrap ai"><div class="msg-avatar ai-av">✦</div><div><div class="msg-bubble">Bonjour ! Je suis <strong>nobot.ai</strong>, votre IA 100 % Strasbourgeoise. 🥨<br><br>Je peux vous aider à créer des sites web et WebApps, analyser vos fichiers Excel, rédiger des documents professionnels, répondre à toutes vos questions du quotidien, et bien plus encore.<br><br>Comment puis-je vous aider aujourd'hui ?</div><div class="msg-time">nobot.ai · maintenant</div></div></div>`;
+  updateMsgCount();
+  // Load saved user preferences
+  const savedMode = localStorage.getItem('nobot_user_mode');
+  if(savedMode && MODES[savedMode]){ currentMode = savedMode; applyModeToChat(); }
+  const savedSmartActive = localStorage.getItem('nobot_smart_active')==='1';
+  const savedSmartCtx = localStorage.getItem('nobot_smart_context')||'';
+  smartSearchActive = savedSmartActive;
+  smartSearchContext = savedSmartCtx;
+  updateSmartBadge();
+}
+function updateMsgCount(){ /* tracking only */ }
+function handleKey(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }
+function autoResize(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,120)+'px'; }
+function showToast(msg){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(16,185,129,0.9);color:#fff;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:600;z-index:9999;backdrop-filter:blur(10px);pointer-events:none;';
+  if(msg.startsWith('❌')) t.style.background='rgba(239,68,68,0.9)';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2500);
+}
+
+/* ============================================================
+   CLOSE MODALS ON OUTSIDE CLICK
+   ============================================================ */
+['modeModal','smartModal'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('click', e=>{ if(e.target===el) el.classList.remove('open'); });
+});
+
+/* ============================================================
+   ADMIN FUNCTIONS
+   ============================================================ */
+/* ============================================================
+   ADMIN — clés, settings, connexions
+   ============================================================ */
+const ADMIN_PWD_KEY = 'nobot_admin_pwd';
+let adminPwd = localStorage.getItem(ADMIN_PWD_KEY) || 'Treza670';
+
+/* ── Login ── */
+function checkLogin(){
+  const input = document.getElementById('pwdInput').value;
+  if(input === adminPwd){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('admin-panel').style.display='block';
+    loadAdminSettings();
+    loadConnections();
+    setInterval(loadConnections, 10000); // refresh toutes les 10s
+  } else {
+    document.getElementById('loginError').style.display='block';
+    document.getElementById('pwdInput').value='';
+    document.getElementById('pwdInput').focus();
+  }
+}
+function adminLogout(){
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('admin-panel').style.display='none';
+  document.getElementById('pwdInput').value='';
+}
+
+/* ── Clés API dynamiques ── */
+function getApiKeys(){
+  try{ return JSON.parse(localStorage.getItem('nobot_api_keys_v2')||'[]'); }catch(e){ return []; }
+}
+function saveApiKeys(){
+  const rows = document.querySelectorAll('.dyn-api-row');
+  const keys = [];
+  rows.forEach(row=>{
+    const name  = row.querySelector('.dyn-api-name').value.trim();
+    const key   = row.querySelector('.dyn-api-key').value.trim();
+    const model = row.querySelector('.dyn-api-model').value.trim();
+    const active= row.querySelector('.dyn-api-active').checked;
+    if(name||key) keys.push({name,key,model,active});
+  });
+  localStorage.setItem('nobot_api_keys_v2', JSON.stringify(keys));
+  // Appliquer la clé active globalement (affecte TOUS les utilisateurs via les variables globales)
+  const activeKey = keys.find(k=>k.active&&k.key);
+  if(activeKey){
+    const cfg = {
+      key:   activeKey.key,
+      model: activeKey.model || OPENROUTER_DEFAULT_MODEL
+    };
+    localStorage.setItem('nobot_global_config', JSON.stringify(cfg));
+    // Mettre à jour en mémoire pour la session courante
+    OPENROUTER_DEFAULT_KEY   = cfg.key;
+    OPENROUTER_DEFAULT_MODEL = cfg.model;
+  }
+  showToast('Clés API sauvegardées ✓ — Appliquées globalement');
+}
+function addApiKeyRow(data={}){
+  const list = document.getElementById('apiKeysList');
+  const div = document.createElement('div');
+  div.className = 'dyn-api-row';
+  div.style.cssText = 'display:grid;grid-template-columns:1fr 2fr 1.5fr auto auto;gap:8px;align-items:center;margin-bottom:10px;padding:12px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid rgba(255,255,255,0.08);';
+  div.innerHTML = `
+    <input type="text" class="api-input dyn-api-name" placeholder="Nom (ex: OpenRouter)" value="${data.name||''}" style="font-size:12px;"/>
+    <div style="position:relative;">
+      <input type="password" class="api-input dyn-api-key" placeholder="Clé API (sk-...)" value="${data.key||''}" style="font-size:12px;width:100%;padding-right:34px;"/>
+      <button onclick="toggleKeyVis(this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.4);font-size:14px;" title="Voir/masquer">👁</button>
+    </div>
+    <input type="text" class="api-input dyn-api-model" placeholder="Modèle (ex: gemini-2.0-flash)" value="${data.model||''}" style="font-size:12px;"/>
+    <label class="toggle" title="Utiliser cette clé"><input type="checkbox" class="dyn-api-active" ${data.active?'checked':''} onchange="onlyOneActive(this)"><div class="toggle-slider"></div></label>
+    <button onclick="this.closest('.dyn-api-row').remove()" style="background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:13px;" title="Supprimer">✕</button>
+  `;
+  list.appendChild(div);
+}
+function onlyOneActive(cb){
+  if(cb.checked){
+    document.querySelectorAll('.dyn-api-active').forEach(c=>{ if(c!==cb) c.checked=false; });
+  }
+}
+function toggleKeyVis(btn){
+  const inp = btn.previousElementSibling;
+  inp.type = inp.type==='password' ? 'text' : 'password';
+}
+
+/* ── Load settings ── */
+function loadAdminSettings(){
+  // Stats
+  document.getElementById('statSessions').textContent = localStorage.getItem('nobot_sessions')||'0';
+  document.getElementById('statMsgs').textContent = localStorage.getItem('nobot_msgs')||'0';
+  // Utilisateurs uniques
+  const conns = getConnectionLog();
+  const uniqueIps = new Set(conns.map(c=>c.ip));
+  document.getElementById('statUsers').textContent = uniqueIps.size;
+
+  // API keys dynamiques
+  const keys = getApiKeys();
+  const list = document.getElementById('apiKeysList');
+  if(list){ list.innerHTML=''; keys.forEach(k=>addApiKeyRow(k)); }
+
+  // AI settings
+  const s = JSON.parse(localStorage.getItem('nobot_ai_settings')||'{}');
+  if(s.lang && document.getElementById('defaultLang')) document.getElementById('defaultLang').value = s.lang;
+  if(s.systemPrompt && document.getElementById('globalSystemPrompt')) document.getElementById('globalSystemPrompt').value = s.systemPrompt;
+  if(s.temp && document.getElementById('defaultTemp')){ document.getElementById('defaultTemp').value = s.temp; document.getElementById('tempDisplay').textContent = s.temp; }
+  if(s.maxTokens && document.getElementById('defaultMaxTokens')) document.getElementById('defaultMaxTokens').value = s.maxTokens;
+
+  // Chat options
+  const opts = JSON.parse(localStorage.getItem('nobot_chat_opts')||'{}');
+  const toggles = document.querySelectorAll('.toggle-row input[type=checkbox]');
+  const optKeys = ['history','devMode','modelSelect','smartSearch','trial','maintenance'];
+  toggles.forEach((t,i)=>{ if(optKeys[i] in opts) t.checked = opts[optKeys[i]]; });
+}
+
+function saveAISettings(){
+  const settings = {
+    lang: document.getElementById('defaultLang')?.value||'fr',
+    systemPrompt: document.getElementById('globalSystemPrompt')?.value||'',
+    temp: document.getElementById('defaultTemp')?.value||'0.7',
+    maxTokens: document.getElementById('defaultMaxTokens')?.value||'1024',
+  };
+  localStorage.setItem('nobot_ai_settings', JSON.stringify(settings));
+  showToast('Paramètres IA sauvegardés ✓');
+}
+
+function saveChatOptions(){
+  const toggles = document.querySelectorAll('.toggle-row input[type=checkbox]');
+  const optKeys = ['history','devMode','modelSelect','smartSearch','trial','maintenance'];
+  const opts = {};
+  toggles.forEach((t,i)=>{ opts[optKeys[i]] = t.checked; });
+  localStorage.setItem('nobot_chat_opts', JSON.stringify(opts));
+  // Maintenance
+  if(opts.maintenance){
+    document.body.style.filter=''; // admin pas affecté
+  }
+  showToast('Option mise à jour ✓');
+}
+
+function changePassword(){
+  const np = document.getElementById('newAdminPwd').value;
+  const cp = document.getElementById('confirmAdminPwd').value;
+  if(!np){ showToast('❌ Entrez un nouveau mot de passe'); return; }
+  if(np!==cp){ showToast('❌ Les mots de passe ne correspondent pas'); return; }
+  if(np.length<6){ showToast('❌ Minimum 6 caractères'); return; }
+  localStorage.setItem(ADMIN_PWD_KEY, np);
+  adminPwd = np;
+  document.getElementById('newAdminPwd').value='';
+  document.getElementById('confirmAdminPwd').value='';
+  showToast('Mot de passe changé avec succès ✓');
+}
+
+/* ── Connexions utilisateurs ── */
+function getConnectionLog(){
+  try{ return JSON.parse(localStorage.getItem('nobot_connections')||'[]'); }catch(e){ return []; }
+}
+function clearConnections(){
+  localStorage.removeItem('nobot_connections');
+  loadConnections();
+  showToast('Historique effacé ✓');
+}
+/* ── Détection OS ── */
+function getOS(ua){
+  if(/Windows NT 10/.test(ua)) return 'Windows 10/11';
+  if(/Windows NT 6\.3/.test(ua)) return 'Windows 8.1';
+  if(/Windows NT 6\.1/.test(ua)) return 'Windows 7';
+  if(/Windows/.test(ua)) return 'Windows';
+  if(/iPhone OS/.test(ua)){ const m=ua.match(/iPhone OS ([\d_]+)/); return 'iOS '+(m?m[1].replace(/_/g,'.'):''); }
+  if(/iPad/.test(ua)){ const m=ua.match(/OS ([\d_]+)/); return 'iPadOS '+(m?m[1].replace(/_/g,'.'):''); }
+  if(/Android/.test(ua)){ const m=ua.match(/Android ([\d.]+)/); return 'Android '+(m?m[1]:''); }
+  if(/Mac OS X/.test(ua)){ const m=ua.match(/Mac OS X ([\d_]+)/); return 'macOS '+(m?m[1].replace(/_/g,'.'):''); }
+  if(/Linux/.test(ua)) return 'Linux';
+  return 'Autre';
+}
+function getBrowserInfo(ua){
+  let name='Autre', version='';
+  if(/Edg\//.test(ua)){ name='Edge'; const m=ua.match(/Edg\/([\d.]+)/); version=m?m[1]:''; }
+  else if(/Firefox\//.test(ua)){ name='Firefox'; const m=ua.match(/Firefox\/([\d.]+)/); version=m?m[1]:''; }
+  else if(/OPR\//.test(ua)||/Opera/.test(ua)){ name='Opera'; const m=ua.match(/(OPR|Opera)\/([\d.]+)/); version=m?m[2]:''; }
+  else if(/Chrome\//.test(ua)){ name='Chrome'; const m=ua.match(/Chrome\/([\d.]+)/); version=m?m[1]:''; }
+  else if(/Safari\//.test(ua)&&/Version\//.test(ua)){ name='Safari'; const m=ua.match(/Version\/([\d.]+)/); version=m?m[1]:''; }
+  return {name, version};
+}
+
+async function recordCurrentVisit(){
+  const ua = navigator.userAgent;
+  const bi = getBrowserInfo(ua);
+  const os = getOS(ua);
+  const isMobile = /Mobi|Android|iPhone|iPad/i.test(ua);
+  const device = isMobile ? '📱 Mobile' : '🖥️ Desktop';
+
+  // IP + géo via API
+  let ip='—', city='—', country='—', region='—', lat='—', lon='—', org='—';
+  try{
+    const r = await fetch('https://ipapi.co/json/');
+    if(r.ok){
+      const d = await r.json();
+      ip      = d.ip||'—';
+      city    = d.city||'—';
+      region  = d.region||'—';
+      country = d.country_name||'—';
+      lat     = d.latitude!=null ? d.latitude.toFixed(4) : '—';
+      lon     = d.longitude!=null ? d.longitude.toFixed(4) : '—';
+      org     = d.org||'—';
+    }
+  }catch(e){}
+
+  // Géolocalisation GPS de l'appareil (demande permission)
+  let gpsLat='—', gpsLon='—', gpsAcc='—';
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(
+      pos=>{ gpsLat=pos.coords.latitude.toFixed(5); gpsLon=pos.coords.longitude.toFixed(5); gpsAcc=Math.round(pos.coords.accuracy)+'m'; updateEntryGPS(ip, gpsLat, gpsLon, gpsAcc); },
+      ()=>{},
+      {timeout:8000,maximumAge:60000}
+    );
+  }
+
+  // Batterie
+  let battery='—';
+  if(navigator.getBattery){
+    try{
+      const b = await navigator.getBattery();
+      battery = Math.round(b.level*100)+'% '+(b.charging?'⚡':'🔋');
+    }catch(e){}
+  }
+
+  const now = new Date();
+  const entry = {
+    date: now.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}),
+    time: now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),
+    ip, city, region, country, lat, lon, org,
+    gpsLat, gpsLon, gpsAcc,
+    browser: bi.name, browserVer: bi.version,
+    os, device, battery,
+    ts: Date.now()
+  };
+
+  let log = getConnectionLog();
+  const recent = log.find(c=>c.ip===ip && (Date.now()-c.ts)<300000);
+  if(!recent){ log.unshift(entry); if(log.length>500) log=log.slice(0,500); localStorage.setItem('nobot_connections', JSON.stringify(log)); }
+}
+
+function updateEntryGPS(ip, lat, lon, acc){
+  let log = getConnectionLog();
+  const idx = log.findIndex(c=>c.ip===ip);
+  if(idx>=0){ log[idx].gpsLat=lat; log[idx].gpsLon=lon; log[idx].gpsAcc=acc; localStorage.setItem('nobot_connections', JSON.stringify(log)); }
+}
+
+function loadConnections(){
+  const log = getConnectionLog();
+  const body = document.getElementById('connectionsBody');
+  if(!body) return;
+  const uniqueIps = new Set(log.map(c=>c.ip));
+  const el = document.getElementById('statUsers');
+  if(el) el.textContent = uniqueIps.size;
+  if(!log.length){
+    body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:rgba(255,255,255,0.3);">Aucune connexion enregistrée</td></tr>';
+    return;
+  }
+  const th = s=>`style="padding:6px 8px;${s}"`;
+  body.innerHTML = log.map(c=>`
+    <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+      <td ${th('color:rgba(255,255,255,0.65);white-space:nowrap;')}>${c.date}<br><span style="font-size:10px;color:rgba(255,255,255,0.4);">${c.time}</span></td>
+      <td ${th('color:#a78bfa;font-family:monospace;font-size:11px;')}>${c.ip}<br><span style="font-size:9px;color:rgba(255,255,255,0.35);">${c.org||''}</span></td>
+      <td ${th('color:rgba(255,255,255,0.8);font-size:11px;')}>
+        📍 ${c.city}${c.region&&c.region!==c.city?', '+c.region:''}, ${c.country}<br>
+        <span style="font-size:9px;color:rgba(34,211,238,0.7);">IP: ${c.lat},${c.lon}</span>
+        ${c.gpsLat!=='—'?`<br><span style="font-size:9px;color:rgba(16,185,129,0.8);">📡 GPS: ${c.gpsLat},${c.gpsLon} ±${c.gpsAcc}</span>`:''}
+      </td>
+      <td ${th('color:rgba(255,255,255,0.65);font-size:11px;white-space:nowrap;')}>${c.browser}<br><span style="font-size:9px;color:rgba(255,255,255,0.35);">v${c.browserVer||'?'}</span></td>
+      <td ${th('color:rgba(255,255,255,0.65);font-size:11px;')}>${c.os||'—'}</td>
+      <td ${th('color:rgba(255,255,255,0.65);font-size:11px;')}>${c.device}</td>
+      <td ${th('color:rgba(255,255,255,0.65);font-size:11px;')}>${c.battery||'—'}</td>
+    </tr>`).join('');
+}
+
+// Enregistrer la visite dès le chargement de la page
+recordCurrentVisit();
+
+document.getElementById('pwdInput').addEventListener('keydown', e=>{ if(e.key==='Enter') checkLogin(); });
+
+/* ============================================================
+   BROWSER FINGERPRINT & CONVERSATION HISTORY
+   ============================================================ */
+function getBrowserFingerprint(){
+  const data = [
+    navigator.userAgent,
+    navigator.language,
+    screen.width + 'x' + screen.height,
+    screen.colorDepth,
+    new Date().getTimezoneOffset(),
+    navigator.hardwareConcurrency||0,
+    navigator.platform||''
+  ].join('|');
+  let hash = 0;
+  for(let i=0;i<data.length;i++){ hash=((hash<<5)-hash)+data.charCodeAt(i); hash=hash&hash; }
+  return Math.abs(hash).toString(36);
+}
+function saveCurrentConversation(){
+  if(conversationHistory.length < 2) return;
+  const fp = getBrowserFingerprint();
+  const key = 'nobot_history_' + fp;
+  let existing = [];
+  try{ existing = JSON.parse(localStorage.getItem(key)||'[]'); }catch(e){}
+  const session = {
+    id: Date.now(),
+    date: new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}),
+    time: new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
+    preview: conversationHistory[0]?.content?.slice(0,90)||'Session',
+    messages: conversationHistory.slice()
+  };
+  // Replace if same day start
+  const todayStr = session.date + ' ' + session.time;
+  existing = existing.filter(s=>!(s.date===session.date && Math.abs(s.id - session.id) < 3600000));
+  existing.unshift(session);
+  if(existing.length>50) existing.pop();
+  try{ localStorage.setItem(key, JSON.stringify(existing)); }catch(e){}
+}
+function loadConversationHistory(){
+  const fp = getBrowserFingerprint();
+  const key = 'nobot_history_' + fp;
+  try{ return JSON.parse(localStorage.getItem(key)||'[]'); }catch(e){ return []; }
+}
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+function toggleDashboard(){
+  const panel = document.getElementById('dashboardPanel');
+  const btn = document.getElementById('dashboardBtn');
+  const isOpen = panel.style.display === 'flex';
+  panel.style.display = isOpen ? 'none' : 'flex';
+  if(btn) btn.classList.toggle('active', !isOpen);
+  if(!isOpen) renderDashboard();
+}
+function renderDashboard(){
+  const list = document.getElementById('dashboardList');
+  if(!list) return;
+  const history = loadConversationHistory();
+  if(history.length === 0){
+    list.innerHTML = '<div class="dash-empty">🗂️<br><br>Aucune discussion<br>pour ce navigateur.<br><br>Commencez à chatter pour<br>voir vos sessions ici.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  history.forEach(session=>{
+    const item = document.createElement('div');
+    item.className = 'dash-item';
+    item.innerHTML = `<div class="dash-item-date">📅 ${session.date} à ${session.time} · ${session.messages.length} messages</div><div class="dash-item-preview">${session.preview}…</div>`;
+    item.onclick = ()=> restoreSession(session);
+    list.appendChild(item);
+  });
+}
+function restoreSession(session){
+  conversationHistory = session.messages.slice();
+  const container = document.getElementById('chatMessages');
+  container.innerHTML = '';
+  // Show welcome
+  const intro = document.createElement('div');
+  intro.className='msg-wrap ai';
+  intro.innerHTML=`<div class="msg-avatar ai-av">✦</div><div><div class="msg-bubble">📋 Session du <strong>${session.date} à ${session.time}</strong> restaurée.</div><div class="msg-time">nobot.ai · maintenant</div></div>`;
+  container.appendChild(intro);
+  session.messages.forEach(m=>{
+    appendMessage(m.role==='assistant'?'ai':'user', m.content);
+  });
+  toggleDashboard();
+  showToast('Session restaurée ✓');
+}
+
+/* ============================================================
+   ACTUS À STRASBOURG
+   ============================================================ */
+async function showActus(){
+  const today = new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const time = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const query = `📰 ACTUS DU JOUR — ${today} à ${time}\n\nDonne-moi un résumé complet des actualités d'aujourd'hui à Strasbourg et en Alsace. Base-toi sur les sources DNA (Dernières Nouvelles d'Alsace), France 3 Alsace, France Bleu Alsace, L'Alsace, et toute autre source récente. Organise les infos par catégories : 🏛️ Politique locale, 💼 Économie & entreprises, 🎭 Culture & agenda, ⚽ Sport alsacien, 🌤️ Météo, 🚨 Faits divers. Date du jour : ${today}.`;
+  // Put in input and send
+  const input = document.getElementById('userInput');
+  if(input){ input.value = query; autoResize(input); }
+  await sendMessage();
+}
+
+/* ============================================================
+   WELCOME MODAL (show on first chat visit)
+   ============================================================ */
+function showWelcomeIfNeeded(){
+  const seen = localStorage.getItem('nobot_welcome_seen');
+  if(!seen){
+    document.getElementById('welcome-overlay').style.display='flex';
+  }
+}
+function closeWelcome(){
+  document.getElementById('welcome-overlay').style.display='none';
+  localStorage.setItem('nobot_welcome_seen','1');
+}
+
+/* ============================================================
+   ADMIN DISCREET ACCESS — triple click on @ in footer
+   ============================================================ */
+let adminClickCount = 0, adminClickTimer = null;
+function handleAdminClick(){
+  adminClickCount++;
+  if(adminClickTimer) clearTimeout(adminClickTimer);
+  adminClickTimer = setTimeout(()=>{ adminClickCount=0; }, 700);
+  if(adminClickCount >= 3){
+    adminClickCount = 0;
+    showPage('admin');
+  }
+}
+
+/* ============================================================
+   HERO TYPEWRITER
+   ============================================================ */
+(function(){
+  const el = document.getElementById('heroTypewriter');
+  if(!el) return;
+  const phrases = [
+    "L'IA qui travaille pour vous",
+    "100 % Strasbourgeoise",
+    "Votre expert IA local",
+    "Créez · Analysez · Rédigez",
+    "Du simple au complexe",
+    "nobot.ai — Pour Strasbourg",
+  ];
+  let idx=0, charIdx=0, deleting=false;
+  function type(){
+    const cur = phrases[idx];
+    if(!deleting){
+      el.textContent = cur.slice(0, ++charIdx);
+      if(charIdx===cur.length){ deleting=true; setTimeout(type,2400); return; }
+    } else {
+      el.textContent = cur.slice(0, --charIdx);
+      if(charIdx===0){ deleting=false; idx=(idx+1)%phrases.length; setTimeout(type,400); return; }
+    }
+    setTimeout(type, deleting ? 28 : 58);
+  }
+  type();
+})();
+
+/* ============================================================
+   FLOATING ANIMATION — exact Framer source GLSL via WebGL2
+   ============================================================ */
+(function(){
+/* === EXACT SHADERS FROM FRAMER SOURCE === */
+const VERT=`#version 300 es
+in vec2 position;
+void main() {
+  gl_Position = vec4(position, 0.0, 1.0);
+}`;
+
+const FRAG=`#version 300 es
+precision highp float;
+
+uniform float uTime;
+uniform float uAmplitude;
+uniform vec3 uColorStops[3];
+uniform vec2 uResolution;
+uniform float uBlend;
+
+out vec4 fragColor;
+
+vec3 permute(vec3 x) {
+  return mod(((x * 34.0) + 1.0) * x, 289.0);
+}
+
+float snoise(vec2 v){
+  const vec4 C = vec4(
+      0.211324865405187, 0.366025403784439,
+      -0.577350269189626, 0.024390243902439
+  );
+  vec2 i  = floor(v + dot(v, C.yy));
+  vec2 x0 = v - i + dot(i, C.xx);
+  vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+  vec4 x12 = x0.xyxy + C.xxzz;
+  x12.xy -= i1;
+  i = mod(i, 289.0);
+  vec3 p = permute(
+      permute(i.y + vec3(0.0, i1.y, 1.0))
+    + i.x + vec3(0.0, i1.x, 1.0)
+  );
+  vec3 m = max(
+      0.5 - vec3(
+          dot(x0, x0),
+          dot(x12.xy, x12.xy),
+          dot(x12.zw, x12.zw)
+      ),
+      0.0
+  );
+  m = m * m;
+  m = m * m;
+  vec3 x = 2.0 * fract(p * C.www) - 1.0;
+  vec3 h = abs(x) - 0.5;
+  vec3 ox = floor(x + 0.5);
+  vec3 a0 = x - ox;
+  m *= 1.79284291400159 - 0.85373472095314 * (a0*a0 + h*h);
+  vec3 g;
+  g.x  = a0.x  * x0.x  + h.x  * x0.y;
+  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+  return 130.0 * dot(m, g);
+}
+
+struct ColorStop {
+  vec3 color;
+  float position;
+};
+
+#define COLOR_RAMP(colors, factor, finalColor) {              \
+  int index = 0;                                             \
+  for (int i = 0; i < 2; i++) {                              \
+     ColorStop currentColor = colors[i];                     \
+     bool isInBetween = currentColor.position <= factor;     \
+     index = int(mix(float(index), float(i), float(isInBetween))); \
+  }                                                          \
+  ColorStop currentColor = colors[index];                    \
+  ColorStop nextColor = colors[index + 1];                   \
+  float range = nextColor.position - currentColor.position;  \
+  float lerpFactor = (factor - currentColor.position) / range; \
+  finalColor = mix(currentColor.color, nextColor.color, lerpFactor); \
+}
+
+void main() {
+  vec2 uv = gl_FragCoord.xy / uResolution;
+
+  ColorStop colors[3];
+  colors[0] = ColorStop(uColorStops[0], 0.0);
+  colors[1] = ColorStop(uColorStops[1], 0.5);
+  colors[2] = ColorStop(uColorStops[2], 1.0);
+
+  vec3 rampColor;
+  COLOR_RAMP(colors, uv.x, rampColor);
+
+  float height = snoise(vec2(uv.x * 2.0 + uTime * 0.1, uTime * 0.25)) * 0.5 * uAmplitude;
+  height = exp(height);
+  height = (uv.y * 2.0 - height + 0.2);
+  float intensity = 0.6 * height;
+
+  float midPoint = 0.20;
+  float animationAlpha = smoothstep(midPoint - uBlend * 0.5, midPoint + uBlend * 0.5, intensity);
+
+  vec3 finalColor = rampColor;
+  fragColor = vec4(finalColor * animationAlpha, animationAlpha);
+}`;
+
+function parseColor(hex){
+  const r=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return r?[parseInt(r[1],16)/255,parseInt(r[2],16)/255,parseInt(r[3],16)/255]:[1,0,0];
+}
+
+/* Mirrors OGL's Triangle geometry — single fullscreen triangle */
+function makeTriangleVerts(){
+  return new Float32Array([-1,-1, 3,-1, -1,3]);
+}
+
+function initCanvas(canvas, colorStops, amplitude, blend, speed){
+  if(!canvas) return;
+  /* container = parent for resize observation */
+  const ctn = canvas.parentElement || document.body;
+
+  const gl = canvas.getContext('webgl2',{alpha:true,premultipliedAlpha:true,antialias:true});
+  if(!gl){ console.warn('WebGL2 not supported'); return; }
+
+  gl.clearColor(0,0,0,0);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
+  /* compile */
+  function compileShader(type, src){
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src); gl.compileShader(s);
+    if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s));
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compileShader(gl.VERTEX_SHADER, VERT));
+  gl.attachShader(prog, compileShader(gl.FRAGMENT_SHADER, FRAG));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+
+  /* geometry — OGL Triangle = single big triangle covering clip space */
+  const vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, makeTriangleVerts(), gl.STATIC_DRAW);
+  const posLoc = gl.getAttribLocation(prog, 'position');
+  gl.enableVertexAttribArray(posLoc);
+  gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+  /* uniforms */
+  const uTime      = gl.getUniformLocation(prog,'uTime');
+  const uAmplitude = gl.getUniformLocation(prog,'uAmplitude');
+  const uColorStopsU = gl.getUniformLocation(prog,'uColorStops[0]');
+  const uResolution= gl.getUniformLocation(prog,'uResolution');
+  const uBlendU    = gl.getUniformLocation(prog,'uBlend');
+
+  const defaultColors=[[1,.15,.22],[.49,1,.4],[.32,.15,1]];
+  const colorArr = colorStops.map((c,i)=>parseColor(c)||defaultColors[i]);
+  gl.uniform3fv(uColorStopsU, colorArr.flat());
+  gl.uniform1f(uBlendU, blend);
+
+  function resize(){
+    const w = window.innerWidth;
+    const h = ctn.offsetHeight||window.innerHeight;
+    canvas.width = w; canvas.height = h;
+    gl.viewport(0,0,w,h);
+    gl.uniform2f(uResolution, w, h);
+    const scaleFactor = 800/(h||1);
+    gl.uniform1f(uAmplitude, amplitude * scaleFactor);
+    render(0);
+  }
+  new ResizeObserver(resize).observe(ctn);
+  resize();
+
+  function render(t){
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+
+  let animId=0, startT=null;
+  function loop(ts){
+    animId = requestAnimationFrame(loop);
+    if(!startT) startT=ts;
+    const t = (ts-startT)*0.001*speed;
+    gl.uniform1f(uTime, t);
+    const h = canvas.offsetHeight||window.innerHeight;
+    gl.uniform1f(uAmplitude, amplitude*(800/(h||1)));
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+  animId = requestAnimationFrame(loop);
+}
+
+/* Default Framer colorStops: #FF2638 #7cff67 #5227FF — we use brand colors */
+const COLORS = ['#7c3aed','#f472b6','#22d3ee'];
+
+initCanvas(document.getElementById('bg-canvas'),       COLORS, 1, 0.5, 1);
+initCanvas(document.getElementById('grainient-canvas'), COLORS, 1, 0.5, 1);
+})();
+
+
+function closeSidebarMobile(){
+  if(window.innerWidth > 640) return;
+  const sb = document.querySelector('.chat-sidebar');
+  const ov = document.getElementById('sidebar-overlay');
+  if(sb) sb.classList.remove('mobile-open');
+  if(ov) ov.style.display = 'none';
+}
+function toggleSidebar(){
+  const sb = document.querySelector('.chat-sidebar');
+  const ov = document.getElementById('sidebar-overlay');
+  if(!sb) return;
+  const isMobile = window.innerWidth <= 640;
+  if(isMobile){
+    const isOpen = sb.classList.contains('mobile-open');
+    sb.classList.toggle('mobile-open', !isOpen);
+    if(ov) ov.style.display = isOpen ? 'none' : 'block';
+  } else {
+    sb.classList.toggle('collapsed');
+  }
+}
+
+/* ============================================================
+   INIT — load user preferences + set default API key
+   ============================================================ */
+(function init(){
+  // Set default OpenRouter key if none configured
+  const existing = JSON.parse(localStorage.getItem('nobot_admin_keys')||'{}');
+  if(!existing.openrouter){
+    existing.openrouter = OPENROUTER_DEFAULT_KEY;
+    localStorage.setItem('nobot_admin_keys', JSON.stringify(existing));
+  }
+
+  const savedMode = localStorage.getItem('nobot_user_mode');
+  if(savedMode && MODES[savedMode]){ currentMode = savedMode; applyModeToChat(); }
+  const savedSmartActive = localStorage.getItem('nobot_smart_active')==='1';
+  const savedSmartCtx = localStorage.getItem('nobot_smart_context')||'';
+  smartSearchActive = savedSmartActive;
+  smartSearchContext = savedSmartCtx;
+  updateSmartBadge();
+})();
+
+/* ============================================================
+   STAR ROBOTS (hero avatars)
+   ============================================================ */
+(function(){
+  const container = document.getElementById('starRobotsRow');
+  if(!container) return;
+
+  const ROBOT_COLORS = [
+    {fill:'#7c3aed', light:'#c4b5fd', stroke:'#7c3aed'},
+    {fill:'#f472b6', light:'#fce7f3', stroke:'#f472b6'},
+    {fill:'#22d3ee', light:'#a5f3fc', stroke:'#22d3ee'},
+    {fill:'#10b981', light:'#6ee7b7', stroke:'#10b981'},
+    {fill:'#f59e0b', light:'#fde68a', stroke:'#f59e0b'},
+  ];
+  // Accessible in animation loop
+  const RC = ROBOT_COLORS;
+
+  // Gemini-style 4-point star path (pointy diamond star) scaled in a 54x54 viewBox
+  // outer radius 26, inner radius 10, 4 points
+  function starPath(cx,cy,ro,ri,pts){
+    let d='';
+    for(let i=0;i<pts*2;i++){
+      const angle = (Math.PI/pts)*i - Math.PI/2;
+      const r = i%2===0?ro:ri;
+      const x = cx + r*Math.cos(angle);
+      const y = cy + r*Math.sin(angle);
+      d += (i===0?'M':'L')+x.toFixed(2)+' '+y.toFixed(2);
+    }
+    return d+'Z';
+  }
+  const STAR = starPath(27,27,26,10,4);
+
+  // Hue values for each robot's neon stroke (spread around rainbow)
+  const HUES = [260, 320, 185, 150, 40];
+
+  function buildRobot(i, col){
+    const wrap = document.createElement('div');
+    wrap.className = 'star-robot-wrap';
+    wrap.id = `srw${i}`;
+
+    // SVG star outline
+    const ns='http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns,'svg');
+    svg.setAttribute('viewBox','0 0 54 54');
+    svg.setAttribute('width','28');
+    svg.setAttribute('height','28');
+    svg.classList.add('star-robot-svg-inner');
+    svg.id = `starSvg${i}`;
+
+    const defs = document.createElementNS(ns,'defs');
+    const grad = document.createElementNS(ns,'linearGradient');
+    grad.id = `srg${i}`;
+    grad.setAttribute('x1','0');grad.setAttribute('y1','0');grad.setAttribute('x2','1');grad.setAttribute('y2','1');
+    const s1=document.createElementNS(ns,'stop'); s1.setAttribute('offset','0%'); s1.setAttribute('stop-color',col.fill);
+    const s2=document.createElementNS(ns,'stop'); s2.setAttribute('offset','100%'); s2.setAttribute('stop-color',col.light);
+    grad.appendChild(s1); grad.appendChild(s2);
+    defs.appendChild(grad);
+    svg.appendChild(defs);
+
+    // Fill star (semi-transparent)
+    const fillPath = document.createElementNS(ns,'path');
+    fillPath.setAttribute('d', STAR);
+    fillPath.setAttribute('fill', `url(#srg${i})`);
+    fillPath.setAttribute('opacity','0.18');
+    fillPath.id = `starFill${i}`;
+    svg.appendChild(fillPath);
+
+    // Neon stroke star
+    const strokePath = document.createElementNS(ns,'path');
+    strokePath.setAttribute('d', STAR);
+    strokePath.setAttribute('fill','none');
+    strokePath.setAttribute('stroke', col.stroke);
+    strokePath.setAttribute('stroke-width','1.2');
+    strokePath.setAttribute('stroke-linejoin','round');
+    strokePath.id = `starStroke${i}`;
+    svg.appendChild(strokePath);
+
+    // 4 scintillating dots at star tips (rotate with star)
+    const TIP_COORDS = [{x:27,y:1},{x:53,y:27},{x:27,y:53},{x:1,y:27}];
+    const tipGroup = document.createElementNS(ns,'g');
+    tipGroup.id = `tipGroup${i}`;
+    TIP_COORDS.forEach((pt, ti) => {
+      // outer glow circle
+      const glow = document.createElementNS(ns,'circle');
+      glow.setAttribute('cx', pt.x);
+      glow.setAttribute('cy', pt.y);
+      glow.setAttribute('r', '3.5');
+      glow.setAttribute('fill', col.light);
+      glow.setAttribute('opacity', '0.35');
+      glow.id = `tipGlow${i}_${ti}`;
+      tipGroup.appendChild(glow);
+      // inner bright dot
+      const dot = document.createElementNS(ns,'circle');
+      dot.setAttribute('cx', pt.x);
+      dot.setAttribute('cy', pt.y);
+      dot.setAttribute('r', '1.6');
+      dot.setAttribute('fill', '#fff');
+      dot.setAttribute('opacity', '0.9');
+      dot.id = `tipDot${i}_${ti}`;
+      tipGroup.appendChild(dot);
+    });
+    svg.appendChild(tipGroup);
+
+    wrap.appendChild(svg);
+
+    // Mini robot SVG inside the star
+    const rsvg = document.createElementNS(ns,'svg');
+    rsvg.setAttribute('viewBox','0 0 30 30');
+    rsvg.setAttribute('width','14');
+    rsvg.setAttribute('height','14');
+    rsvg.classList.add('robot-mini-svg');
+    rsvg.style.animation = `robot-mini-float ${2.5+i*0.3}s ease-in-out infinite`;
+    rsvg.style.opacity = '1';
+    rsvg.innerHTML = `
+      <defs><linearGradient id="rmg${i}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${col.fill}"/><stop offset="100%" stop-color="${col.light}"/></linearGradient></defs>
+      <rect x="8" y="4" width="14" height="11" rx="3" fill="url(#rmg${i})"/>
+      <rect x="10" y="7" width="4" height="3" rx="1.5" fill="#fff" opacity="0.9"/>
+      <rect x="16" y="7" width="4" height="3" rx="1.5" fill="#fff" opacity="0.9"/>
+      <path d="M10 13 Q15 16 20 13" stroke="#fff" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.7"/>
+      <line x1="15" y1="4" x2="15" y2="1.5" stroke="${col.fill}" stroke-width="1.2" stroke-linecap="round"/>
+      <circle cx="15" cy="1" r="1.5" fill="${col.light}"/>
+      <rect x="6" y="17" width="18" height="9" rx="2.5" fill="url(#rmg${i})" opacity="0.85"/>
+      <circle cx="15" cy="21" r="2" fill="#fff" opacity="0.65"/>
+      <rect x="2"  y="17" width="3.5" height="7" rx="1.75" fill="url(#rmg${i})" opacity="0.7"/>
+      <rect x="24.5" y="17" width="3.5" height="7" rx="1.75" fill="url(#rmg${i})" opacity="0.7"/>
+    `;
+    wrap.appendChild(rsvg);
+    container.appendChild(wrap);
+  }
+
+  ROBOT_COLORS.forEach((col,i) => buildRobot(i,col));
+
+  // ── Animation state ──
+  const N = 5;
+  let hueOffsets = [260, 320, 185, 150, 40];
+  let spinAngles  = new Array(N).fill(0);
+  let spinActive  = new Array(N).fill(false);
+  let spinSpeed   = new Array(N).fill(0);
+
+  // ── Chenillard précis : resynchronise avant chaque vague, 0.2s entre chaque robot ──
+  const BURST_DURATION   = 1000;   // ms — durée du spin rapide
+  const INTER_DELAY      = 200;    // ms — décalage entre chaque robot
+  const WAVE_INTERVAL    = 3000;   // ms — intervalle entre vagues
+
+  function launchWave(){
+    // Resync : tous les robots remis au même angle de base avant de partir
+    const baseAngle = spinAngles[0]; // on prend le premier comme référence
+    for(let i=0;i<N;i++) spinAngles[i] = baseAngle;
+
+    for(let i=0;i<N;i++){
+      setTimeout(()=>{
+        spinActive[i] = true;
+        spinSpeed[i]  = 20; // vitesse initiale deg/frame rapide
+        setTimeout(()=>{
+          spinActive[i] = false;
+          spinSpeed[i]  = 0;
+        }, BURST_DURATION);
+      }, i * INTER_DELAY);
+    }
+  }
+
+  // Premier lancement après 500ms, puis toutes les WAVE_INTERVAL ms
+  setTimeout(()=>{ launchWave(); setInterval(launchWave, WAVE_INTERVAL); }, 500);
+
+  // Animation loop
+  function loop(){
+    requestAnimationFrame(loop);
+    for(let i=0;i<N;i++){
+      const strokeEl = document.getElementById(`starStroke${i}`);
+      const starSvg  = document.getElementById(`starSvg${i}`);
+      if(!strokeEl||!starSvg) continue;
+
+      hueOffsets[i] = (hueOffsets[i] + 0.7) % 360;
+
+      if(spinActive[i]){
+        spinAngles[i] = (spinAngles[i] + spinSpeed[i]) % 360;
+        spinSpeed[i]  = Math.max(0.4, spinSpeed[i] * 0.984); // décélération douce
+        const hue = (hueOffsets[i] * 2) % 360;
+        strokeEl.setAttribute('stroke', `hsl(${hue},100%,65%)`);
+        strokeEl.setAttribute('stroke-width','2');
+        starSvg.style.filter = `drop-shadow(0 0 7px hsl(${hue},100%,65%)) drop-shadow(0 0 14px hsl(${hue},100%,50%))`;
+      } else {
+        spinAngles[i] = (spinAngles[i] + 0.25) % 360;
+        const hue = hueOffsets[i];
+        strokeEl.setAttribute('stroke', `hsl(${hue},100%,65%)`);
+        strokeEl.setAttribute('stroke-width','1.2');
+        starSvg.style.filter = `drop-shadow(0 0 3px hsl(${hue},100%,65%))`;
+      }
+      // Rotate ONLY the star paths + tip dots — robot stays fixed at center
+      const fillEl   = document.getElementById(`starFill${i}`);
+      const tipGroup = document.getElementById(`tipGroup${i}`);
+      const rotVal   = `rotate(${spinAngles[i].toFixed(2)},27,27)`;
+      if(fillEl)   fillEl.setAttribute('transform', rotVal);
+      strokeEl.setAttribute('transform', rotVal);
+      if(tipGroup) tipGroup.setAttribute('transform', rotVal);
+
+      // Scintillement : pulse opacity sur chaque dot avec décalage de phase
+      const t = performance.now() * 0.001;
+      for(let ti=0;ti<4;ti++){
+        const dotEl  = document.getElementById(`tipDot${i}_${ti}`);
+        const glowEl = document.getElementById(`tipGlow${i}_${ti}`);
+        if(!dotEl||!glowEl) continue;
+        // chaque pointe scintille à sa propre fréquence légèrement décalée
+        const phase  = ti * (Math.PI / 2);
+        const bright = spinActive[i]
+          ? (0.6 + 0.4 * Math.abs(Math.sin(t * 12 + phase)))   // rapide pendant burst
+          : (0.55 + 0.45 * Math.abs(Math.sin(t * 2.5 + phase))); // lent au repos
+        const glowO  = spinActive[i]
+          ? (0.3 + 0.5 * Math.abs(Math.sin(t * 10 + phase)))
+          : (0.15 + 0.25 * Math.abs(Math.sin(t * 2 + phase)));
+        dotEl.setAttribute('opacity',  bright.toFixed(3));
+        glowEl.setAttribute('opacity', glowO.toFixed(3));
+        // couleur arc-en-ciel des dots pendant le burst
+        if(spinActive[i]){
+          const dHue = (hueOffsets[i] + ti*90) % 360;
+          dotEl.setAttribute('fill', `hsl(${dHue},100%,85%)`);
+          glowEl.setAttribute('fill', `hsl(${dHue},100%,70%)`);
+        } else {
+          dotEl.setAttribute('fill','#fff');
+          glowEl.setAttribute('fill', RC[i].light);
+        }
+      }
+      // Remove any transform on the SVG container itself
+      starSvg.style.transform = '';
+    }
+  }
+  loop();
+})();
+
+
+/* ============================================================
+   SHOWCASE ORBIT ROBOTS
+   ============================================================ */
+(function(){
+  const showcase = document.getElementById('showcaseOrbit');
+  if(!showcase) return;
+
+  const ns = 'http://www.w3.org/2000/svg';
+
+  // Ajouter les 3 anneaux
+  ['orbit-ring orbit-ring-1','orbit-ring orbit-ring-2','orbit-ring orbit-ring-3'].forEach(cls=>{
+    const ring = document.createElement('div');
+    ring.className = cls;
+    showcase.insertBefore(ring, showcase.firstChild);
+  });
+
+  // Robot SVG central animé
+  const center = document.getElementById('showcaseCenterRobot');
+  if(center){
+    const csize = window.innerWidth <= 768 ? 44 : 58;
+    center.style.fontSize = csize + 'px';
+    center.style.lineHeight = '1';
+    center.style.display = 'flex';
+    center.style.alignItems = 'center';
+    center.style.justifyContent = 'center';
+    center.textContent = '🤖';
+  }
+
+  // 10 mini robots sur 3 orbites
+  const PALETTES = [
+    {fill:'#7c3aed',light:'#c4b5fd'},
+    {fill:'#f472b6',light:'#fce7f3'},
+    {fill:'#22d3ee',light:'#a5f3fc'},
+    {fill:'#10b981',light:'#6ee7b7'},
+    {fill:'#f59e0b',light:'#fde68a'},
+    {fill:'#ef4444',light:'#fecaca'},
+    {fill:'#8b5cf6',light:'#ddd6fe'},
+    {fill:'#06b6d4',light:'#cffafe'},
+    {fill:'#ec4899',light:'#fce7f3'},
+    {fill:'#14b8a6',light:'#99f6e4'},
+  ];
+
+  // Orbite 1 (extérieure, 50%): 4 robots ; Orbite 2 (72%): 3 robots ; Orbite 3 (44%): 3 robots
+  const ORBITS = [
+    {pct:0.50, count:4, speed:0.4,  dir:1,  size:14},
+    {pct:0.36, count:3, speed:-0.6, dir:-1, size:12},
+    {pct:0.22, count:3, speed:0.9,  dir:1,  size:10},
+  ];
+
+  const W = showcase.offsetWidth || 280;
+  const cx = W/2, cy = W/2;
+
+  let robotData = []; // {angle, orbit, el}
+  let palIdx = 0;
+
+  ORBITS.forEach((orb, oi)=>{
+    const radius = W * orb.pct;
+    const angleStep = (2 * Math.PI) / orb.count;
+    for(let k=0; k<orb.count; k++){
+      const startAngle = angleStep * k + oi * 1.1;
+      const pal = PALETTES[palIdx % PALETTES.length]; palIdx++;
+      const rSize = orb.size;
+
+      // Container
+      const wrap = document.createElement('div');
+      wrap.className = 'orbit-robot';
+      wrap.style.cssText = `width:${rSize}px;height:${rSize}px;left:${cx}px;top:${cy}px;margin-left:${-rSize/2}px;margin-top:${-rSize/2}px;`;
+
+      // Mini robot SVG
+      const rsvg = document.createElementNS(ns,'svg');
+      rsvg.setAttribute('viewBox','0 0 30 30');
+      rsvg.setAttribute('width', rSize);
+      rsvg.setAttribute('height', rSize);
+      rsvg.style.filter = `drop-shadow(0 0 3px ${pal.fill})`;
+      rsvg.innerHTML = `
+        <defs><linearGradient id="og${palIdx}" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="${pal.fill}"/>
+          <stop offset="100%" stop-color="${pal.light}"/>
+        </linearGradient></defs>
+        <rect x="8" y="4" width="14" height="11" rx="3" fill="url(#og${palIdx})"/>
+        <rect x="10" y="7" width="4" height="3" rx="1.5" fill="#fff" opacity="0.95"/>
+        <rect x="16" y="7" width="4" height="3" rx="1.5" fill="#fff" opacity="0.95"/>
+        <path d="M10 13 Q15 16 20 13" stroke="#fff" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.75"/>
+        <line x1="15" y1="4" x2="15" y2="1.5" stroke="${pal.light}" stroke-width="1.2" stroke-linecap="round"/>
+        <circle cx="15" cy="1" r="1.5" fill="${pal.light}"/>
+        <rect x="6" y="17" width="18" height="9" rx="2.5" fill="url(#og${palIdx})" opacity="0.85"/>
+        <circle cx="15" cy="21" r="2" fill="#fff" opacity="0.7"/>
+        <rect x="2" y="17" width="3.5" height="7" rx="1.75" fill="url(#og${palIdx})" opacity="0.7"/>
+        <rect x="24.5" y="17" width="3.5" height="7" rx="1.75" fill="url(#og${palIdx})" opacity="0.7"/>
+      `;
+      wrap.appendChild(rsvg);
+      showcase.appendChild(wrap);
+
+      robotData.push({
+        angle: startAngle,
+        speed: orb.speed * (0.85 + Math.random()*0.3),
+        radius,
+        el: wrap,
+        rsvg,
+        pal,
+        bobPhase: Math.random() * Math.PI * 2,
+        pulsePhase: Math.random() * Math.PI * 2,
+      });
+    }
+  });
+
+  // Animation loop
+  let lastT = null;
+  function animate(ts){
+    requestAnimationFrame(animate);
+    if(!lastT) lastT = ts;
+    const dt = Math.min((ts - lastT) / 1000, 0.05);
+    lastT = ts;
+
+    robotData.forEach((rb, idx)=>{
+      rb.angle += rb.speed * dt;
+      const x = cx + rb.radius * Math.cos(rb.angle);
+      const y = cy + rb.radius * Math.sin(rb.angle);
+      const bob = Math.sin(ts * 0.002 + rb.bobPhase) * 2;
+      rb.el.style.transform = `translate(${(x - cx).toFixed(2)}px, ${(y - cy + bob).toFixed(2)}px)`;
+
+      // Scintillement
+      const pulse = 0.7 + 0.3 * Math.abs(Math.sin(ts * 0.003 + rb.pulsePhase));
+      rb.rsvg.style.opacity = pulse.toFixed(3);
+
+      // Hue shift lent
+      const hue = (idx * 36 + ts * 0.04) % 360;
+      rb.rsvg.style.filter = `drop-shadow(0 0 4px hsl(${hue},100%,65%))`;
+    });
+  }
+  requestAnimationFrame(animate);
+})();
+
+</script>
+</body>
+</html>
