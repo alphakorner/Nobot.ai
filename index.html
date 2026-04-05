@@ -364,18 +364,17 @@ h1.hero-title{font-family:'Outfit',sans-serif;font-size:clamp(28px,5vw,58px);fon
 @keyframes ring-spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
 @media(max-width:768px){.ia-pres-card{grid-template-columns:1fr;gap:32px;}.ia-pres-right{order:-1;}.ia-robot-showcase{width:180px;height:180px;}.showcase-robot-center{width:64px;height:64px;}}
 
-/* ====== OFFRE ====== */
 .offre-wrap{position:relative;z-index:2;max-width:700px;margin:64px auto 0;padding:0 24px;}
 .offre-card{background:rgba(255,255,255,0.05);border:1px solid rgba(124,58,237,0.25);border-radius:28px;overflow:hidden;backdrop-filter:blur(20px);box-shadow:0 20px 60px rgba(124,58,237,0.15);}
-.offre-inner{padding:40px;}
-.offre-badge{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;color:#c084fc;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px;}
+.offre-inner{padding:40px;text-align:center;display:flex;flex-direction:column;align-items:center;}
+.offre-badge{display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;font-weight:800;color:#c084fc;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px;}
 .star-icon{font-size:14px;}
-.offre-title{font-family:'Outfit',sans-serif;font-size:clamp(20px,3vw,28px);font-weight:900;margin-bottom:12px;color:#fff;line-height:1.2;}
+.offre-title{font-family:'Outfit',sans-serif;font-size:clamp(20px,3vw,28px);font-weight:900;margin-bottom:12px;color:#fff;line-height:1.2;text-align:center;}
 .offre-days{font-family:'Outfit',sans-serif;font-size:72px;font-weight:900;background:linear-gradient(135deg,#7c3aed,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;}
-.offre-unit{font-size:16px;font-weight:600;color:#fff;}
-.offre-sub{font-size:14px;color:#fff;margin:12px 0;line-height:1.6;}
-.offre-perks{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0;}
-.perk{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#fff;}
+.offre-unit{font-size:16px;font-weight:600;color:#fff;text-align:center;}
+.offre-sub{font-size:14px;color:#fff;margin:12px 0;line-height:1.6;text-align:center;}
+.offre-perks{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0;width:100%;max-width:320px;}
+.perk{display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:600;color:#fff;}
 .perk-check{color:#10b981;font-size:15px;font-weight:800;}
 .btn-offre{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#7c3aed,#f472b6);color:#fff;border:none;padding:13px 30px;border-radius:999px;font-size:15px;font-weight:800;cursor:pointer;font-family:'Outfit',sans-serif;box-shadow:0 6px 24px rgba(124,58,237,0.4);transition:transform 0.2s,box-shadow 0.2s;margin-top:8px;}
 .btn-offre:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(124,58,237,0.55);}
@@ -399,8 +398,9 @@ h1.hero-title{font-family:'Outfit',sans-serif;font-size:clamp(28px,5vw,58px);fon
 .alsace-title{font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#fff;}
 .alsace-grad{background:linear-gradient(135deg,#c8400a,#e08040);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .social-section{max-width:500px;margin:0 auto;padding:0 24px;}
-.social-row{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
-.soc{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.3);}
+.social-row{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;}
+.social-row::-webkit-scrollbar{display:none;}
+.soc{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.3);flex-shrink:0;}
 .soc:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,0.4);}
 .soc-snapchat{background:#FFFC00;}
 
@@ -1154,17 +1154,17 @@ if('serviceWorker' in navigator){
 <!-- OFFRE -->
 <div class="offre-wrap" id="offre">
   <div class="offre-card">
-    <div class="offre-inner" style="text-align:center;display:flex;flex-direction:column;align-items:center;">
-      <div class="offre-badge" style="justify-content:center;"><span class="star-icon">★</span>OFFRE DE LANCEMENT<span class="star-icon">★</span></div>
-      <div class="offre-title" style="text-align:center;">Découvrez nobot.ai Pack Complet !<br><span class="grad">L'IA la plus complète</span></div>
-      <div class="offre-days" style="font-size:32px;letter-spacing:-0.01em;">Gratuit</div>
-      <span class="offre-unit" style="color:#fff;">7j/7 · 24h/24 — Disponible en permanence</span>
-      <p class="offre-sub" style="text-align:center;">Accès complet à tous nos services. Aucune carte bancaire.<br>Résultats visibles dès la première semaine.</p>
-      <div class="offre-perks" style="width:100%;max-width:340px;">
-        <div class="perk" style="justify-content:center;"><span class="perk-check">✓</span>Accès 100% complet</div>
-        <div class="perk" style="justify-content:center;"><span class="perk-check">✓</span>Sans carte bancaire</div>
-        <div class="perk" style="justify-content:center;"><span class="perk-check">✓</span>Support dédié inclus</div>
-        <div class="perk" style="justify-content:center;"><span class="perk-check">✓</span>Annulation en 1 clic</div>
+    <div class="offre-inner">
+      <div class="offre-badge"><span class="star-icon">★</span>OFFRE DE LANCEMENT<span class="star-icon">★</span></div>
+      <div class="offre-title">Découvrez nobot.ai Pack Complet !<br><span class="grad">L'IA la plus complète</span></div>
+      <div class="offre-days">Gratuit</div>
+      <span class="offre-unit">7j/7 · 24h/24 — Disponible en permanence</span>
+      <p class="offre-sub">Accès complet à tous nos services. Aucune carte bancaire.<br>Résultats visibles dès la première semaine.</p>
+      <div class="offre-perks">
+        <div class="perk"><span class="perk-check">✓</span>Accès 100% complet</div>
+        <div class="perk"><span class="perk-check">✓</span>Sans carte bancaire</div>
+        <div class="perk"><span class="perk-check">✓</span>Support dédié inclus</div>
+        <div class="perk"><span class="perk-check">✓</span>Annulation en 1 clic</div>
       </div>
       <button class="btn-offre" onclick="showPage('chat')">Commencer une discussion<span class="ac"><svg viewBox="0 0 16 16" fill="none" stroke="#0a0a14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M3 8h10M8 3l5 5-5 5"/></svg></span></button>
     </div>
