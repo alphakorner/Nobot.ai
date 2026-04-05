@@ -83,7 +83,7 @@ body{font-family:'DM Sans',sans-serif;background:#06000f;color:#fff;overflow-x:h
 .welcome-btn:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(124,58,237,0.6);}
 
 /* ====== INDEX BG CANVAS ====== */
-#bg-canvas{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:0;width:100vw;height:100%;display:block;margin:0;padding:0;}
+/* bg-canvas supprimé */
 
 /* ====== ROBOT BG SHAPES (pro, high-tech) ====== */
 .robot-bg-container{
@@ -406,8 +406,8 @@ h1.hero-title{font-family:'Outfit',sans-serif;font-size:clamp(28px,5vw,58px);fon
 /* ============================================================
    CHAT PAGE
    ============================================================ */
-#page-chat{position:relative;z-index:1;background:#06000f;color:#fff;}
-#chat-bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#06000f;}
+#page-chat{position:relative;z-index:1;background:transparent;color:#fff;}
+/* #chat-bg supprimé */
 .bg-orb,.bg-grid{display:none;}
 #chat-app{position:relative;z-index:1;display:flex;flex-direction:column;height:100vh;}
 .chat-topbar{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;flex-shrink:0;background:rgba(255,255,255,0.04);backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,0.08);}
@@ -496,7 +496,31 @@ h1.hero-title{font-family:'Outfit',sans-serif;font-size:clamp(28px,5vw,58px);fon
 .send-btn{border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,#7c3aed,#f472b6);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 0 16px rgba(124,58,237,0.6),0 0 32px rgba(244,114,182,0.3);animation:send-glow-c 2s ease-in-out infinite;transition:width 0.35s cubic-bezier(0.34,1.56,0.64,1),opacity 0.2s;}
 .send-btn:disabled{opacity:0.4;cursor:not-allowed;}
 @keyframes send-glow-c{0%,100%{box-shadow:0 0 16px rgba(124,58,237,0.6),0 0 32px rgba(244,114,182,0.3)}50%{box-shadow:0 0 28px rgba(124,58,237,0.9),0 0 60px rgba(244,114,182,0.6),0 0 80px rgba(34,211,238,0.2)}}
-.input-hint{font-size:11px;color:rgba(255,255,255,0.65);margin-top:8px;text-align:center;}
+.input-hint{font-size:11px;color:rgba(255,255,255,0.65);margin-top:4px;text-align:center;}
+
+/* ====== MODE PILLS ROW ====== */
+.mode-pills-row{
+  display:flex;gap:6px;overflow-x:auto;padding:8px 2px 4px;
+  scrollbar-width:none;-ms-overflow-style:none;
+  flex-wrap:nowrap;
+}
+.mode-pills-row::-webkit-scrollbar{display:none;}
+.mode-pill{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 12px;border-radius:999px;font-size:12px;font-weight:600;
+  cursor:pointer;white-space:nowrap;flex-shrink:0;
+  border:1.5px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.05);
+  color:rgba(255,255,255,0.55);
+  transition:all 0.2s;font-family:'DM Sans',sans-serif;
+}
+.mode-pill:hover{background:rgba(124,58,237,0.15);border-color:rgba(124,58,237,0.35);color:rgba(255,255,255,0.85);}
+.mode-pill.active{
+  background:linear-gradient(135deg,rgba(124,58,237,0.35),rgba(244,114,182,0.25));
+  border-color:rgba(124,58,237,0.6);
+  color:#fff;
+  box-shadow:0 0 12px rgba(124,58,237,0.25);
+}
 
 /* ====== MODEL POPUP ====== */
 .model-popup{position:absolute;top:58px;right:20px;background:rgba(15,8,40,0.95);backdrop-filter:blur(30px);border:1px solid rgba(124,58,237,0.3);border-radius:14px;padding:12px;width:220px;z-index:100;display:none;box-shadow:0 20px 60px rgba(0,0,0,0.5);}
@@ -743,8 +767,7 @@ h1.hero-title{font-family:'Outfit',sans-serif;font-size:clamp(28px,5vw,58px);fon
 .dash-empty{text-align:center;padding:40px 20px;color:rgba(255,255,255,0.75);font-size:13px;line-height:1.8;}
 
 /* ====== GRAINIENT BG OVERRIDE ====== */
-#chat-bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#04000c;}
-.bg-orb,.bg-grid{display:none;}
+#page-admin{background:transparent;min-height:100vh;color:#fff;font-family:'DM Sans',sans-serif;}.bg-orb,.bg-grid{display:none;}
 
 
 /* ====== SIDEBAR TOGGLE ====== */
@@ -782,7 +805,6 @@ h1.hero-title{font-family:'Outfit',sans-serif;font-size:clamp(28px,5vw,58px);fon
 @media(max-width:768px){.offre-perks{grid-template-columns:1fr;}}
 
 /* ====== ADMIN PAGE ====== */
-#page-admin{background:#060312;min-height:100vh;color:#fff;font-family:'DM Sans',sans-serif;}
 #login-screen{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 30% 40%, rgba(124,58,237,0.3) 0%, transparent 60%),radial-gradient(ellipse at 70% 60%, rgba(244,114,182,0.2) 0%, transparent 60%),#060312;}
 .login-card{background:rgba(255,255,255,0.04);backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:48px 40px;width:100%;max-width:380px;text-align:center;box-shadow:0 40px 80px rgba(0,0,0,0.5);}
 .login-icon{font-size:48px;margin-bottom:16px;}
@@ -953,14 +975,15 @@ if('serviceWorker' in navigator){
   </div>
 </div>
 
+<!-- Robot BG — fixed, visible sur toutes les pages -->
+<div class="robot-bg-container" id="robotBg"></div>
+
 <!-- =====================================================
      INDEX PAGE
 ===================================================== -->
 <div class="page active" id="page-index">
 
 <!-- Robot BG -->
-<div class="robot-bg-container" id="robotBg"></div>
-<canvas id="bg-canvas" style="position:fixed;top:0;left:0;width:100vw;height:calc(100% + 560px);pointer-events:none;z-index:0;transform:translateY(560px);"></canvas>
 
 <!-- NAV -->
 <div id="navbar-wrap">
@@ -1181,11 +1204,6 @@ if('serviceWorker' in navigator){
 ===================================================== -->
 <div class="page" id="page-chat" style="height:100vh;flex-direction:column;">
 
-<!-- CHAT BACKGROUND FLOATING ANIMATION -->
-<div id="chat-bg">
-  <canvas id="grainient-canvas" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
-</div>
-
 <div id="chat-app">
   <!-- TOPBAR -->
   <div class="chat-topbar">
@@ -1241,7 +1259,9 @@ if('serviceWorker' in navigator){
             <span class="ceb-blob"></span>
           </button>
         </div>
-        <div class="input-hint">Entrée pour envoyer · Maj+Entrée pour nouvelle ligne · <span id="modeHint">Mode : Professionnel</span> · <span id="smartHint" style="color:rgba(16,185,129,0.6);display:none;">🔍 Recherche intelligente activée</span></div>
+        <!-- BOUTONS MODE DIRECTS -->
+        <div class="mode-pills-row" id="modePillsRow"></div>
+        <div class="input-hint"><span id="smartHint" style="color:rgba(16,185,129,0.6);display:none;">🔍 Recherche intelligente activée</span></div>
       </div>
     </div>
     <!-- DASHBOARD PANEL -->
@@ -1504,7 +1524,6 @@ if('serviceWorker' in navigator){
 </div><!-- end page-admin -->
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 /* ============================================================
    PAGE ROUTING
@@ -1536,67 +1555,6 @@ function showPage(name){
   window.scrollTo(0,0);
 }
 
-/* ============================================================
-   THREE.JS BACKGROUND (index page)
-   ============================================================ */
-(function(){
-  const canvas = document.getElementById('bg-canvas');
-  if(!canvas || typeof THREE === 'undefined') return;
-  const renderer = new THREE.WebGLRenderer({canvas, alpha:false, antialias:true});
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setClearColor(0xf5f4ff, 1);
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(58, window.innerWidth/window.innerHeight, 0.1, 300);
-  camera.position.set(0,0,24);
-  scene.fog = new THREE.Fog(0xf5f4ff, 30, 80);
-  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-  const l1 = new THREE.DirectionalLight(0x7c3aed, 3.5); l1.position.set(10,12,8); scene.add(l1);
-  const l2 = new THREE.DirectionalLight(0xf472b6, 2.8); l2.position.set(-10,-8,5); scene.add(l2);
-  const l3 = new THREE.DirectionalLight(0x22d3ee, 2.2); l3.position.set(2,-12,10); scene.add(l3);
-  const l4 = new THREE.PointLight(0xa78bfa, 4, 50); l4.position.set(0,6,12); scene.add(l4);
-
-  // PRO ROBOT SHAPES — geometric high-tech forms (no simple spheres/boxes)
-  const makePro = [
-    ()=>new THREE.OctahedronGeometry(1,0),
-    ()=>new THREE.IcosahedronGeometry(1,1),
-    ()=>new THREE.TorusGeometry(1,0.3,16,48),
-    ()=>new THREE.ConeGeometry(0.7,1.8,6),
-    ()=>new THREE.CylinderGeometry(0.3,0.8,2,8),
-    ()=>new THREE.TetrahedronGeometry(1,0),
-    ()=>new THREE.TorusGeometry(0.7,0.15,12,32),
-  ];
-  const cols = [0x7c3aed,0xa78bfa,0xf472b6,0x22d3ee,0x06b6d4,0x6366f1,0x8b5cf6];
-  const objs = [];
-  for(let i=0;i<22;i++){
-    const wire=Math.random()>0.5;
-    const col=cols[Math.floor(Math.random()*cols.length)];
-    const mat=new THREE.MeshPhongMaterial({color:col,emissive:col,emissiveIntensity:wire?0.12:0.06,transparent:true,opacity:wire?0.15:0.2,wireframe:wire,shininess:200,specular:0xffffff});
-    const geo=makePro[Math.floor(Math.random()*makePro.length)]();
-    const mesh=new THREE.Mesh(geo,mat);
-    const s=0.4+Math.random()*2.8;
-    mesh.scale.setScalar(s);
-    mesh.position.set((Math.random()-0.5)*50,(Math.random()-0.5)*35,(Math.random()-0.5)*20-4);
-    mesh.rotation.set(Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2);
-    scene.add(mesh);
-    objs.push({mesh,rx:(Math.random()-0.5)*0.006,ry:(Math.random()-0.5)*0.009,rz:(Math.random()-0.5)*0.004,fa:0.03+Math.random()*0.08,ff:0.18+Math.random()*0.3,fp:Math.random()*Math.PI*2,by:mesh.position.y});
-  }
-  let mx=0,my=0;
-  window.addEventListener('mousemove',e=>{mx=(e.clientX/window.innerWidth-0.5)*3;my=-(e.clientY/window.innerHeight-0.5)*2;});
-  window.addEventListener('resize',()=>{renderer.setSize(window.innerWidth,window.innerHeight);camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();});
-  function tick(){
-    requestAnimationFrame(tick);
-    const t=performance.now()*0.001;
-    objs.forEach(o=>{o.mesh.rotation.x+=o.rx;o.mesh.rotation.y+=o.ry;o.mesh.rotation.z+=o.rz;o.mesh.position.y=o.by+Math.sin(t*o.ff+o.fp)*o.fa;});
-    camera.position.x+=(mx-camera.position.x)*0.015;
-    camera.position.y+=(my-camera.position.y)*0.015;
-    camera.lookAt(scene.position);
-    l4.position.x=Math.sin(t*0.28)*14;
-    l4.position.z=Math.cos(t*0.28)*14;
-    renderer.render(scene,camera);
-  }
-  tick();
-})();
 
 /* ============================================================
    ROBOT BG SHAPES (SVG robots in background)
@@ -1823,7 +1781,25 @@ function applyModeToChat(){
   if(hint) hint.textContent = 'Mode : ' + m.label;
   const lbl = document.getElementById('activeModeLabel');
   if(lbl) lbl.textContent = m.label.split(' ')[0];
+  buildModePills();
   saveModeToStorage();
+}
+
+function buildModePills(){
+  const row = document.getElementById('modePillsRow');
+  if(!row) return;
+  row.innerHTML = '';
+  Object.entries(MODES).forEach(([key, m])=>{
+    const pill = document.createElement('button');
+    pill.className = 'mode-pill' + (currentMode === key ? ' active' : '');
+    pill.innerHTML = `${m.icon} ${m.label}`;
+    pill.title = m.desc;
+    pill.onclick = () => {
+      currentMode = key;
+      applyModeToChat();
+    };
+    row.appendChild(pill);
+  });
 }
 function saveModeToStorage(){
   localStorage.setItem('nobot_user_mode', currentMode);
@@ -2128,7 +2104,15 @@ function loadAdminSettings(){
   // API keys dynamiques
   const keys = getApiKeys();
   const list = document.getElementById('apiKeysList');
-  if(list){ list.innerHTML=''; keys.forEach(k=>addApiKeyRow(k)); }
+  if(list){
+    list.innerHTML='';
+    if(keys.length === 0){
+      // Clé par défaut pré-remplie
+      addApiKeyRow({name:'OpenRouter (défaut)', key:'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', model:'google/gemini-2.0-flash-001', active:true});
+    } else {
+      keys.forEach(k=>addApiKeyRow(k));
+    }
+  }
 
   // AI settings
   const s = JSON.parse(localStorage.getItem('nobot_ai_settings')||'{}');
@@ -2467,205 +2451,6 @@ function handleAdminClick(){
   type();
 })();
 
-/* ============================================================
-   FLOATING ANIMATION — exact Framer source GLSL via WebGL2
-   ============================================================ */
-(function(){
-/* === EXACT SHADERS FROM FRAMER SOURCE === */
-const VERT=`#version 300 es
-in vec2 position;
-void main() {
-  gl_Position = vec4(position, 0.0, 1.0);
-}`;
-
-const FRAG=`#version 300 es
-precision highp float;
-
-uniform float uTime;
-uniform float uAmplitude;
-uniform vec3 uColorStops[3];
-uniform vec2 uResolution;
-uniform float uBlend;
-
-out vec4 fragColor;
-
-vec3 permute(vec3 x) {
-  return mod(((x * 34.0) + 1.0) * x, 289.0);
-}
-
-float snoise(vec2 v){
-  const vec4 C = vec4(
-      0.211324865405187, 0.366025403784439,
-      -0.577350269189626, 0.024390243902439
-  );
-  vec2 i  = floor(v + dot(v, C.yy));
-  vec2 x0 = v - i + dot(i, C.xx);
-  vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
-  vec4 x12 = x0.xyxy + C.xxzz;
-  x12.xy -= i1;
-  i = mod(i, 289.0);
-  vec3 p = permute(
-      permute(i.y + vec3(0.0, i1.y, 1.0))
-    + i.x + vec3(0.0, i1.x, 1.0)
-  );
-  vec3 m = max(
-      0.5 - vec3(
-          dot(x0, x0),
-          dot(x12.xy, x12.xy),
-          dot(x12.zw, x12.zw)
-      ),
-      0.0
-  );
-  m = m * m;
-  m = m * m;
-  vec3 x = 2.0 * fract(p * C.www) - 1.0;
-  vec3 h = abs(x) - 0.5;
-  vec3 ox = floor(x + 0.5);
-  vec3 a0 = x - ox;
-  m *= 1.79284291400159 - 0.85373472095314 * (a0*a0 + h*h);
-  vec3 g;
-  g.x  = a0.x  * x0.x  + h.x  * x0.y;
-  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
-  return 130.0 * dot(m, g);
-}
-
-struct ColorStop {
-  vec3 color;
-  float position;
-};
-
-#define COLOR_RAMP(colors, factor, finalColor) {              \
-  int index = 0;                                             \
-  for (int i = 0; i < 2; i++) {                              \
-     ColorStop currentColor = colors[i];                     \
-     bool isInBetween = currentColor.position <= factor;     \
-     index = int(mix(float(index), float(i), float(isInBetween))); \
-  }                                                          \
-  ColorStop currentColor = colors[index];                    \
-  ColorStop nextColor = colors[index + 1];                   \
-  float range = nextColor.position - currentColor.position;  \
-  float lerpFactor = (factor - currentColor.position) / range; \
-  finalColor = mix(currentColor.color, nextColor.color, lerpFactor); \
-}
-
-void main() {
-  vec2 uv = gl_FragCoord.xy / uResolution;
-
-  ColorStop colors[3];
-  colors[0] = ColorStop(uColorStops[0], 0.0);
-  colors[1] = ColorStop(uColorStops[1], 0.5);
-  colors[2] = ColorStop(uColorStops[2], 1.0);
-
-  vec3 rampColor;
-  COLOR_RAMP(colors, uv.x, rampColor);
-
-  float height = snoise(vec2(uv.x * 2.0 + uTime * 0.1, uTime * 0.25)) * 0.5 * uAmplitude;
-  height = exp(height);
-  height = (uv.y * 2.0 - height + 0.2);
-  float intensity = 0.6 * height;
-
-  float midPoint = 0.20;
-  float animationAlpha = smoothstep(midPoint - uBlend * 0.5, midPoint + uBlend * 0.5, intensity);
-
-  vec3 finalColor = rampColor;
-  fragColor = vec4(finalColor * animationAlpha, animationAlpha);
-}`;
-
-function parseColor(hex){
-  const r=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return r?[parseInt(r[1],16)/255,parseInt(r[2],16)/255,parseInt(r[3],16)/255]:[1,0,0];
-}
-
-/* Mirrors OGL's Triangle geometry — single fullscreen triangle */
-function makeTriangleVerts(){
-  return new Float32Array([-1,-1, 3,-1, -1,3]);
-}
-
-function initCanvas(canvas, colorStops, amplitude, blend, speed){
-  if(!canvas) return;
-  /* container = parent for resize observation */
-  const ctn = canvas.parentElement || document.body;
-
-  const gl = canvas.getContext('webgl2',{alpha:true,premultipliedAlpha:true,antialias:true});
-  if(!gl){ console.warn('WebGL2 not supported'); return; }
-
-  gl.clearColor(0,0,0,0);
-  gl.enable(gl.BLEND);
-  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-
-  /* compile */
-  function compileShader(type, src){
-    const s = gl.createShader(type);
-    gl.shaderSource(s, src); gl.compileShader(s);
-    if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s));
-    return s;
-  }
-  const prog = gl.createProgram();
-  gl.attachShader(prog, compileShader(gl.VERTEX_SHADER, VERT));
-  gl.attachShader(prog, compileShader(gl.FRAGMENT_SHADER, FRAG));
-  gl.linkProgram(prog);
-  gl.useProgram(prog);
-
-  /* geometry — OGL Triangle = single big triangle covering clip space */
-  const vao = gl.createVertexArray();
-  gl.bindVertexArray(vao);
-  const buf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  gl.bufferData(gl.ARRAY_BUFFER, makeTriangleVerts(), gl.STATIC_DRAW);
-  const posLoc = gl.getAttribLocation(prog, 'position');
-  gl.enableVertexAttribArray(posLoc);
-  gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
-
-  /* uniforms */
-  const uTime      = gl.getUniformLocation(prog,'uTime');
-  const uAmplitude = gl.getUniformLocation(prog,'uAmplitude');
-  const uColorStopsU = gl.getUniformLocation(prog,'uColorStops[0]');
-  const uResolution= gl.getUniformLocation(prog,'uResolution');
-  const uBlendU    = gl.getUniformLocation(prog,'uBlend');
-
-  const defaultColors=[[1,.15,.22],[.49,1,.4],[.32,.15,1]];
-  const colorArr = colorStops.map((c,i)=>parseColor(c)||defaultColors[i]);
-  gl.uniform3fv(uColorStopsU, colorArr.flat());
-  gl.uniform1f(uBlendU, blend);
-
-  function resize(){
-    const w = window.innerWidth;
-    const h = ctn.offsetHeight||window.innerHeight;
-    canvas.width = w; canvas.height = h;
-    gl.viewport(0,0,w,h);
-    gl.uniform2f(uResolution, w, h);
-    const scaleFactor = 800/(h||1);
-    gl.uniform1f(uAmplitude, amplitude * scaleFactor);
-    render(0);
-  }
-  new ResizeObserver(resize).observe(ctn);
-  resize();
-
-  function render(t){
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
-  }
-
-  let animId=0, startT=null;
-  function loop(ts){
-    animId = requestAnimationFrame(loop);
-    if(!startT) startT=ts;
-    const t = (ts-startT)*0.001*speed;
-    gl.uniform1f(uTime, t);
-    const h = canvas.offsetHeight||window.innerHeight;
-    gl.uniform1f(uAmplitude, amplitude*(800/(h||1)));
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
-  }
-  animId = requestAnimationFrame(loop);
-}
-
-/* Default Framer colorStops: #FF2638 #7cff67 #5227FF — we use brand colors */
-const COLORS = ['#7c3aed','#f472b6','#22d3ee'];
-
-initCanvas(document.getElementById('bg-canvas'),       COLORS, 1, 0.5, 1);
-initCanvas(document.getElementById('grainient-canvas'), COLORS, 1, 0.5, 1);
-})();
 
 
 function closeSidebarMobile(){
@@ -2701,7 +2486,8 @@ function toggleSidebar(){
   }
 
   const savedMode = localStorage.getItem('nobot_user_mode');
-  if(savedMode && MODES[savedMode]){ currentMode = savedMode; applyModeToChat(); }
+  if(savedMode && MODES[savedMode]){ currentMode = savedMode; }
+  applyModeToChat(); // construit aussi les pills
   const savedSmartActive = localStorage.getItem('nobot_smart_active')==='1';
   const savedSmartCtx = localStorage.getItem('nobot_smart_context')||'';
   smartSearchActive = savedSmartActive;
