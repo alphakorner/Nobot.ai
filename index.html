@@ -5295,10 +5295,6 @@ OBLIGATIONS :
   codeConversationHistory.push({role:'assistant',content:reply});
   if(codeConversationHistory.length > 10) codeConversationHistory = codeConversationHistory.slice(-10);
   return reply;
-}catch(e){
-    console.error('[nobot code] NVIDIA NIM erreur:', e.message);
-    throw new Error('❌ NVIDIA NIM a échoué : ' + e.message + '. Vérifiez votre connexion.');
-  }
 }
 
 // ── Pollinations AI — Gratuit, anonyme, pas de clé requise
