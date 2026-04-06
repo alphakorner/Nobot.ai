@@ -1285,7 +1285,7 @@ if('serviceWorker' in navigator){
 
 <!-- HERO -->
 <div class="hero">
-  <div class="badge-top">✦&nbsp;Nouveau · + De 200 Agents IA Disponibles Dès Maintenant</div>
+  <div class="badge-top" style="font-size:clamp(10px,2.2vw,13px);padding:5px 14px;white-space:nowrap;">✦&nbsp;Nouveau · +200 Agents IA Disponibles Maintenant</div>
   <h1 class="hero-title" style="line-height:1.15;">
     <span style="color:#fff;display:block;">L'IA qui travaille pour vous</span>
     <span class="grad" style="font-size:clamp(20px,3.5vw,42px);display:block;margin-top:6px;min-height:1.2em;" id="strasbourgTypewriter"></span>
@@ -1363,6 +1363,12 @@ if('serviceWorker' in navigator){
 <!-- IA PRESENTATION -->
 <div class="ia-presentation" id="features">
   <div class="ia-pres-card" style="grid-template-columns:1fr;gap:32px;text-align:center;">
+    <div class="ia-pres-right" style="justify-content:center;">
+      <div class="ia-robot-showcase" id="showcaseOrbit">
+        <!-- Orbiting robots rendered by JS -->
+        <div class="showcase-robot-center" id="showcaseCenterRobot"></div>
+      </div>
+    </div>
     <div class="ia-pres-left" style="display:flex;flex-direction:column;align-items:center;">
       <div class="ia-pres-tag">🥨 Spécialisé Strasbourg & Alsace</div>
       <div class="ia-pres-title" style="text-align:center;">Votre IA experte<br><span class="grad">pour tout faire</span></div>
@@ -1376,12 +1382,6 @@ if('serviceWorker' in navigator){
         <div class="ia-skill"><span class="ia-skill-icon">👥</span>Gestion Clients</div>
         <div class="ia-skill"><span class="ia-skill-icon">🗺️</span>Expert Strasbourg</div>
         <div class="ia-skill"><span class="ia-skill-icon">🤖</span>200+ Agents IA</div>
-      </div>
-    </div>
-    <div class="ia-pres-right" style="justify-content:center;">
-      <div class="ia-robot-showcase" id="showcaseOrbit">
-        <!-- Orbiting robots rendered by JS -->
-        <div class="showcase-robot-center" id="showcaseCenterRobot"></div>
       </div>
     </div>
   </div>
@@ -1401,7 +1401,7 @@ if('serviceWorker' in navigator){
         <div class="perk"><span class="perk-check">✓</span>Accès 100% complet</div>
         <div class="perk"><span class="perk-check">✓</span>Sans carte bancaire</div>
         <div class="perk"><span class="perk-check">✓</span>Support dédié inclus</div>
-        <div class="perk"><span class="perk-check">✓</span>Annulation en 1 clic</div>
+        <div class="perk"><span class="perk-check" style="color:#10b981;">✓</span>Mode Code Développeur <span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.5);border-radius:4px;margin-left:5px;font-size:9px;color:#10b981;">💻</span><span style="display:inline-block;width:7px;height:7px;background:#10b981;border-radius:50%;margin-left:4px;box-shadow:0 0 6px #10b981;flex-shrink:0;"></span></div>
       </div>
       <button class="btn-offre" onclick="showPage('chat')">Commencer une discussion<span class="ac"><svg viewBox="0 0 16 16" fill="none" stroke="#0a0a14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M3 8h10M8 3l5 5-5 5"/></svg></span></button>
     </div>
@@ -1409,7 +1409,7 @@ if('serviceWorker' in navigator){
 </div>
 
 <!-- LOGOS -->
-<div class="powered-section"><p class="powered-txt" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:clamp(10px,1.8vw,13px);">Propulsé par les meilleurs modèles d'IA — une interface simple, des résultats puissants.</p></div>
+<div class="powered-section"><p class="powered-txt" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:clamp(7px,2.8vw,13px);">Propulsé par les meilleurs modèles d'IA — une interface simple, des résultats puissants.</p></div>
 <div class="logos-row">
   <div class="logo-item"><svg viewBox="0 0 24 24" width="28" height="28"><defs><linearGradient id="gm2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4285F4"/><stop offset="50%" stop-color="#9B72CB"/><stop offset="100%" stop-color="#D96570"/></linearGradient></defs><path d="M12 24A14.304 14.304 0 000 12 14.304 14.304 0 0012 0a14.304 14.304 0 0012 12 14.304 14.304 0 00-12 12z" fill="url(#gm2)"/></svg><span style="background:linear-gradient(135deg,#4285F4,#9B72CB,#D96570);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Gemini</span></div>
   <div class="logo-item"><svg viewBox="0 0 24 24" width="26" height="26" fill="#fff"><path d="M22.282 9.821a5.985 5.985 0 00-.516-4.91 6.046 6.046 0 00-6.51-2.9A6.065 6.065 0 004.981 4.18a5.985 5.985 0 00-3.998 2.9 6.046 6.046 0 00.743 7.097 5.98 5.98 0 00.51 4.911 6.051 6.051 0 006.515 2.9A5.985 5.985 0 0013.26 24a6.056 6.056 0 005.772-4.206 5.99 5.99 0 003.997-2.9 6.056 6.056 0 00-.747-7.073zM13.26 22.43a4.476 4.476 0 01-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 00.392-.681v-6.737l2.02 1.168a.071.071 0 01.038.052v5.583a4.504 4.504 0 01-4.494 4.494z"/></svg><span>OpenAI</span></div>
@@ -2076,21 +2076,22 @@ if('serviceWorker' in navigator){
       <div class="admin-card">
         <div class="card-header">
           <div class="card-icon ci-blue">🎨</div>
-          <div><div class="card-title">Branding & Textes</div><div class="card-sub">Personnalisez l'identité visuelle</div></div>
+          <div><div class="card-title">Branding & Textes</div><div class="card-sub">Personnalisez l'identité visuelle — synchronisé Supabase</div></div>
         </div>
         <div class="form-group">
           <label class="form-label">Nom affiché de l'IA</label>
-          <input type="text" class="form-input" value="nobot.ai" placeholder="nobot.ai"/>
+          <input type="text" id="brandingName" class="form-input" value="nobot.ai" placeholder="nobot.ai" oninput="debouncedSaveBranding()"/>
         </div>
         <div class="form-group">
           <label class="form-label">Slogan</label>
-          <input type="text" class="form-input" value="L'IA 100 % Strasbourgeoise" placeholder="Votre slogan…"/>
+          <input type="text" id="brandingSlogan" class="form-input" value="L'IA 100 % Strasbourgeoise" placeholder="Votre slogan…" oninput="debouncedSaveBranding()"/>
         </div>
         <div class="form-group">
           <label class="form-label">Message de bienvenue du chat</label>
-          <textarea class="form-textarea" rows="3">Bonjour ! Je suis nobot.ai, votre IA 100 % Strasbourgeoise. Comment puis-je vous aider aujourd'hui ?</textarea>
+          <textarea id="brandingWelcome" class="form-textarea" rows="3" oninput="debouncedSaveBranding()">Bonjour ! Je suis nobot.ai, votre IA 100 % Strasbourgeoise. Comment puis-je vous aider aujourd'hui ?</textarea>
         </div>
-        <button class="save-btn" onclick="showToast('Branding sauvegardé ✓')">💾 Sauvegarder</button>
+        <button class="save-btn" onclick="saveBranding()">💾 Sauvegarder sur Supabase</button>
+        <span id="brandingSaveStatus" style="font-size:11px;color:rgba(255,255,255,0.4);margin-left:12px;"></span>
       </div>
 
       <!-- SÉCURITÉ -->
@@ -3634,57 +3635,74 @@ function getApiKeys(){ return []; }
 function addApiKeyRow(){} function onlyOneActive(){} function toggleKeyVis(){}
 async function saveApiKeys(){ showAdminSaveToast('⚠️ Utilisez les nouveaux onglets API ci-dessus', 'warning'); }
 
-/* ── Load settings ── */
-function loadAdminSettings(){
-  document.getElementById('statSessions').textContent=localStorage.getItem('nobot_sessions')||'0';
-  document.getElementById('statMsgs').textContent=localStorage.getItem('nobot_msgs')||'0';
-  const conns=getConnectionLog(); const uniqueIps=new Set(conns.map(c=>c.ip));
-  document.getElementById('statUsers').textContent=uniqueIps.size;
+/* ============================================================
+   ADMIN SAVE — TOUT SAUVEGARDÉ DANS SUPABASE EN TEMPS RÉEL
+   Chaque bouton Save / chaque toggle / chaque input déclenche
+   un upsert immédiat dans app_settings.
+   ============================================================ */
 
-  // Charger les sections API
-  loadAdminApiSection();
-
-  // AI settings
-  const s=JSON.parse(localStorage.getItem('nobot_ai_settings')||'{}');
-  if(s.lang&&document.getElementById('defaultLang')) document.getElementById('defaultLang').value=s.lang;
-  if(s.systemPrompt&&document.getElementById('globalSystemPrompt')) document.getElementById('globalSystemPrompt').value=s.systemPrompt;
-  if(s.temp&&document.getElementById('defaultTemp')){ document.getElementById('defaultTemp').value=s.temp; document.getElementById('tempDisplay').textContent=s.temp; }
-  if(s.maxTokens&&document.getElementById('defaultMaxTokens')) document.getElementById('defaultMaxTokens').value=s.maxTokens;
-
-  // Chat options
-  const opts=JSON.parse(localStorage.getItem('nobot_chat_opts')||'{}');
-  const toggles=document.querySelectorAll('.toggle-row input[type=checkbox]');
-  const optKeys=['history','devMode','modelSelect','smartSearch','trial','maintenance'];
-  toggles.forEach((t,i)=>{ if(optKeys[i] in opts) t.checked=opts[optKeys[i]]; });
+// ── Helper générique upsert Supabase ─────────────────────
+async function sbUpsert(key, value){
+  const sb = getSupabase();
+  if(!sb) return false;
+  try{
+    const { error } = await sb.from('app_settings').upsert(
+      { key, value, updated_at: new Date().toISOString() },
+      { onConflict: 'key' }
+    );
+    if(error){ console.warn('[nobot] sbUpsert error:', key, error.message); return false; }
+    return true;
+  }catch(e){ console.warn('[nobot] sbUpsert exception:', key, e.message); return false; }
 }
 
+// ── Paramètres IA ─────────────────────────────────────────
 function saveAISettings(){
   const settings = {
-    lang: document.getElementById('defaultLang')?.value||'fr',
+    lang:         document.getElementById('defaultLang')?.value||'fr',
     systemPrompt: document.getElementById('globalSystemPrompt')?.value||'',
-    temp: document.getElementById('defaultTemp')?.value||'0.7',
-    maxTokens: document.getElementById('defaultMaxTokens')?.value||'1024',
+    temp:         document.getElementById('defaultTemp')?.value||'0.7',
+    maxTokens:    document.getElementById('defaultMaxTokens')?.value||'1024',
   };
   localStorage.setItem('nobot_ai_settings', JSON.stringify(settings));
-  // Sync vers Supabase
-  const sb = getSupabase();
-  if(sb) sb.from('app_settings').upsert({ key:'ai_settings', value:settings, updated_at:new Date().toISOString() }, { onConflict:'key' }).then(({error})=>{ if(error) console.warn('[nobot] saveAISettings Supabase:', error.message); });
-  showAdminSaveToast('✅ Paramètres IA sauvegardés sur Supabase !', 'success');
+  sbUpsert('ai_settings', settings).then(ok=>{
+    showAdminSaveToast(ok ? '✅ Paramètres IA sauvegardés sur Supabase !' : '⚠️ Supabase indisponible — sauvegarde locale ok', ok?'success':'warning');
+  });
 }
 
+// ── Options chat (chaque toggle) ──────────────────────────
 function saveChatOptions(){
   const toggles = document.querySelectorAll('.toggle-row input[type=checkbox]');
   const optKeys = ['history','devMode','modelSelect','smartSearch','trial','maintenance'];
   const opts = {};
   toggles.forEach((t,i)=>{ opts[optKeys[i]] = t.checked; });
   localStorage.setItem('nobot_chat_opts', JSON.stringify(opts));
-  // Sync vers Supabase
-  const sb = getSupabase();
-  if(sb) sb.from('app_settings').upsert({ key:'chat_opts', value:opts, updated_at:new Date().toISOString() }, { onConflict:'key' }).then(({error})=>{ if(error) console.warn('[nobot] saveChatOptions Supabase:', error.message); });
+  sbUpsert('chat_opts', opts);
   showToast('Option mise à jour ✓');
 }
 
-function changePassword(){
+// ── Branding ──────────────────────────────────────────────
+let _brandingDebounce = null;
+function debouncedSaveBranding(){
+  clearTimeout(_brandingDebounce);
+  _brandingDebounce = setTimeout(saveBranding, 1500);
+  const st = document.getElementById('brandingSaveStatus');
+  if(st) st.textContent = '✏️ En cours de frappe…';
+}
+async function saveBranding(){
+  const branding = {
+    name:    document.getElementById('brandingName')?.value||'nobot.ai',
+    slogan:  document.getElementById('brandingSlogan')?.value||'',
+    welcome: document.getElementById('brandingWelcome')?.value||'',
+  };
+  localStorage.setItem('nobot_branding', JSON.stringify(branding));
+  const ok = await sbUpsert('branding', branding);
+  const st = document.getElementById('brandingSaveStatus');
+  if(st) st.textContent = ok ? '✅ Sauvegardé sur Supabase' : '⚠️ Local seulement';
+  showAdminSaveToast(ok?'✅ Branding sauvegardé sur Supabase !':'⚠️ Supabase indisponible — local ok', ok?'success':'warning');
+}
+
+// ── Mot de passe ──────────────────────────────────────────
+async function changePassword(){
   const np = document.getElementById('newAdminPwd').value;
   const cp = document.getElementById('confirmAdminPwd').value;
   if(!np){ showToast('❌ Entrez un nouveau mot de passe'); return; }
@@ -3694,10 +3712,77 @@ function changePassword(){
   adminPwd = np;
   document.getElementById('newAdminPwd').value='';
   document.getElementById('confirmAdminPwd').value='';
-  // Sync vers Supabase (haché légèrement pour la sécurité de base)
+  const ok = await sbUpsert('admin_pwd', { pwd: np });
+  showAdminSaveToast(ok?'🔒 Mot de passe changé & synchronisé Supabase !':'🔒 Mot de passe changé (local) — Supabase indisponible', ok?'success':'warning');
+}
+
+/* ── Load ALL settings depuis Supabase au login admin ── */
+async function loadAdminSettings(){
+  document.getElementById('statSessions').textContent=localStorage.getItem('nobot_sessions')||'0';
+  document.getElementById('statMsgs').textContent=localStorage.getItem('nobot_msgs')||'0';
+  const conns=getConnectionLog(); const uniqueIps=new Set(conns.map(c=>c.ip));
+  document.getElementById('statUsers').textContent=uniqueIps.size;
+
+  // ── Charger depuis Supabase d'abord, puis fallback local ──
   const sb = getSupabase();
-  if(sb) sb.from('app_settings').upsert({ key:'admin_pwd', value:{pwd:np}, updated_at:new Date().toISOString() }, { onConflict:'key' }).then(({error})=>{ if(!error) console.log('[nobot] Mot de passe sauvegardé Supabase'); });
-  showAdminSaveToast('🔒 Mot de passe changé et synchronisé !', 'success');
+  if(sb){
+    try{
+      const { data, error } = await sb.from('app_settings').select('key, value');
+      if(!error && data){
+        data.forEach(row => {
+          const v = row.value;
+          switch(row.key){
+            case 'ai_settings':
+              if(v){
+                localStorage.setItem('nobot_ai_settings', JSON.stringify(v));
+                if(v.lang && document.getElementById('defaultLang')) document.getElementById('defaultLang').value=v.lang;
+                if(v.systemPrompt && document.getElementById('globalSystemPrompt')) document.getElementById('globalSystemPrompt').value=v.systemPrompt;
+                if(v.temp && document.getElementById('defaultTemp')){ document.getElementById('defaultTemp').value=v.temp; const td=document.getElementById('tempDisplay'); if(td) td.textContent=v.temp; }
+                if(v.maxTokens && document.getElementById('defaultMaxTokens')) document.getElementById('defaultMaxTokens').value=v.maxTokens;
+              }
+              break;
+            case 'chat_opts':
+              if(v){
+                localStorage.setItem('nobot_chat_opts', JSON.stringify(v));
+                const toggles=document.querySelectorAll('.toggle-row input[type=checkbox]');
+                const optKeys=['history','devMode','modelSelect','smartSearch','trial','maintenance'];
+                toggles.forEach((t,i)=>{ if(optKeys[i] in v) t.checked=v[optKeys[i]]; });
+              }
+              break;
+            case 'branding':
+              if(v){
+                localStorage.setItem('nobot_branding', JSON.stringify(v));
+                if(v.name && document.getElementById('brandingName')) document.getElementById('brandingName').value=v.name;
+                if(v.slogan && document.getElementById('brandingSlogan')) document.getElementById('brandingSlogan').value=v.slogan;
+                if(v.welcome && document.getElementById('brandingWelcome')) document.getElementById('brandingWelcome').value=v.welcome;
+              }
+              break;
+            case 'admin_pwd':
+              if(v && v.pwd){ localStorage.setItem(ADMIN_PWD_KEY, v.pwd); adminPwd=v.pwd; }
+              break;
+          }
+        });
+        console.log('[nobot] ✅ Paramètres admin chargés depuis Supabase');
+      }
+    }catch(e){ console.warn('[nobot] loadAdminSettings Supabase:', e.message); }
+  }
+
+  // Fallback local si Supabase vide ou indisponible
+  const s=JSON.parse(localStorage.getItem('nobot_ai_settings')||'{}');
+  if(!sb || !s.lang){
+    if(s.lang&&document.getElementById('defaultLang')) document.getElementById('defaultLang').value=s.lang;
+    if(s.systemPrompt&&document.getElementById('globalSystemPrompt')) document.getElementById('globalSystemPrompt').value=s.systemPrompt;
+    if(s.temp&&document.getElementById('defaultTemp')){ document.getElementById('defaultTemp').value=s.temp; const td=document.getElementById('tempDisplay'); if(td) td.textContent=s.temp; }
+    if(s.maxTokens&&document.getElementById('defaultMaxTokens')) document.getElementById('defaultMaxTokens').value=s.maxTokens;
+  }
+
+  const opts=JSON.parse(localStorage.getItem('nobot_chat_opts')||'{}');
+  const toggles=document.querySelectorAll('.toggle-row input[type=checkbox]');
+  const optKeys=['history','devMode','modelSelect','smartSearch','trial','maintenance'];
+  if(!sb) toggles.forEach((t,i)=>{ if(optKeys[i] in opts) t.checked=opts[optKeys[i]]; });
+
+  // Charger les sections API
+  loadAdminApiSection();
 }
 
 /* ── Connexions utilisateurs ── */
@@ -4634,12 +4719,114 @@ let codeConversationHistory = [];
 let currentCodeContent = '';
 
 const CODE_PROJECT_PROMPTS = {
-  site: "Tu es un expert développeur web full-stack senior. Génère un site web HTML complet, en un seul fichier HTML autonome. Utilise du CSS moderne intégré (dans <style>) et du JS intégré (dans <script>). Le résultat doit être visuellement impressionnant, professionnel, responsive mobile, avec des animations CSS et une UX soignée. N'utilise que du HTML/CSS/JS pur (pas de framework externe). Renvoie UNIQUEMENT le code HTML complet, sans explication, sans balises markdown, sans commentaires avant/après le code. Commence directement par <!DOCTYPE html>.",
-  app: "Tu es un expert développeur web full-stack senior. Génère une Web App HTML complète en un seul fichier autonome. Utilise du CSS moderne et du JavaScript fonctionnel. L'app doit être interactive, belle visuellement, responsive. CSS intégré dans <style>, JS dans <script>. N'utilise que du HTML/CSS/JS pur. Renvoie UNIQUEMENT le code HTML complet sans explication, sans markdown. Commence par <!DOCTYPE html>.",
-  landing: "Tu es un expert en design web et conversion. Génère une landing page professionnelle HTML complète, en fichier unique autonome, avec hero section, features, témoignages, CTA et footer. Design moderne, animations d'apparition, gradient, responsive. CSS dans <style>, JS dans <script>. Renvoie UNIQUEMENT le code HTML complet. Commence par <!DOCTYPE html>.",
-  dashboard: "Tu es un expert en UI/UX data. Génère un tableau de bord (dashboard) HTML complet en un fichier autonome, avec sidebar, métriques, graphiques simulés en CSS/SVG, tables de données, navigation active. Design sombre professionnel, responsive. CSS dans <style>, JS dans <script>. Renvoie UNIQUEMENT le code HTML. Commence par <!DOCTYPE html>.",
-  component: "Tu es un expert développeur front-end senior. Génère un composant UI HTML/CSS/JS complet et autonome dans un fichier HTML unique. Élégant, animé, prêt à l'emploi. CSS dans <style>, JS dans <script>. Renvoie UNIQUEMENT le code HTML. Commence par <!DOCTYPE html>.",
-  game: "Tu es un expert en développement de jeux web. Génère un mini-jeu interactif HTML complet en un fichier autonome. Gameplay simple mais engageant, animations fluides, score, game over. CSS dans <style>, JS dans <script>. Renvoie UNIQUEMENT le code HTML complet. Commence par <!DOCTYPE html>."
+  site: `Tu es un expert développeur web front-end SENIOR et designer UI/UX de niveau mondial. Tu crées des sites web HTML complets en UN SEUL fichier HTML autonome, visuellement ÉPOUSTOUFLANTS.
+
+RÈGLES OBLIGATOIRES :
+1. Tout le CSS dans <style>, tout le JS dans <script> — aucune dépendance externe
+2. EFFETS VISUELS OBLIGATOIRES : tu dois inclure au minimum 3 de ces effets selon le contexte :
+   - Parallax scrolling (sections qui bougent à vitesses différentes)
+   - Animations CSS au scroll (éléments qui apparaissent en glissant/fondant)
+   - Effet glassmorphism (cartes en verre flou)
+   - Gradient animé en fond (couleurs qui changent doucement)
+   - Curseur personnalisé ou effets hover sophistiqués
+   - Particules flottantes en JS pur ou SVG animés
+   - Texte avec animation typewriter
+   - Compteurs animés (chiffres qui défilent)
+   - Navbar qui change d'apparence au scroll
+   - Hero plein écran avec image/gradient + overlay
+   - Boutons avec effet ripple ou sheen
+   - Cards avec effet 3D tilt au hover
+3. DESIGN : couleurs harmonieuses, typographie soignée (Google Fonts via CDN ok), espacement généreux, sections bien définies
+4. RESPONSIVE : mobile-first, breakpoints 640px et 1024px
+5. Commence DIRECTEMENT par <!DOCTYPE html> — aucune explication avant ou après
+6. Code complet, professionnel, prêt à déployer sur GitHub Pages
+`,
+
+  app: `Tu es un expert développeur web SENIOR. Tu crées des Web Apps interactives HTML complètes en UN SEUL fichier autonome.
+
+RÈGLES OBLIGATOIRES :
+1. CSS dans <style>, JS dans <script> — autonome, aucune dépendance externe
+2. FONCTIONNALITÉS INTERACTIVES : l'app doit vraiment fonctionner (localStorage pour persister les données si besoin, logique métier réelle)
+3. EFFETS UI MODERNES obligatoires :
+   - Transitions fluides entre états (0.3s ease)
+   - Feedback visuel immédiat (hover, focus, active)
+   - Toasts/notifications stylisées
+   - Loaders/animations de chargement
+   - Mode sombre si pertinent
+   - Animations d'entrée pour les éléments
+4. Layout : sidebar ou navbar si pertinent, composants bien structurés
+5. Commence DIRECTEMENT par <!DOCTYPE html>
+`,
+
+  landing: `Tu es un expert en design web, conversion et marketing digital. Tu crées des landing pages PROFESSIONNELLES qui convertissent.
+
+STRUCTURE OBLIGATOIRE :
+1. HERO : plein écran, headline percutante, sous-titre, CTA principal, image/illustration ou background animé
+2. FEATURES : 3-6 fonctionnalités avec icônes SVG inline, descriptions
+3. SOCIAL PROOF : témoignages ou stats avec compteurs animés
+4. HOW IT WORKS : étapes numérotées avec animations
+5. PRICING (optionnel) : cartes tarifaires
+6. CTA FINAL : section de conversion
+7. FOOTER : liens, réseaux sociaux
+
+EFFETS OBLIGATOIRES :
+- Gradient animé ou particles en hero
+- Scroll animations (IntersectionObserver) sur toutes les sections
+- Navbar sticky qui change d'aspect au scroll
+- Boutons avec effet sheen animé
+- Compteurs qui s'animent au scroll (0 → chiffre final)
+- Hover effects sophistiqués sur les cards
+
+CSS dans <style>, JS dans <script>, responsive. Commence par <!DOCTYPE html>.
+`,
+
+  dashboard: `Tu es un expert UI/UX data analyst. Tu crées des dashboards PROFESSIONNELS et modernes.
+
+STRUCTURE OBLIGATOIRE :
+1. SIDEBAR responsive (collapse en mobile) avec navigation active
+2. TOPBAR avec barre de recherche, notifications, avatar
+3. MÉTRIQUES : 4-6 KPI cards avec icônes, chiffres, variation (↑↓), couleurs contextuelles
+4. GRAPHIQUES : charts réalistes en SVG/Canvas/CSS (barres, lignes, donuts — SANS bibliothèque externe)
+5. TABLE de données avec tri, pagination simulée, badges de statut colorés
+6. Design sombre professionnel (#0f0f1a ou similaire) ou light professionnel
+
+EFFETS OBLIGATOIRES :
+- Animations d'entrée des cards (stagger)
+- Chiffres qui comptent de 0 à la valeur finale
+- Graphiques qui s'animent au chargement
+- Hover states sur tous les éléments interactifs
+- Scrollbar personnalisée
+- Transitions smooth entre états
+
+CSS dans <style>, JS dans <script>. Commence par <!DOCTYPE html>.
+`,
+
+  component: `Tu es un expert développeur front-end. Tu crées un composant UI PARFAIT, réutilisable, en HTML/CSS/JS pur dans un fichier autonome.
+
+RÈGLES :
+- Le composant doit être visible et fonctionnel dans une démo autonome
+- Design soigné, animations fluides, accessibilité (focus, ARIA si besoin)
+- Plusieurs états/variantes affichées si pertinent
+- Fond neutre ou dégradé pour mettre en valeur le composant
+- Interactions réelles (hover, click, focus, toggle…)
+- Code propre, commenté, réutilisable
+
+CSS dans <style>, JS dans <script>. Commence par <!DOCTYPE html>.
+`,
+
+  game: `Tu es un expert en développement de jeux web. Tu crées un mini-jeu interactif COMPLET et ADDICTIF en HTML/CSS/JS pur.
+
+RÈGLES OBLIGATOIRES :
+1. Gameplay immédiatement compréhensible et fun
+2. Score en temps réel, meilleur score (localStorage), timer si pertinent
+3. Animations fluides (requestAnimationFrame pour les jeux canvas)
+4. Écran de démarrage, état de jeu, game over avec score final
+5. Sons simulés (WebAudio API simple si possible) ou effets visuels à la place
+6. Mobile-friendly (touch events)
+7. Design soigné même pour un jeu
+
+CSS dans <style>, JS dans <script>. Commence par <!DOCTYPE html>.
+`
 };
 
 function openCodeModal(){
