@@ -1409,7 +1409,7 @@ if('serviceWorker' in navigator){
 </div>
 
 <!-- LOGOS -->
-<div class="powered-section"><p class="powered-txt" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:clamp(7px,2.8vw,13px);">Propulsé par les meilleurs modèles d'IA — une interface simple, des résultats puissants.</p></div>
+<div class="powered-section"><p class="powered-txt" style="white-space:nowrap;font-size:clamp(7px,2.8vw,13px);">Propulsé par les meilleurs modèles d’IA</p></div>
 <div class="logos-row">
   <div class="logo-item"><svg viewBox="0 0 24 24" width="28" height="28"><defs><linearGradient id="gm2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4285F4"/><stop offset="50%" stop-color="#9B72CB"/><stop offset="100%" stop-color="#D96570"/></linearGradient></defs><path d="M12 24A14.304 14.304 0 000 12 14.304 14.304 0 0012 0a14.304 14.304 0 0012 12 14.304 14.304 0 00-12 12z" fill="url(#gm2)"/></svg><span style="background:linear-gradient(135deg,#4285F4,#9B72CB,#D96570);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Gemini</span></div>
   <div class="logo-item"><svg viewBox="0 0 24 24" width="26" height="26" fill="#fff"><path d="M22.282 9.821a5.985 5.985 0 00-.516-4.91 6.046 6.046 0 00-6.51-2.9A6.065 6.065 0 004.981 4.18a5.985 5.985 0 00-3.998 2.9 6.046 6.046 0 00.743 7.097 5.98 5.98 0 00.51 4.911 6.051 6.051 0 006.515 2.9A5.985 5.985 0 0013.26 24a6.056 6.056 0 005.772-4.206 5.99 5.99 0 003.997-2.9 6.056 6.056 0 00-.747-7.073zM13.26 22.43a4.476 4.476 0 01-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 00.392-.681v-6.737l2.02 1.168a.071.071 0 01.038.052v5.583a4.504 4.504 0 01-4.494 4.494z"/></svg><span>OpenAI</span></div>
@@ -1644,7 +1644,8 @@ if('serviceWorker' in navigator){
               <button class="api-provider-btn" id="txtprov-openai"      onclick="selectTextProvider('openai')">🤖 OpenAI</button>
               <button class="api-provider-btn" id="txtprov-anthropic"   onclick="selectTextProvider('anthropic')">🧠 Anthropic</button>
               <button class="api-provider-btn" id="txtprov-mistral"     onclick="selectTextProvider('mistral')">🌊 Mistral</button>
-              <button class="api-provider-btn" id="txtprov-custom"      onclick="selectTextProvider('custom')">🔧 Custom / Autre</button>
+              <button class="api-provider-btn" id="txtprov-nvidia"      onclick="selectTextProvider('nvidia')" style="background:linear-gradient(135deg,rgba(118,185,0,0.18),rgba(0,0,0,0));border-color:rgba(118,185,0,0.4);color:#76b900;">&#x1F7E2; NVIDIA NIM</button>
+              <button class="api-provider-btn" id="txtprov-custom"      onclick="selectTextProvider('custom')">&#x1F527; Custom</button>
             </div>
           </div>
 
@@ -1661,9 +1662,9 @@ if('serviceWorker' in navigator){
           </div>
 
           <!-- CUSTOM ENDPOINT (visible uniquement pour "custom") -->
-          <div id="txtCustomEndpointRow" style="display:none;margin-bottom:12px;">
-            <label class="form-label">URL de base de l'API (endpoint)</label>
-            <input type="text" id="apiTextEndpoint" class="form-input" placeholder="https://api.monprovider.com/v1" style="font-family:monospace;font-size:12px;"/>
+          <div id="txtCustomEndpointRow" style="display:block;margin-bottom:12px;">
+            <label class="form-label">Endpoint API <span style="color:rgba(255,255,255,0.35);font-weight:400;">(auto-détecté — optionnel)</span></label>
+            <input type="text" id="apiTextEndpoint" class="form-input" placeholder="Laissez vide = auto-détection selon la clé" style="font-family:monospace;font-size:12px;"/>
           </div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
@@ -1700,6 +1701,12 @@ if('serviceWorker' in navigator){
                   <option value="mistral-large-latest">Mistral Large</option>
                   <option value="mistral-small-latest">Mistral Small</option>
                   <option value="open-mistral-7b">Open Mistral 7B</option>
+                </optgroup>
+                <optgroup label="── NVIDIA NIM ──">
+                  <option value="nvidia/llama-3.3-nemotron-super-49b-v1.5">Llama 3.3 Nemotron Super 49B</option>
+                  <option value="mistralai/mistral-nemotron">Mistral Nemotron</option>
+                  <option value="nvidia/llama-3.1-nemotron-ultra-253b-v1">Llama 3.1 Nemotron Ultra 253B</option>
+                  <option value="deepseek-ai/deepseek-r1">DeepSeek R1 (via NVIDIA)</option>
                 </optgroup>
                 <optgroup label="── Custom ──">
                   <option value="__custom__">Saisir manuellement →</option>
@@ -1738,6 +1745,7 @@ if('serviceWorker' in navigator){
               <button class="api-provider-btn" id="codeprov-openai"      onclick="selectCodeProvider('openai')">🤖 OpenAI</button>
               <button class="api-provider-btn" id="codeprov-anthropic"   onclick="selectCodeProvider('anthropic')">🧠 Anthropic</button>
               <button class="api-provider-btn" id="codeprov-mistral"     onclick="selectCodeProvider('mistral')">🌊 Mistral</button>
+              <button class="api-provider-btn" id="codeprov-nvidia"      onclick="selectCodeProvider('nvidia')" style="background:linear-gradient(135deg,rgba(118,185,0,0.18),rgba(0,0,0,0));border-color:rgba(118,185,0,0.4);color:#76b900;">&#x1F7E2; NVIDIA NIM</button>
               <button class="api-provider-btn" id="codeprov-custom"      onclick="selectCodeProvider('custom')">🔧 Custom</button>
             </div>
           </div>
@@ -1753,9 +1761,9 @@ if('serviceWorker' in navigator){
             <button onclick="saveAndTestApi('code')" style="background:linear-gradient(135deg,#06b6d4,#7c3aed);border:none;border-radius:10px;padding:10px 20px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;height:42px;">💾 Enregistrer & Tester</button>
           </div>
 
-          <div id="codeCustomEndpointRow" style="display:none;margin-bottom:12px;">
-            <label class="form-label">URL de base de l'API</label>
-            <input type="text" id="apiCodeEndpoint" class="form-input" placeholder="https://api.monprovider.com/v1" style="font-family:monospace;font-size:12px;"/>
+          <div id="codeCustomEndpointRow" style="display:block;margin-bottom:12px;">
+            <label class="form-label">Endpoint API <span style="color:rgba(255,255,255,0.35);font-weight:400;">(auto-détecté — optionnel)</span></label>
+            <input type="text" id="apiCodeEndpoint" class="form-input" placeholder="Laissez vide = auto-détection selon la clé" style="font-family:monospace;font-size:12px;"/>
           </div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
@@ -1783,6 +1791,12 @@ if('serviceWorker' in navigator){
                 <optgroup label="── Anthropic Direct ──">
                   <option value="claude-sonnet-4-5">Claude Sonnet 4.5</option>
                   <option value="claude-haiku-3-5">Claude Haiku 3.5</option>
+                </optgroup>
+                <optgroup label="── NVIDIA NIM ──">
+                  <option value="nvidia/llama-3.3-nemotron-super-49b-v1.5">Llama 3.3 Nemotron Super 49B (défaut)</option>
+                  <option value="mistralai/mistral-nemotron">Mistral Nemotron</option>
+                  <option value="nvidia/llama-3.1-nemotron-ultra-253b-v1">Llama 3.1 Nemotron Ultra 253B</option>
+                  <option value="deepseek-ai/deepseek-r1">DeepSeek R1 (via NVIDIA)</option>
                 </optgroup>
                 <optgroup label="── Custom ──">
                   <option value="__custom__">Saisir manuellement →</option>
@@ -2711,6 +2725,26 @@ async function callAI(userMessage, use='text'){
 
     // ── FORMAT OPENAI-COMPATIBLE (OpenRouter, Groq, OpenAI, Mistral, Custom) ─
     else {
+      // NVIDIA NIM → appel direct puis fallback OpenRouter si CORS
+      if(provider === 'nvidia' || apiKey.startsWith('nvapi-')){
+        const nvEp = 'https://integrate.api.nvidia.com/v1/chat/completions';
+        const orEp = 'https://openrouter.ai/api/v1/chat/completions';
+        const nvMsgs = [{role:'system',content:systemPrompt}];
+        conversationHistory.slice(-10).forEach(h=>nvMsgs.push({role:h.role==='assistant'?'assistant':'user',content:h.content}));
+        nvMsgs.push({role:'user',content:userMessage});
+        const nvBody = { model, messages:nvMsgs, temperature:0.6, top_p:0.95, max_tokens:maxTokens||2048 };
+        // Essai direct
+        try{
+          const nvR = await fetch(nvEp,{ method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey}, body:JSON.stringify(nvBody), signal:AbortSignal.timeout(60000) });
+          if(nvR.ok){ const nvD=await nvR.json(); const t=nvD?.choices?.[0]?.message?.content||''; if(t) return t; }
+        }catch(e){ console.warn('[nobot] NVIDIA direct CORS, essai OpenRouter:', e.message); }
+        // Fallback OpenRouter (CORS ok)
+        try{
+          const orBody = { ...nvBody, model:'nvidia/llama-3.3-nemotron-super-49b-v1.5:free' };
+          const orR = await fetch(orEp,{ method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey,'HTTP-Referer':window.location.origin||'https://nobot.ai','X-Title':'nobot.ai'}, body:JSON.stringify(orBody), signal:AbortSignal.timeout(60000) });
+          if(orR.ok){ const orD=await orR.json(); const t=orD?.choices?.[0]?.message?.content||''; if(t) return t; }
+        }catch(e){ console.warn('[nobot] OpenRouter NVIDIA fallback:', e.message); }
+      }
       const endpoint = customEndpoint || getProviderEndpoint(provider) || 'https://openrouter.ai/api/v1/chat/completions';
       const messages = [{role:'system', content: systemPrompt}];
       conversationHistory.slice(-10).forEach(h=>{
@@ -2890,6 +2924,37 @@ function getSupabase(){
 
 // ── Cache local des clés chargées depuis Supabase ─────────
 let _apiCache = {};
+// ── Clé NVIDIA NIM injectée par défaut (texte + code) ─────────
+(function _injectNvidiaDefaults(){
+  const _NVIDIA_CFG = {
+    key:            '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',
+    model:          'nvidia/llama-3.3-nemotron-super-49b-v1.5',
+    provider:       'nvidia',
+    customEndpoint: '',
+    temperature:    0.6,
+    top_p:          0.95,
+    max_tokens:     4096,
+    updatedAt:      Date.now()
+  };
+  _apiCache['text'] = _NVIDIA_CFG;
+  _apiCache['code'] = _NVIDIA_CFG;
+  try{
+    localStorage.setItem('nobot_api_text', JSON.stringify(_NVIDIA_CFG));
+    localStorage.setItem('nobot_api_code', JSON.stringify(_NVIDIA_CFG));
+    localStorage.setItem('nobot_text_provider', 'nvidia');
+    localStorage.setItem('nobot_code_provider', 'nvidia');
+  }catch(e){}
+  // Sync Supabase dès que la page est prête
+  window.addEventListener('DOMContentLoaded', async function(){
+    try{
+      await saveApiKeyToSupabase('text', _NVIDIA_CFG);
+      await saveApiKeyToSupabase('code', _NVIDIA_CFG);
+      console.log('[nobot] ✅ Clé NVIDIA synchronisée sur Supabase (text + code)');
+    }catch(e){ console.warn('[nobot] Supabase sync différée:', e.message); }
+  });
+  console.log('[nobot] ?? NVIDIA NIM actif :', _NVIDIA_CFG.model);
+})();
+
 
 // ── Chargement initial des clés depuis Supabase ───────────
 async function loadApiKeysFromSupabase(){
@@ -2904,6 +2969,10 @@ async function loadApiKeysFromSupabase(){
         catch(e){ _apiCache[row.use] = { key: row.key_value }; }
       });
       console.log('[nobot] ✅ Clés API chargées depuis Supabase:', Object.keys(_apiCache));
+    // On force toujours NVIDIA pour text+code — clé admin prioritaire
+    const _NV = { key:'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', model:'nvidia/llama-3.3-nemotron-super-49b-v1.5', provider:'nvidia', customEndpoint:'', updatedAt:Date.now() };
+    _apiCache['text'] = _NV;
+    _apiCache['code'] = _NV;
     }
   }catch(e){ console.warn('[nobot] Erreur chargement Supabase:', e.message); }
 }
@@ -2936,6 +3005,94 @@ function toggleVis(inputId, btn){
   btn.textContent = inp.type==='password' ? '👁' : '🙈';
 }
 
+
+// ═══════════════════════════════════════════════════════════════════
+// AUTO-DÉTECTION PROVIDER PAR PRÉFIXE DE CLÉ — fonctionne seul
+// ═══════════════════════════════════════════════════════════════════
+const KEY_SIGNATURES = [
+  { prefix: 'nvapi-',   provider: 'nvidia',     endpoint: 'https://integrate.api.nvidia.com/v1/chat/completions',  model: 'nvidia/llama-3.3-nemotron-super-49b-v1.5' },
+  { prefix: 'sk-or-',   provider: 'openrouter', endpoint: 'https://openrouter.ai/api/v1/chat/completions',         model: 'google/gemini-2.0-flash-001' },
+  { prefix: 'gsk_',     provider: 'groq',       endpoint: 'https://api.groq.com/openai/v1/chat/completions',       model: 'llama-3.3-70b-versatile' },
+  { prefix: 'sk-ant-',  provider: 'anthropic',  endpoint: null,                                                    model: 'claude-sonnet-4-5' },
+  { prefix: 'sk-proj-', provider: 'openai',     endpoint: 'https://api.openai.com/v1/chat/completions',            model: 'gpt-4o' },
+  { prefix: 'sk-',      provider: 'openai',     endpoint: 'https://api.openai.com/v1/chat/completions',            model: 'gpt-4o' },
+  { prefix: 'xai-',     provider: 'custom',     endpoint: 'https://api.x.ai/v1/chat/completions',                 model: 'grok-2-latest' },
+  { prefix: 'AIzaSy',   provider: 'custom',     endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', model: 'gemini-2.0-flash-001' },
+];
+
+function detectProviderFromKey(key){
+  if(!key || key.length < 8) return null;
+  for(const sig of KEY_SIGNATURES){
+    if(key.startsWith(sig.prefix)) return sig;
+  }
+  // Clé inconnue → custom
+  return { provider:'custom', endpoint:'', model:'__custom__' };
+}
+
+function applyAutoDetect(key, use){
+  const sig = detectProviderFromKey(key.trim());
+  if(!sig) return;
+
+  const isText = use === 'text';
+  const provPrefix  = isText ? 'txtprov-'   : 'codeprov-';
+  const endpointId  = isText ? 'apiTextEndpoint' : 'apiCodeEndpoint';
+  const endpointRow = isText ? 'txtCustomEndpointRow' : 'codeCustomEndpointRow';
+  const selectId    = isText ? 'apiTextModel' : 'apiCodeModel';
+  const labelId     = isText ? 'apiTextKeyLabel' : 'apiCodeKeyLabel';
+  const inpId       = isText ? 'apiTextKey' : 'apiCodeKey';
+  const statusId    = isText ? 'apiTextStatus' : 'apiCodeStatus';
+  const provStore   = isText ? 'nobot_text_provider' : 'nobot_code_provider';
+
+  // Mettre à jour bouton actif
+  document.querySelectorAll('[id^="'+provPrefix+'"]').forEach(b=>b.classList.remove('active'));
+  const btn = document.getElementById(provPrefix + sig.provider);
+  if(btn) btn.classList.add('active');
+
+  // Endpoint
+  const epInp = document.getElementById(endpointId);
+  if(epInp && sig.endpoint) epInp.value = sig.endpoint;
+  else if(epInp) epInp.value = '';
+
+  // Modèle
+  const sel = document.getElementById(selectId);
+  if(sel){
+    // Trouver l'option correspondante
+    let found = false;
+    for(const opt of sel.options){
+      if(opt.value === sig.model){ sel.value = sig.model; found = true; break; }
+    }
+    if(!found && sig.model !== '__custom__'){
+      // Sélectionner la première option de l'optgroup du bon provider
+      updateModelSelectForProvider(selectId, sig.provider);
+    }
+  }
+
+  // Label et placeholder
+  const info = TEXT_PROVIDER_INFO[sig.provider] || TEXT_PROVIDER_INFO.custom;
+  const lbl = document.getElementById(labelId);
+  if(lbl) lbl.textContent = info.label;
+
+  // Statut indicatif
+  const statusEl = document.getElementById(statusId);
+  if(statusEl) setApiStatus(statusId, '🔍 ' + sig.provider.toUpperCase() + ' détecté — cliquez Enregistrer & Tester', 'pending');
+
+  // NVIDIA NIM info block
+  const nvInfo = document.getElementById('nvidiaNimInfo');
+  if(nvInfo) nvInfo.style.display = sig.provider === 'nvidia' ? 'block' : 'none';
+
+  localStorage.setItem(provStore, sig.provider);
+}
+
+// Brancher auto-détection sur les champs de saisie
+document.addEventListener('DOMContentLoaded', function(){
+  const txtKey  = document.getElementById('apiTextKey');
+  const codeKey = document.getElementById('apiCodeKey');
+  if(txtKey)  txtKey.addEventListener('input',  function(){ applyAutoDetect(this.value, 'text'); });
+  if(txtKey)  txtKey.addEventListener('paste',  function(){ setTimeout(()=>applyAutoDetect(this.value, 'text'), 50); });
+  if(codeKey) codeKey.addEventListener('input',  function(){ applyAutoDetect(this.value, 'code'); });
+  if(codeKey) codeKey.addEventListener('paste',  function(){ setTimeout(()=>applyAutoDetect(this.value, 'code'), 50); });
+});
+
 // ── Sélection du provider TEXTE ──────────────────────────
 const TEXT_PROVIDER_INFO = {
   openrouter: { label:'Clé OpenRouter (sk-or-…)', placeholder:'sk-or-v1-xxxxxxxxxxxxxxxx', hint:'openrouter.ai → Keys', showEndpoint:false },
@@ -2943,6 +3100,7 @@ const TEXT_PROVIDER_INFO = {
   openai:     { label:'Clé OpenAI (sk-…)',          placeholder:'sk-xxxxxxxxxxxxxxxxxxxxxxxx', hint:'platform.openai.com → API keys', showEndpoint:false },
   anthropic:  { label:'Clé Anthropic (sk-ant-…)',   placeholder:'sk-ant-xxxxxxxxxxxxxxxxxxxx', hint:'console.anthropic.com → API Keys', showEndpoint:false },
   mistral:    { label:'Clé Mistral (…)',             placeholder:'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', hint:'console.mistral.ai → API Keys', showEndpoint:false },
+  nvidia:     { label:'Clé NVIDIA NIM (nvapi-…)',     placeholder:'nvapi-xxxxxxxxxxxxxxxxxxxxxxxx', hint:'build.nvidia.com → Get API Key', showEndpoint:false },
   custom:     { label:'Clé API custom',              placeholder:'votre-cle-api', hint:'Entrez votre endpoint ci-dessous', showEndpoint:true },
 };
 
@@ -2975,6 +3133,8 @@ function selectCodeProvider(p){
   if(inp) inp.placeholder = info.placeholder;
   if(ep)  ep.style.display = info.showEndpoint ? 'block' : 'none';
   updateModelSelectForProvider('apiCodeModel', p);
+  const nvInfo = document.getElementById('nvidiaNimInfo');
+  if(nvInfo) nvInfo.style.display = p === 'nvidia' ? 'block' : 'none';
 }
 
 // Sélectionne l'optgroup approprié selon le provider
@@ -2982,7 +3142,7 @@ function updateModelSelectForProvider(selectId, provider){
   const sel = document.getElementById(selectId);
   if(!sel) return;
   // Sélectionner la première option du bon groupe
-  const groupMap = { openrouter:'── OpenRouter ──', groq:'── Groq ──', openai:'── OpenAI Direct ──', anthropic:'── Anthropic Direct ──', mistral:'── Mistral Direct ──' };
+  const groupMap = { openrouter:'── OpenRouter ──', groq:'── Groq ──', openai:'── OpenAI Direct ──', anthropic:'── Anthropic Direct ──', mistral:'── Mistral Direct ──', nvidia:'── NVIDIA NIM ──' };
   const targetLabel = groupMap[provider];
   if(!targetLabel) return;
   for(const og of sel.querySelectorAll('optgroup')){
@@ -3007,6 +3167,7 @@ function getProviderEndpoint(provider){
     openai:     'https://api.openai.com/v1/chat/completions',
     anthropic:  null, // gère son propre format
     mistral:    'https://api.mistral.ai/v1/chat/completions',
+    nvidia:     'https://integrate.api.nvidia.com/v1/chat/completions',
   };
   return endpoints[provider] || null;
 }
@@ -3023,6 +3184,19 @@ async function testApiKey(key, model, provider, customEndpoint){
         signal: AbortSignal.timeout(15000)
       });
       return res.ok || res.status===429;
+    }catch(e){ return false; }
+  }
+  // NVIDIA NIM — format OpenAI-compatible avec endpoint forcé
+  if(provider === 'nvidia' || key.startsWith('nvapi-')){
+    const nvEndpoint = customEndpoint || 'https://integrate.api.nvidia.com/v1/chat/completions';
+    try{
+      const res = await fetch(nvEndpoint,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+        body: JSON.stringify({ model: model||'nvidia/llama-3.3-nemotron-super-49b-v1.5', messages:[{role:'user',content:'Hi'}], max_tokens:5 }),
+        signal: AbortSignal.timeout(20000)
+      });
+      return res.ok || res.status===429 || res.status===400;
     }catch(e){ return false; }
   }
   // Format OpenAI compatible (OpenRouter, Groq, OpenAI, Mistral, custom)
@@ -3050,7 +3224,13 @@ async function saveAndTestApi(use){
     const modelSel = document.getElementById('apiTextModel')?.value||'google/gemini-2.0-flash-001';
     model = modelSel === '__custom__' ? (document.getElementById('apiTextModelCustom')?.value||'').trim() : modelSel;
     customEndpoint = (document.getElementById('apiTextEndpoint')?.value||'').trim();
-    if(!key){ showAdminSaveToast('❌ Entrez votre clé API', 'error'); return; }
+    // Fallback sur clé déjà en cache si champ vide
+    if(!key){ const cached = getApiForUse('text'); key = cached.key || ''; }
+    if(!key){ showAdminSaveToast('❌ Collez une clé API ou utilisez la clé NVIDIA par défaut', 'error'); return; }
+    // Auto-détecter provider/endpoint si pas explicitement choisi
+    const _sigT = detectProviderFromKey(key);
+    if(_sigT && provider === 'openrouter' && key.startsWith('nvapi-')){ provider='nvidia'; customEndpoint=customEndpoint||'https://integrate.api.nvidia.com/v1/chat/completions'; }
+    if(!customEndpoint && _sigT && _sigT.endpoint) customEndpoint = _sigT.endpoint;
     setApiStatus('apiTextStatus', '⏳ Test en cours…', 'pending');
     showAdminSaveToast('⏳ Test de la clé '+provider+'…', 'pending');
     const ok = await testApiKey(key, model, provider, customEndpoint);
@@ -3068,7 +3248,11 @@ async function saveAndTestApi(use){
     const modelSel = document.getElementById('apiCodeModel')?.value||'google/gemini-2.0-flash-001';
     model = modelSel === '__custom__' ? (document.getElementById('apiCodeModelCustom')?.value||'').trim() : modelSel;
     customEndpoint = (document.getElementById('apiCodeEndpoint')?.value||'').trim();
-    if(!key){ showAdminSaveToast('❌ Entrez votre clé API', 'error'); return; }
+    if(!key){ const cachedC = getApiForUse('code'); key = cachedC.key || ''; }
+    if(!key){ showAdminSaveToast('❌ Collez une clé API ou utilisez la clé NVIDIA par défaut', 'error'); return; }
+    const _sigC = detectProviderFromKey(key);
+    if(_sigC && provider === 'openrouter' && key.startsWith('nvapi-')){ provider='nvidia'; customEndpoint=customEndpoint||'https://integrate.api.nvidia.com/v1/chat/completions'; }
+    if(!customEndpoint && _sigC && _sigC.endpoint) customEndpoint = _sigC.endpoint;
     setApiStatus('apiCodeStatus', '⏳ Test en cours…', 'pending');
     showAdminSaveToast('⏳ Test de la clé Code '+provider+'…', 'pending');
     const ok = await testApiKey(key, model, provider, customEndpoint);
@@ -4983,67 +5167,138 @@ async function improveCode(){
 }
 
 async function callCodeBuilderAI(userMessage, isImprovement=false){
+  const NVIDIA_KEY      = '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';
+  const NVIDIA_MODEL    = 'nvidia/llama-3.3-nemotron-super-49b-v1.5';
+  const NVIDIA_ENDPOINT = 'https://integrate.api.nvidia.com/v1/chat/completions';
+  // OpenRouter proxifie NVIDIA sans blocage CORS
+  const OR_ENDPOINT     = 'https://openrouter.ai/api/v1/chat/completions';
+  const OR_MODEL        = 'nvidia/llama-3.3-nemotron-super-49b-v1.5:free';
+
   const systemPrompt = isImprovement
-    ? 'Tu es un expert développeur web senior. Améliore le code qu\'on te donne. Renvoie UNIQUEMENT le code HTML complet amélioré, sans explication, sans markdown.'
+    ? `Tu es un expert développeur web senior de niveau MONDIAL. Améliore le code qu'on te donne.
+OBLIGATIONS :
+- Renvoie UNIQUEMENT le code HTML complet amélioré, AUCUN texte avant ou après
+- Code complet entre <!DOCTYPE html> et </html>
+- Design premium, animations CSS avancées, effets visuels époustouflants
+- Glassmorphism, gradients animés, parallax, particules, typewriter
+- Pas de markdown, pas d'explication`
     : (CODE_PROJECT_PROMPTS[codeProjectType] || CODE_PROJECT_PROMPTS.site);
 
   const messages = [
-    ...codeConversationHistory.slice(-4),
-    { role: 'user', content: systemPrompt + '\n\n' + userMessage }
+    { role: 'system', content: systemPrompt },
+    ...codeConversationHistory.slice(-6),
+    { role: 'user', content: userMessage }
   ];
+
+  const body = {
+    model:             NVIDIA_MODEL,
+    messages:          messages,
+    temperature:       0.6,
+    top_p:             0.95,
+    max_tokens:        16384,
+    frequency_penalty: 0,
+    presence_penalty:  0,
+    stream:            false
+  };
 
   let reply = null;
 
-  // ── 1. Utiliser la clé code admin (Groq, OpenRouter, etc.) ──
-  const codeCfg = getApiForUse('code');
-  if(codeCfg && codeCfg.key && codeCfg.key.length > 8){
-    try{
-      reply = await callAI(systemPrompt + '\n\n' + userMessage, 'code');
-      if(reply && reply.length > 100){
-        codeConversationHistory.push({role:'user',content:userMessage});
-        codeConversationHistory.push({role:'assistant',content:reply});
-        if(codeConversationHistory.length > 8) codeConversationHistory = codeConversationHistory.slice(-8);
-        return reply;
-      }
-    }catch(e){ console.warn('[nobot code] Admin API fallback:', e.message); }
-  }
-
-  // ── 2. Pollinations AI — 100% gratuit, pas de clé ──────────
-  try {
-    reply = await callPollinationsAI(systemPrompt, userMessage);
-    if(reply && reply.length > 100) {
-      codeConversationHistory.push({role:'user',content:userMessage});
-      codeConversationHistory.push({role:'assistant',content:reply});
-      if(codeConversationHistory.length > 8) codeConversationHistory = codeConversationHistory.slice(-8);
-      return reply;
+  // ── Tentative 1 : appel direct NVIDIA NIM ─────────────────
+  try{
+    const res = await fetch(NVIDIA_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+NVIDIA_KEY },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(90000)
+    });
+    if(res.ok){
+      const data = await res.json();
+      reply = data?.choices?.[0]?.message?.content || '';
+    } else {
+      const errBody = await res.json().catch(()=>({}));
+      console.warn('[nobot code] NVIDIA direct:', res.status, errBody?.detail||errBody?.message||'');
     }
-  } catch(e){ console.warn('[nobot code] Pollinations fallback:', e.message); }
-
-  // ── 3. OpenRouter avec clé texte en fallback ────────────────
-  const textCfg = getApiForUse('text');
-  if(textCfg.key && textCfg.key.length > 8){
-    try{
-      const endpoint = textCfg.customEndpoint || getProviderEndpoint(textCfg.provider||'openrouter') || 'https://openrouter.ai/api/v1/chat/completions';
-      const headers = {'Content-Type':'application/json','Authorization':'Bearer '+textCfg.key};
-      if((textCfg.provider||'openrouter')==='openrouter'){ headers['HTTP-Referer']=window.location.origin||'https://nobot.ai'; headers['X-Title']='nobot.ai Code Builder'; }
-      const res = await fetch(endpoint,{
-        method:'POST', headers,
-        body: JSON.stringify({ model: textCfg.model||'google/gemini-2.0-flash-001', messages, temperature:0.7, max_tokens:8192 }),
-        signal: AbortSignal.timeout(60000)
-      });
-      if(res.ok){
-        const data = await res.json();
-        reply = data?.choices?.[0]?.message?.content || '';
-        if(reply && reply.length > 50){
-          codeConversationHistory.push({role:'user',content:userMessage});
-          codeConversationHistory.push({role:'assistant',content:reply});
-          return reply;
-        }
-      }
-    }catch(e){ console.warn('[nobot code] Text API fallback:', e.message); }
+  } catch(e){
+    // CORS ou réseau → on passe au fallback silencieusement
+    console.warn('[nobot code] NVIDIA direct bloqué (CORS/réseau), passage OpenRouter:', e.message);
   }
 
-  throw new Error('Toutes les APIs ont échoué. Vérifiez votre connexion ou configurez une clé dans Admin.');
+  // ── Tentative 2 : OpenRouter proxifie NVIDIA (CORS ok) ────
+  if(!reply || reply.length < 100){
+    try{
+      const orBody = { ...body, model: OR_MODEL };
+      const res2 = await fetch(OR_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': 'Bearer '+NVIDIA_KEY,
+          'HTTP-Referer':  window.location.origin || 'https://nobot.ai',
+          'X-Title':       'nobot.ai Code Builder'
+        },
+        body: JSON.stringify(orBody),
+        signal: AbortSignal.timeout(90000)
+      });
+      if(res2.ok){
+        const data2 = await res2.json();
+        reply = data2?.choices?.[0]?.message?.content || '';
+        console.log('[nobot code] ✅ NVIDIA via OpenRouter OK');
+      } else {
+        const e2 = await res2.json().catch(()=>({}));
+        console.warn('[nobot code] OpenRouter NVIDIA:', res2.status, e2?.error?.message||'');
+      }
+    } catch(e){ console.warn('[nobot code] OpenRouter fallback erreur:', e.message); }
+  }
+
+  // ── Tentative 3 : OpenRouter Gemini Flash gratuit (backup) ─
+  if(!reply || reply.length < 100){
+    try{
+      const res3 = await fetch(OR_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': 'Bearer '+NVIDIA_KEY,
+          'HTTP-Referer':  window.location.origin || 'https://nobot.ai',
+          'X-Title':       'nobot.ai Code Builder'
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.0-flash-001',
+          messages, temperature:0.7, max_tokens:16384
+        }),
+        signal: AbortSignal.timeout(90000)
+      });
+      if(res3.ok){
+        const data3 = await res3.json();
+        reply = data3?.choices?.[0]?.message?.content || '';
+        console.log('[nobot code] ✅ Gemini Flash backup OK');
+      }
+    } catch(e){ console.warn('[nobot code] Gemini backup erreur:', e.message); }
+  }
+
+  // ── Tentative 4 : clé admin configurée (si différente) ────
+  if(!reply || reply.length < 100){
+    const codeCfg = getApiForUse('code');
+    if(codeCfg && codeCfg.key && codeCfg.key !== NVIDIA_KEY && codeCfg.key.length > 8){
+      try{
+        reply = await callAI(systemPrompt + '\n\n' + userMessage, 'code');
+      } catch(e){ console.warn('[nobot code] Admin key fallback:', e.message); }
+    }
+  }
+
+  if(!reply || reply.length < 100){
+    throw new Error('Toutes les APIs ont échoué. Vérifiez votre connexion internet.');
+  }
+
+  // Nettoyer blocs markdown
+  reply = reply.replace(/^```html\s*/i,'').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
+
+  codeConversationHistory.push({role:'user',    content:userMessage});
+  codeConversationHistory.push({role:'assistant',content:reply});
+  if(codeConversationHistory.length > 10) codeConversationHistory = codeConversationHistory.slice(-10);
+  return reply;
+}catch(e){
+    console.error('[nobot code] NVIDIA NIM erreur:', e.message);
+    throw new Error('❌ NVIDIA NIM a échoué : ' + e.message + '. Vérifiez votre connexion.');
+  }
 }
 
 // ── Pollinations AI — Gratuit, anonyme, pas de clé requise
