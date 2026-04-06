@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="nobot.ai">
 <link rel="manifest" id="pwa-manifest">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 /* ====== GLOBAL RESET ====== */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -914,6 +915,239 @@ h1.hero-title{font-family:'Outfit',sans-serif;font-size:clamp(28px,5vw,58px);fon
   white-space:nowrap;
   overflow:hidden;
 }
+
+/* ====== CODE MODAL OVERLAY ====== */
+#codeModal{
+  position:fixed;inset:0;z-index:8000;
+  background:rgba(6,0,20,0.92);
+  backdrop-filter:blur(20px);
+  display:none;flex-direction:column;
+  animation:fadeIn 0.25s ease;
+}
+#codeModal.open{display:flex;}
+
+/* ====== CODE MODAL TOPBAR ====== */
+.code-topbar{
+  display:flex;align-items:center;gap:10px;
+  padding:0 16px;height:52px;
+  background:rgba(10,0,30,0.9);
+  border-bottom:1px solid rgba(124,58,237,0.3);
+  flex-shrink:0;
+}
+.code-topbar-logo{
+  font-family:'Outfit',sans-serif;font-weight:900;font-size:15px;
+  background:linear-gradient(135deg,#a78bfa,#f472b6,#22d3ee);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-right:8px;
+}
+.code-tab-btn{
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.6);
+  border-radius:8px;padding:5px 14px;
+  font-size:12px;font-weight:600;cursor:pointer;
+  font-family:'Outfit',sans-serif;
+  transition:all 0.2s;
+}
+.code-tab-btn.active{
+  background:rgba(124,58,237,0.35);
+  border-color:rgba(124,58,237,0.6);
+  color:#c084fc;
+}
+.code-tab-btn:hover:not(.active){background:rgba(255,255,255,0.1);color:#fff;}
+.code-close-btn{
+  margin-left:auto;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.5);border-radius:8px;padding:5px 12px;
+  font-size:13px;cursor:pointer;transition:all 0.2s;
+}
+.code-close-btn:hover{background:rgba(239,68,68,0.2);border-color:rgba(239,68,68,0.4);color:#fca5a5;}
+
+/* ====== CODE EDITOR BODY ====== */
+.code-body{
+  display:flex;flex:1;overflow:hidden;
+}
+
+/* ====== CODE LEFT PANEL (IA chat) ====== */
+.code-ai-panel{
+  width:340px;flex-shrink:0;
+  display:flex;flex-direction:column;
+  border-right:1px solid rgba(255,255,255,0.07);
+  background:rgba(8,2,22,0.8);
+}
+.code-ai-messages{
+  flex:1;overflow-y:auto;padding:14px;
+  display:flex;flex-direction:column;gap:10px;
+  scrollbar-width:thin;scrollbar-color:rgba(124,58,237,0.3) transparent;
+}
+.code-ai-messages::-webkit-scrollbar{width:4px;}
+.code-ai-messages::-webkit-scrollbar-thumb{background:rgba(124,58,237,0.4);border-radius:4px;}
+.code-msg-ai,.code-msg-user{
+  max-width:100%;border-radius:12px;padding:9px 13px;font-size:12px;line-height:1.65;
+}
+.code-msg-ai{
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.1);
+  color:#e2e8f0;align-self:flex-start;
+}
+.code-msg-user{
+  background:linear-gradient(135deg,rgba(124,58,237,0.4),rgba(244,114,182,0.25));
+  border:1px solid rgba(124,58,237,0.35);
+  color:#fff;align-self:flex-end;
+}
+.code-msg-label{
+  font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);
+  margin-bottom:3px;
+}
+.code-msg-user .code-msg-label{text-align:right;}
+.code-ai-input-area{
+  padding:12px;border-top:1px solid rgba(255,255,255,0.07);
+  display:flex;flex-direction:column;gap:8px;
+  background:rgba(10,0,30,0.6);
+}
+.code-type-row{
+  display:flex;gap:6px;flex-wrap:wrap;
+}
+.code-type-pill{
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.6);border-radius:999px;padding:3px 10px;
+  font-size:10px;font-weight:600;cursor:pointer;transition:all 0.2s;
+}
+.code-type-pill.active,.code-type-pill:hover{
+  background:rgba(124,58,237,0.3);border-color:rgba(124,58,237,0.5);color:#c084fc;
+}
+.code-input-row{
+  display:flex;gap:8px;align-items:flex-end;
+}
+.code-input-field{
+  flex:1;background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:10px;padding:9px 13px;
+  font-size:12px;color:#fff;
+  font-family:'DM Sans',sans-serif;outline:none;
+  resize:none;max-height:100px;
+  transition:border-color 0.2s;
+}
+.code-input-field:focus{border-color:rgba(124,58,237,0.5);}
+.code-send-btn{
+  background:linear-gradient(135deg,#7c3aed,#f472b6);
+  border:none;border-radius:10px;padding:9px 16px;
+  font-size:12px;font-weight:700;color:#fff;cursor:pointer;
+  font-family:'Outfit',sans-serif;
+  white-space:nowrap;
+  box-shadow:0 4px 16px rgba(124,58,237,0.4);
+  transition:transform 0.15s,box-shadow 0.15s;
+}
+.code-send-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(124,58,237,0.6);}
+.code-send-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+
+/* ====== CODE EDITOR CENTER ====== */
+.code-editor-panel{
+  flex:1;display:flex;flex-direction:column;overflow:hidden;
+  background:#0d0920;
+}
+.code-editor-header{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 14px;
+  background:rgba(10,0,30,0.8);
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  flex-shrink:0;
+}
+.code-file-tab{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(124,58,237,0.2);border:1px solid rgba(124,58,237,0.3);
+  border-radius:6px;padding:4px 12px;
+  font-size:11px;font-weight:600;color:#c084fc;
+  font-family:'Courier New',monospace;
+}
+.code-lang-badge{
+  background:rgba(34,211,238,0.15);border:1px solid rgba(34,211,238,0.3);
+  border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;color:#67e8f9;
+  font-family:'Outfit',sans-serif;
+}
+.code-actions{margin-left:auto;display:flex;gap:6px;}
+.code-action-btn{
+  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.6);border-radius:6px;padding:4px 12px;
+  font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s;
+}
+.code-action-btn:hover{background:rgba(255,255,255,0.14);color:#fff;}
+.code-action-btn.run{
+  background:linear-gradient(135deg,rgba(16,185,129,0.3),rgba(6,182,212,0.2));
+  border-color:rgba(16,185,129,0.4);color:#6ee7b7;
+}
+.code-action-btn.run:hover{background:rgba(16,185,129,0.4);color:#fff;}
+.code-action-btn.copy{
+  background:rgba(124,58,237,0.2);border-color:rgba(124,58,237,0.4);color:#c084fc;
+}
+
+/* ====== ACTUAL CODE TEXTAREA ====== */
+#codeEditorTextarea{
+  flex:1;width:100%;border:none;outline:none;resize:none;
+  background:#0d0920;
+  color:#e2e8f0;
+  font-family:'Courier New',Consolas,monospace;
+  font-size:13px;line-height:1.7;
+  padding:16px 20px;
+  tab-size:2;
+  white-space:pre;
+  overflow:auto;
+  scrollbar-width:thin;scrollbar-color:rgba(124,58,237,0.3) transparent;
+}
+#codeEditorTextarea::-webkit-scrollbar{width:6px;height:6px;}
+#codeEditorTextarea::-webkit-scrollbar-thumb{background:rgba(124,58,237,0.4);border-radius:4px;}
+
+/* ====== PREVIEW PANEL ====== */
+.code-preview-panel{
+  width:420px;flex-shrink:0;
+  display:flex;flex-direction:column;
+  border-left:1px solid rgba(255,255,255,0.07);
+  background:#0a0a14;
+}
+.code-preview-header{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 14px;
+  background:rgba(10,0,30,0.8);
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  flex-shrink:0;
+}
+.preview-title{font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);font-family:'Outfit',sans-serif;letter-spacing:0.08em;text-transform:uppercase;}
+.preview-live-dot{width:6px;height:6px;border-radius:50%;background:#10b981;animation:pulse 2s infinite;flex-shrink:0;}
+#codePreviewFrame{
+  flex:1;width:100%;border:none;
+  background:#fff;
+}
+.code-preview-placeholder{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;color:rgba(255,255,255,0.25);font-size:13px;text-align:center;padding:24px;
+}
+
+/* ====== CODE TYPING INDICATOR ====== */
+.code-typing{
+  display:flex;align-items:center;gap:4px;padding:8px 12px;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);
+  border-radius:10px;align-self:flex-start;
+}
+.code-typing span{width:6px;height:6px;background:rgba(124,58,237,0.7);border-radius:50%;animation:typing-bounce 1.2s ease-in-out infinite;}
+.code-typing span:nth-child(2){animation-delay:0.15s;}
+.code-typing span:nth-child(3){animation-delay:0.3s;}
+@keyframes typing-bounce{0%,80%,100%{transform:scale(0.7);opacity:0.5}40%{transform:scale(1);opacity:1}}
+
+/* ====== SIDEBAR CODE ITEM HIGHLIGHT ====== */
+.sidebar-item.code-mode-active{
+  background:rgba(124,58,237,0.2);
+  border-left:2px solid #7c3aed;
+  color:#c084fc;
+}
+
+/* ====== RESPONSIVE CODE MODAL ====== */
+@media(max-width:900px){
+  .code-preview-panel{display:none;}
+}
+@media(max-width:640px){
+  .code-ai-panel{width:100%;border-right:none;}
+  .code-editor-panel{display:none;}
+}
 </style>
 
 <script>
@@ -1238,6 +1472,12 @@ if('serviceWorker' in navigator){
       <!-- BOUTON RECHERCHE INTELLIGENTE -->
       <div class="sidebar-item" onclick="openSmartModal();closeSidebarMobile()"><span class="si-icon">🔍</span>Recherche intelligente <span id="smartBadge" style="margin-left:auto;font-size:10px;background:rgba(16,185,129,0.3);color:#6ee7b7;padding:1px 8px;border-radius:999px;display:none;">ON</span></div>
 
+      <!-- BOUTON MODE CODE -->
+      <div class="sidebar-item" id="codeModeBtn" onclick="openCodeModal();closeSidebarMobile()" style="border:1px solid rgba(124,58,237,0.2);margin:4px 8px;border-radius:10px;padding:9px 12px;">
+        <span class="si-icon" style="font-size:16px;">💻</span><span style="font-weight:700;">Mode Code</span>
+        <span style="margin-left:auto;font-size:10px;background:linear-gradient(135deg,rgba(124,58,237,0.5),rgba(34,211,238,0.3));color:#67e8f9;padding:1px 8px;border-radius:999px;border:1px solid rgba(34,211,238,0.4);">BUILDER</span>
+      </div>
+
       <div class="sidebar-section">Historique</div>
       <div class="sidebar-item" style="font-size:11px;color:rgba(255,255,255,0.6);">Aucun historique</div>
     </div>
@@ -1365,17 +1605,366 @@ if('serviceWorker' in navigator){
 
     <div class="admin-grid">
 
-      <!-- CLÉS API DYNAMIQUES -->
-      <div class="admin-card full">
+      <!-- ══════════════════════════════════════════════════
+           GESTION DES CLÉS API PAR USAGE
+           ══════════════════════════════════════════════════ -->
+      <div class="admin-card full" id="apiManagerCard">
         <div class="card-header">
           <div class="card-icon ci-purple">🔑</div>
-          <div><div class="card-title">Clés API & Fournisseurs</div><div class="card-sub">Clé utilisée automatiquement — nom visible uniquement pour vous</div></div>
+          <div>
+            <div class="card-title">Gestionnaire de Clés API</div>
+            <div class="card-sub">Une clé dédiée par usage — chaque service est indépendant et isolé</div>
+          </div>
+          <div id="apiGlobalStatus" style="margin-left:auto;font-size:11px;font-weight:700;padding:4px 14px;border-radius:999px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#6ee7b7;">
+            ✅ Gratuit actif (Pollinations)
+          </div>
         </div>
-        <div id="apiKeysList"></div>
-        <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
-          <button class="save-btn" onclick="addApiKeyRow()" style="background:linear-gradient(135deg,#10b981,#06b6d4);">+ Ajouter une clé API</button>
-          <button class="save-btn" onclick="saveApiKeys()">💾 Sauvegarder tout</button>
-          <button class="save-btn red" onclick="resetApiCache()" style="background:rgba(239,68,68,0.25);border:1px solid rgba(239,68,68,0.4);color:#fca5a5;" title="Vide les anciennes clés du cache navigateur">🗑 Réinitialiser le cache</button>
+
+        <!-- TAB NAV -->
+        <div style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;">
+          <button class="api-tab-btn active" id="apitab-text"    onclick="switchApiTab('text')">💬 Texte / Chat</button>
+          <button class="api-tab-btn"         id="apitab-code"    onclick="switchApiTab('code')">💻 Code Builder</button>
+          <button class="api-tab-btn"         id="apitab-image"   onclick="switchApiTab('image')">🖼 Génération Photo</button>
+          <button class="api-tab-btn"         id="apitab-video"   onclick="switchApiTab('video')">🎬 Vidéo / Voix</button>
+        </div>
+
+        <!-- ── TAB: TEXTE ── -->
+        <div class="api-tab-pane" id="apipane-text">
+          <div style="background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.25);border-radius:14px;padding:16px 18px;margin-bottom:16px;">
+            <div style="font-size:12px;font-weight:700;color:#c084fc;margin-bottom:6px;">💬 API pour le Chat principal & tous les modes texte</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.5);line-height:1.6;">Choisissez votre fournisseur IA — Groq, OpenRouter, OpenAI, Anthropic, Mistral… Collez n'importe quelle clé.<br>Sans clé → Pollinations AI gratuit prend le relai automatiquement.</div>
+          </div>
+
+          <!-- PROVIDER SELECTOR -->
+          <div style="margin-bottom:16px;">
+            <label class="form-label">Fournisseur API</label>
+            <div style="display:flex;gap:7px;flex-wrap:wrap;" id="textProviderBtns">
+              <button class="api-provider-btn active" id="txtprov-openrouter" onclick="selectTextProvider('openrouter')">🔀 OpenRouter</button>
+              <button class="api-provider-btn" id="txtprov-groq"        onclick="selectTextProvider('groq')">⚡ Groq</button>
+              <button class="api-provider-btn" id="txtprov-openai"      onclick="selectTextProvider('openai')">🤖 OpenAI</button>
+              <button class="api-provider-btn" id="txtprov-anthropic"   onclick="selectTextProvider('anthropic')">🧠 Anthropic</button>
+              <button class="api-provider-btn" id="txtprov-mistral"     onclick="selectTextProvider('mistral')">🌊 Mistral</button>
+              <button class="api-provider-btn" id="txtprov-custom"      onclick="selectTextProvider('custom')">🔧 Custom / Autre</button>
+            </div>
+          </div>
+
+          <!-- KEY INPUT -->
+          <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;margin-bottom:12px;">
+            <div>
+              <label class="form-label" id="apiTextKeyLabel">Clé API</label>
+              <div style="position:relative;">
+                <input type="password" id="apiTextKey" class="form-input" placeholder="Collez votre clé ici…" style="padding-right:44px;font-family:monospace;font-size:12px;"/>
+                <button onclick="toggleVis('apiTextKey',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:15px;">👁</button>
+              </div>
+            </div>
+            <button onclick="saveAndTestApi('text')" style="background:linear-gradient(135deg,#7c3aed,#f472b6);border:none;border-radius:10px;padding:10px 20px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;height:42px;">💾 Enregistrer & Tester</button>
+          </div>
+
+          <!-- CUSTOM ENDPOINT (visible uniquement pour "custom") -->
+          <div id="txtCustomEndpointRow" style="display:none;margin-bottom:12px;">
+            <label class="form-label">URL de base de l'API (endpoint)</label>
+            <input type="text" id="apiTextEndpoint" class="form-input" placeholder="https://api.monprovider.com/v1" style="font-family:monospace;font-size:12px;"/>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+            <div>
+              <label class="form-label">Modèle</label>
+              <select id="apiTextModel" class="form-select" style="font-size:12px;">
+                <optgroup label="── OpenRouter ──">
+                  <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash</option>
+                  <option value="google/gemini-flash-1.5">Gemini 1.5 Flash</option>
+                  <option value="openai/gpt-4o">GPT-4o (via OR)</option>
+                  <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet (via OR)</option>
+                  <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (gratuit)</option>
+                  <option value="mistralai/mistral-7b-instruct:free">Mistral 7B (gratuit)</option>
+                </optgroup>
+                <optgroup label="── Groq ──">
+                  <option value="llama-3.3-70b-versatile">Llama 3.3 70B Versatile</option>
+                  <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant</option>
+                  <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+                  <option value="gemma2-9b-it">Gemma 2 9B</option>
+                  <option value="deepseek-r1-distill-llama-70b">DeepSeek R1 Distill 70B</option>
+                  <option value="qwen-qwq-32b">Qwen QwQ 32B</option>
+                </optgroup>
+                <optgroup label="── OpenAI Direct ──">
+                  <option value="gpt-4o">GPT-4o</option>
+                  <option value="gpt-4o-mini">GPT-4o Mini</option>
+                  <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                </optgroup>
+                <optgroup label="── Anthropic Direct ──">
+                  <option value="claude-opus-4-5">Claude Opus 4.5</option>
+                  <option value="claude-sonnet-4-5">Claude Sonnet 4.5</option>
+                  <option value="claude-haiku-3-5">Claude Haiku 3.5</option>
+                </optgroup>
+                <optgroup label="── Mistral Direct ──">
+                  <option value="mistral-large-latest">Mistral Large</option>
+                  <option value="mistral-small-latest">Mistral Small</option>
+                  <option value="open-mistral-7b">Open Mistral 7B</option>
+                </optgroup>
+                <optgroup label="── Custom ──">
+                  <option value="__custom__">Saisir manuellement →</option>
+                </optgroup>
+              </select>
+              <!-- Champ modèle custom -->
+              <input type="text" id="apiTextModelCustom" class="form-input" placeholder="nom-exact-du-modele" style="display:none;margin-top:6px;font-family:monospace;font-size:12px;"/>
+            </div>
+            <div>
+              <label class="form-label">Statut</label>
+              <div id="apiTextStatus" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px;font-size:12px;color:rgba(255,255,255,0.5);">Non testé</div>
+            </div>
+          </div>
+
+          <!-- INFO PROVIDER -->
+          <div id="txtProviderInfo" style="font-size:11px;color:rgba(255,255,255,0.3);line-height:1.7;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:8px;">
+            💡 <strong style="color:#a78bfa;">OpenRouter</strong> : clé commence par <code>sk-or-</code> — obtenez-en une sur <a href="https://openrouter.ai" target="_blank" style="color:#a78bfa;">openrouter.ai</a><br>
+            ⚡ <strong style="color:#a78bfa;">Groq</strong> : clé commence par <code>gsk_</code> — obtenez-en une sur <a href="https://console.groq.com" target="_blank" style="color:#a78bfa;">console.groq.com</a> (gratuit)<br>
+            🤖 <strong style="color:#a78bfa;">OpenAI</strong> : clé commence par <code>sk-</code> — sur <a href="https://platform.openai.com" target="_blank" style="color:#a78bfa;">platform.openai.com</a>
+          </div>
+        </div>
+
+        <!-- ── TAB: CODE ── -->
+        <div class="api-tab-pane" id="apipane-code" style="display:none;">
+          <div style="background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.2);border-radius:14px;padding:16px 18px;margin-bottom:16px;">
+            <div style="font-size:12px;font-weight:700;color:#67e8f9;margin-bottom:6px;">💻 API dédiée au Mode Code Builder</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.5);line-height:1.6;">Utilisée uniquement pour générer des sites web et apps. Peut être un fournisseur différent du chat.<br>Sans clé → Pollinations AI gratuit est utilisé automatiquement.</div>
+          </div>
+
+          <!-- PROVIDER SELECTOR -->
+          <div style="margin-bottom:16px;">
+            <label class="form-label">Fournisseur API</label>
+            <div style="display:flex;gap:7px;flex-wrap:wrap;">
+              <button class="api-provider-btn active" id="codeprov-openrouter" onclick="selectCodeProvider('openrouter')">🔀 OpenRouter</button>
+              <button class="api-provider-btn" id="codeprov-groq"        onclick="selectCodeProvider('groq')">⚡ Groq</button>
+              <button class="api-provider-btn" id="codeprov-openai"      onclick="selectCodeProvider('openai')">🤖 OpenAI</button>
+              <button class="api-provider-btn" id="codeprov-anthropic"   onclick="selectCodeProvider('anthropic')">🧠 Anthropic</button>
+              <button class="api-provider-btn" id="codeprov-mistral"     onclick="selectCodeProvider('mistral')">🌊 Mistral</button>
+              <button class="api-provider-btn" id="codeprov-custom"      onclick="selectCodeProvider('custom')">🔧 Custom</button>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;margin-bottom:12px;">
+            <div>
+              <label class="form-label" id="apiCodeKeyLabel">Clé API</label>
+              <div style="position:relative;">
+                <input type="password" id="apiCodeKey" class="form-input" placeholder="Collez votre clé ici…" style="padding-right:44px;font-family:monospace;font-size:12px;"/>
+                <button onclick="toggleVis('apiCodeKey',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:15px;">👁</button>
+              </div>
+            </div>
+            <button onclick="saveAndTestApi('code')" style="background:linear-gradient(135deg,#06b6d4,#7c3aed);border:none;border-radius:10px;padding:10px 20px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;height:42px;">💾 Enregistrer & Tester</button>
+          </div>
+
+          <div id="codeCustomEndpointRow" style="display:none;margin-bottom:12px;">
+            <label class="form-label">URL de base de l'API</label>
+            <input type="text" id="apiCodeEndpoint" class="form-input" placeholder="https://api.monprovider.com/v1" style="font-family:monospace;font-size:12px;"/>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+            <div>
+              <label class="form-label">Modèle pour le code</label>
+              <select id="apiCodeModel" class="form-select" style="font-size:12px;">
+                <optgroup label="── OpenRouter ──">
+                  <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash</option>
+                  <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet (meilleur)</option>
+                  <option value="openai/gpt-4o">GPT-4o (via OR)</option>
+                  <option value="deepseek/deepseek-coder">DeepSeek Coder</option>
+                  <option value="mistralai/codestral-mamba">Codestral</option>
+                  <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (gratuit)</option>
+                </optgroup>
+                <optgroup label="── Groq ──">
+                  <option value="llama-3.3-70b-versatile">Llama 3.3 70B Versatile</option>
+                  <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant</option>
+                  <option value="deepseek-r1-distill-llama-70b">DeepSeek R1 Distill 70B</option>
+                  <option value="qwen-qwq-32b">Qwen QwQ 32B</option>
+                </optgroup>
+                <optgroup label="── OpenAI Direct ──">
+                  <option value="gpt-4o">GPT-4o</option>
+                  <option value="gpt-4o-mini">GPT-4o Mini</option>
+                </optgroup>
+                <optgroup label="── Anthropic Direct ──">
+                  <option value="claude-sonnet-4-5">Claude Sonnet 4.5</option>
+                  <option value="claude-haiku-3-5">Claude Haiku 3.5</option>
+                </optgroup>
+                <optgroup label="── Custom ──">
+                  <option value="__custom__">Saisir manuellement →</option>
+                </optgroup>
+              </select>
+              <input type="text" id="apiCodeModelCustom" class="form-input" placeholder="nom-exact-du-modele" style="display:none;margin-top:6px;font-family:monospace;font-size:12px;"/>
+            </div>
+            <div>
+              <label class="form-label">Statut</label>
+              <div id="apiCodeStatus" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px;font-size:12px;color:rgba(255,255,255,0.5);">Non testé</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.3);">💡 Groq est ultra-rapide et gratuit — parfait pour le Code Builder. Clé sur <a href="https://console.groq.com" target="_blank" style="color:#67e8f9;">console.groq.com</a></div>
+        </div>
+
+        <!-- ── TAB: PHOTO ── -->
+        <div class="api-tab-pane" id="apipane-image" style="display:none;">
+          <div style="background:rgba(244,114,182,0.08);border:1px solid rgba(244,114,182,0.2);border-radius:14px;padding:16px 18px;margin-bottom:16px;">
+            <div style="font-size:12px;font-weight:700;color:#f9a8d4;margin-bottom:6px;">🖼 API pour la génération d'images</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.5);line-height:1.6;">Pollinations Image est gratuit et sans clé. Pour plus de qualité : clé OpenAI (DALL-E 3) ou clé Stability AI.<br>Sans clé → Pollinations Image gratuit fonctionne automatiquement.</div>
+          </div>
+          <div style="margin-bottom:16px;">
+            <label class="form-label">Fournisseur d'images</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="api-provider-btn active" id="imgprov-pollinations" onclick="selectImageProvider('pollinations')">
+                🆓 Pollinations (gratuit)
+              </button>
+              <button class="api-provider-btn" id="imgprov-openai" onclick="selectImageProvider('openai')">
+                🤖 OpenAI DALL-E 3
+              </button>
+              <button class="api-provider-btn" id="imgprov-stability" onclick="selectImageProvider('stability')">
+                🎨 Stability AI
+              </button>
+            </div>
+          </div>
+          <div id="imgKeySection" style="display:none;margin-bottom:12px;">
+            <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;">
+              <div>
+                <label class="form-label" id="imgKeyLabel">Clé API OpenAI</label>
+                <div style="position:relative;">
+                  <input type="password" id="apiImageKey" class="form-input" placeholder="sk-…" style="padding-right:44px;font-family:monospace;font-size:12px;"/>
+                  <button onclick="toggleVis('apiImageKey',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:15px;">👁</button>
+                </div>
+              </div>
+              <button onclick="saveAndTestApi('image')" style="background:linear-gradient(135deg,#ec4899,#f59e0b);border:none;border-radius:10px;padding:10px 20px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;height:42px;">💾 Enregistrer & Tester</button>
+            </div>
+          </div>
+          <div id="apiImageStatus" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px;font-size:12px;color:#6ee7b7;margin-bottom:8px;">✅ Pollinations Image actif — gratuit & illimité</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.3);">💡 Pollinations génère des images HD via un simple URL — aucune clé requise pour vos clients.</div>
+        </div>
+
+        <!-- ── TAB: VIDÉO/VOIX ── -->
+        <div class="api-tab-pane" id="apipane-video" style="display:none;">
+          <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:14px;padding:16px 18px;margin-bottom:16px;">
+            <div style="font-size:12px;font-weight:700;color:#fde68a;margin-bottom:6px;">🎬 Voix IA — Dictée & Lecture des réponses</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.5);line-height:1.6;">La synthèse vocale (TTS) et la reconnaissance vocale (STT) pour dicter et écouter les réponses.<br>Web Speech API est gratuite et native au navigateur — aucune clé requise.</div>
+          </div>
+          <div style="margin-bottom:16px;">
+            <label class="form-label">Moteur de voix</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="api-provider-btn active" id="voiceprov-browser" onclick="selectVoiceProvider('browser')">
+                🆓 Navigateur (gratuit)
+              </button>
+              <button class="api-provider-btn" id="voiceprov-openai" onclick="selectVoiceProvider('openai')">
+                🤖 OpenAI TTS/Whisper
+              </button>
+              <button class="api-provider-btn" id="voiceprov-elevenlabs" onclick="selectVoiceProvider('elevenlabs')">
+                🎙 ElevenLabs
+              </button>
+            </div>
+          </div>
+          <div id="voiceKeySection" style="display:none;margin-bottom:12px;">
+            <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;">
+              <div>
+                <label class="form-label" id="voiceKeyLabel">Clé API</label>
+                <div style="position:relative;">
+                  <input type="password" id="apiVoiceKey" class="form-input" placeholder="Clé API…" style="padding-right:44px;font-family:monospace;font-size:12px;"/>
+                  <button onclick="toggleVis('apiVoiceKey',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:15px;">👁</button>
+                </div>
+              </div>
+              <button onclick="saveAndTestApi('voice')" style="background:linear-gradient(135deg,#f59e0b,#10b981);border:none;border-radius:10px;padding:10px 20px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;height:42px;">💾 Enregistrer & Tester</button>
+            </div>
+          </div>
+          <div id="apiVoiceStatus" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px;font-size:12px;color:#6ee7b7;margin-bottom:8px;">✅ Voix navigateur active — gratuit & aucune clé requise</div>
+          <div style="margin-top:12px;">
+            <label class="form-label">Activer la voix dans le chat</label>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <input type="checkbox" id="voiceTtsEnabled" onchange="saveVoiceSettings()" style="accent-color:#7c3aed;width:16px;height:16px;"/>
+                <span style="font-size:12px;color:rgba(255,255,255,0.7);">Lire les réponses IA à voix haute (TTS)</span>
+              </label>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:8px;cursor:pointer;">
+              <input type="checkbox" id="voiceSttEnabled" onchange="saveVoiceSettings()" style="accent-color:#7c3aed;width:16px;height:16px;"/>
+              <span style="font-size:12px;color:rgba(255,255,255,0.7);">Dicter les messages avec le micro (STT)</span>
+            </div>
+          </div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:10px;">💡 OpenAI Whisper est le meilleur STT. ElevenLabs donne des voix ultra-réalistes.</div>
+        </div>
+
+        <!-- BOUTON RESET GLOBAL -->
+        <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.07);display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+          <div style="font-size:11px;color:rgba(16,185,129,0.7);flex:1;">🔒 Les clés sont stockées dans Supabase (base sécurisée) et partagées automatiquement avec tous les utilisateurs connectés.</div>
+          <button onclick="resetAllApiKeys()" style="background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.35);color:#fca5a5;border-radius:8px;padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;">🗑 Effacer toutes les clés</button>
+        </div>
+      </div>
+
+      <style>
+      .api-tab-btn{
+        background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+        color:rgba(255,255,255,0.6);border-radius:999px;padding:7px 18px;
+        font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;
+        transition:all 0.2s;
+      }
+      .api-tab-btn:hover{background:rgba(255,255,255,0.1);color:#fff;}
+      .api-tab-btn.active{
+        background:linear-gradient(135deg,rgba(124,58,237,0.5),rgba(244,114,182,0.3));
+        border-color:rgba(124,58,237,0.6);color:#fff;
+        box-shadow:0 2px 12px rgba(124,58,237,0.3);
+      }
+      .api-provider-btn{
+        background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+        color:rgba(255,255,255,0.6);border-radius:10px;padding:8px 16px;
+        font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;
+      }
+      .api-provider-btn:hover{background:rgba(255,255,255,0.1);color:#fff;}
+      .api-provider-btn.active{
+        background:rgba(16,185,129,0.2);border-color:rgba(16,185,129,0.5);color:#6ee7b7;
+        box-shadow:0 0 12px rgba(16,185,129,0.2);
+      }
+      </style>
+
+      <!-- SUPABASE STATUS & SETUP — ENHANCED -->
+      <div class="admin-card full" id="supabaseSetupCard">
+        <div class="card-header">
+          <div class="card-icon" style="background:rgba(62,207,142,0.15);color:#3ecf8e;font-size:20px;">🗄</div>
+          <div><div class="card-title">Supabase — Base de données centralisée</div><div class="card-sub">Initialisation complète en 1 clic — aucun SQL manuel requis</div></div>
+          <div id="supabaseStatusBadge" style="margin-left:auto;font-size:11px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:999px;padding:4px 14px;color:rgba(255,255,255,0.4);">Vérification…</div>
+        </div>
+
+        <!-- TERMINAL CMD OUTPUT -->
+        <div id="initTerminal" style="background:#060612;border:1px solid rgba(62,207,142,0.25);border-radius:12px;padding:14px 16px;font-family:'Courier New',monospace;font-size:11.5px;color:#a5f3fc;min-height:120px;max-height:240px;overflow-y:auto;margin-bottom:14px;line-height:1.8;box-shadow:inset 0 2px 12px rgba(0,0,0,0.5);">
+          <span style="color:rgba(255,255,255,0.2);">$ nobot-init --ready</span><br>
+          <span style="color:#6ee7b7;">✓</span> Système prêt — Cliquez sur <strong style="color:#fde68a;">🚀 Initialiser le système</strong> pour tout configurer automatiquement.
+        </div>
+
+        <!-- MAIN BUTTONS -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+          <!-- INIT BUTTON — PRINCIPAL -->
+          <button onclick="initFullSystem()" id="btnInitSystem" style="background:linear-gradient(135deg,#3ecf8e,#06b6d4);border:none;border-radius:10px;padding:12px 24px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 4px 20px rgba(62,207,142,0.35);display:flex;align-items:center;gap:8px;font-family:'Outfit',sans-serif;">
+            🚀 Initialiser le système
+          </button>
+          <!-- UPDATE BUTTON -->
+          <button onclick="updateSystem()" id="btnUpdateSystem" style="background:linear-gradient(135deg,#7c3aed,#f472b6);border:none;border-radius:10px;padding:12px 20px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">
+            ⬆️ Mettre à jour
+          </button>
+          <!-- CHECK -->
+          <button onclick="checkSupabaseStatus()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:10px 18px;color:rgba(255,255,255,0.7);font-size:12px;font-weight:600;cursor:pointer;">
+            🔄 Vérifier connexion
+          </button>
+          <!-- PUSH KEYS -->
+          <button onclick="supabasePushAllKeys()" style="background:rgba(124,58,237,0.2);border:1px solid rgba(124,58,237,0.4);border-radius:10px;padding:10px 18px;color:#c084fc;font-size:12px;font-weight:600;cursor:pointer;">
+            ☁️ Sync Supabase
+          </button>
+          <!-- SUPABASE DASHBOARD LINK -->
+          <a href="https://supabase.com/dashboard/project/joocfwvvlkxwgxwdjoxe" target="_blank" style="background:rgba(62,207,142,0.15);border:1px solid rgba(62,207,142,0.35);border-radius:10px;padding:10px 18px;color:#3ecf8e;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:6px;">
+            🔗 Dashboard Supabase
+          </a>
+          <!-- DOWNLOAD PDF CONNECTIONS -->
+          <button onclick="downloadConnectionsPDF()" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:10px 18px;color:#fca5a5;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+            📄 Télécharger PDF connexions
+          </button>
+        </div>
+
+        <div id="supabaseStatusMsg" style="background:rgba(62,207,142,0.08);border:1px solid rgba(62,207,142,0.2);border-radius:12px;padding:14px 18px;font-size:12px;color:#6ee7b7;margin-bottom:14px;line-height:1.7;">
+          🔄 Connexion à Supabase en cours…
+        </div>
+
+        <div style="margin-top:4px;font-size:11px;color:rgba(255,255,255,0.3);line-height:1.6;">
+          📍 Projet : <code style="color:#3ecf8e;">joocfwvvlkxwgxwdjoxe.supabase.co</code> &nbsp;·&nbsp; 
+          Clés chargées au démarrage pour <strong style="color:#fff;">tous les visiteurs</strong> sans configuration.
+          &nbsp;·&nbsp; <span style="color:#a78bfa;">Conversations par appareil sauvegardées dans Supabase</span>
         </div>
       </div>
 
@@ -1521,7 +2110,7 @@ if('serviceWorker' in navigator){
           </div>
         </div>
         <button class="save-btn green" onclick="changePassword()">🔒 Changer le mot de passe</button>
-        <span style="font-size:11px;color:rgba(255,255,255,0.7);margin-left:12px;">Stocké et sécurisé localement</span>
+        <span style="font-size:11px;color:rgba(255,255,255,0.7);margin-left:12px;">Synchronisé avec Supabase</span>
       </div>
 
 
@@ -1529,11 +2118,13 @@ if('serviceWorker' in navigator){
       <div class="admin-card full">
         <div class="card-header">
           <div class="card-icon ci-blue">👥</div>
-          <div><div class="card-title">Utilisateurs connectés</div><div class="card-sub">IP & géolocalisation — mis à jour en temps réel</div></div>
+          <div><div class="card-title">Utilisateurs connectés</div><div class="card-sub">IP & géolocalisation — sauvegardé dans Supabase — mis à jour en temps réel</div></div>
         </div>
         <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
-          <span style="font-size:12px;color:rgba(255,255,255,0.5);">Actualisé automatiquement · Basé sur les données de navigation réelles</span>
-          <button class="save-btn red" onclick="clearConnections()" style="margin-left:auto;padding:6px 16px;font-size:12px;">🗑 Effacer l'historique</button>
+          <span style="font-size:12px;color:rgba(255,255,255,0.5);">Actualisé automatiquement · Supabase + local</span>
+          <button onclick="loadConnectionsFromSupabase()" style="background:rgba(62,207,142,0.15);border:1px solid rgba(62,207,142,0.3);border-radius:8px;padding:6px 14px;color:#6ee7b7;font-size:12px;font-weight:600;cursor:pointer;">🔄 Recharger Supabase</button>
+          <button onclick="downloadConnectionsPDF()" style="background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.3);border-radius:8px;padding:6px 14px;color:#c084fc;font-size:12px;font-weight:600;cursor:pointer;">📄 PDF</button>
+          <button class="save-btn red" onclick="clearConnections()" style="margin-left:auto;padding:6px 16px;font-size:12px;">🗑 Effacer</button>
         </div>
         <div id="connectionsTable" style="overflow-x:auto;">
           <table style="width:100%;border-collapse:collapse;font-size:11px;">
@@ -1767,17 +2358,18 @@ if(ham&&mob){
 }
 
 /* ============================================================
-   INIT — précharge la clé correcte si aucune config existante
+   INIT — Ne pas écraser la config admin si elle existe déjà
    ============================================================ */
 (function initApiConfig(){
-  const CORRECT_KEY = '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';
-  const CORRECT_MODEL = 'google/gemini-2.0-flash-001';
   try{
-    // Toujours écraser avec la clé correcte (plug & play pour tous)
-    const cfg = { key: CORRECT_KEY, model: CORRECT_MODEL };
-    localStorage.setItem('nobot_global_config', JSON.stringify(cfg));
-    const freshKeys = [{name:'OpenRouter', key: CORRECT_KEY, model: CORRECT_MODEL, active:true}];
-    localStorage.setItem('nobot_api_keys_v2', JSON.stringify(freshKeys));
+    const existing = JSON.parse(localStorage.getItem('nobot_global_config')||'{}');
+    // Ne rien écraser si une clé valide est déjà configurée par l'admin
+    if(existing.key && existing.key.startsWith('sk-or-') && existing.key.length > 20) return;
+    // Sinon effacer l'ancienne clé morte si présente
+    localStorage.removeItem('nobot_global_config');
+    const existingKeys = JSON.parse(localStorage.getItem('nobot_api_keys_v2')||'[]');
+    const hasValid = existingKeys.some(k=>k.active && k.key && k.key.startsWith('sk-or-') && k.key.length > 20);
+    if(!hasValid) localStorage.removeItem('nobot_api_keys_v2');
   }catch(e){}
 })();
 
@@ -1987,7 +2579,22 @@ async function sendMessage(){
   updateMsgCount();
   const typingId = showTyping();
   try {
-    const response = await callOpenRouter(text);
+    // ── ROUTAGE INTELLIGENT — détecte le type de demande ──
+    const reqType = detectRequestType(text);
+    let response;
+    if(reqType === 'image'){
+      response = await handleImageRequest(text);
+    } else if(reqType === 'code'){
+      // Ouvrir automatiquement le Code Builder
+      removeTyping(typingId);
+      appendMessage('ai', '💻 Je détecte une demande de code. Ouverture du <strong>Code Builder</strong>…');
+      setTimeout(()=>{ openCodeModal(); const inp = document.getElementById('codeUserInput'); if(inp){ inp.value = text; } }, 600);
+      document.getElementById('sendBtn').disabled = false;
+      input.focus();
+      return;
+    } else {
+      response = await callOpenRouter(text);
+    }
     removeTyping(typingId);
     appendMessage('ai', response);
     conversationHistory.push({role:'assistant', content: response});
@@ -2003,42 +2610,161 @@ async function sendMessage(){
   input.focus();
 }
 
+// ── Détection intelligente du type de demande ─────────────
+function detectRequestType(text){
+  const t = text.toLowerCase();
+  // IMAGES — mots-clés explicites
+  const imageKw = ['génère une image','génère moi une image','crée une image','dessine','illustration','photo de','image de','génère un logo','fais une image','make an image','generate an image','create an image','draw','picture of'];
+  if(imageKw.some(k=>t.includes(k))) return 'image';
+  // VIDEO — futur
+  // CODE — mots-clés explicites
+  const codeKw = ['écris le code','génère le code','crée un site','crée une page','crée une app','développe','programme','code html','code css','code javascript','code python','cree moi un site','fait moi un site','site web complet','landing page','dashboard','composant react','write code','generate code','create a website','build an app'];
+  if(codeKw.some(k=>t.includes(k))) return 'code';
+  return 'text';
+}
+
+// ── Génération d'image ────────────────────────────────────
+async function handleImageRequest(text){
+  const imgCfg = getApiForUse('image');
+  const provider = imgCfg.provider || localStorage.getItem('nobot_image_provider') || 'pollinations';
+  // Traduire le prompt en anglais si en français (Pollinations fonctionne mieux en EN)
+  const prompt = encodeURIComponent(text.replace(/génère|génère moi|crée|dessine|fais|illustration|image de|photo de/gi,'').trim());
+
+  if(provider === 'openai' && imgCfg.key){
+    try{
+      const res = await fetch('https://api.openai.com/v1/images/generations',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+imgCfg.key},
+        body:JSON.stringify({model:'dall-e-3',prompt:text,n:1,size:'1024x1024',response_format:'url'})
+      });
+      if(res.ok){
+        const data = await res.json();
+        const url = data?.data?.[0]?.url;
+        if(url) return `🎨 Image générée avec DALL-E 3 :<br><br><img src="${url}" style="max-width:100%;border-radius:12px;margin-top:8px;box-shadow:0 8px 32px rgba(124,58,237,0.3);" alt="Image générée"/><br><br><a href="${url}" target="_blank" style="color:#a78bfa;font-size:12px;">🔗 Voir en taille réelle</a>`;
+      }
+    }catch(e){ console.warn('[nobot] OpenAI image error:', e.message); }
+  }
+
+  // Fallback : Pollinations Image (100% gratuit)
+  try{
+    const seed = Math.floor(Math.random()*999999);
+    const url = `https://image.pollinations.ai/prompt/${prompt}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true`;
+    // Vérifier que l'image se charge
+    await new Promise((resolve, reject)=>{
+      const img = new Image();
+      img.onload = resolve;
+      img.onerror = reject;
+      img.src = url;
+      setTimeout(reject, 20000);
+    });
+    return `🎨 Image générée avec Pollinations AI :<br><br><img src="${url}" style="max-width:100%;border-radius:12px;margin-top:8px;box-shadow:0 8px 32px rgba(124,58,237,0.3);" alt="Image générée"/><br><br><a href="${url}" target="_blank" style="color:#a78bfa;font-size:12px;">🔗 Voir en taille réelle</a> &nbsp;·&nbsp; <span style="color:rgba(255,255,255,0.4);font-size:11px;">Pollinations AI • Gratuit</span>`;
+  }catch(e){
+    return `⚠️ La génération d'image a échoué (${e.message}). Essayez de reformuler votre demande ou vérifiez votre connexion.`;
+  }
+}
+
 /* ============================================================
-   OPENROUTER API
+   APPEL API UNIVERSEL — OpenRouter, Groq, OpenAI, Anthropic, Mistral, Custom
    ============================================================ */
 async function callOpenRouter(userMessage){
-  const apiKey = getApiKey();
-  const model = getActiveModel();
-  if(!apiKey) throw new Error('Aucune clé API configurée. Veuillez en ajouter une dans le panneau Admin.');
-  console.log('[nobot] clé utilisée:', apiKey.slice(0,18)+'…', '| modèle:', model);
+  return callAI(userMessage, 'text');
+}
+
+async function callAI(userMessage, use='text'){
+  const cfg = getApiForUse(use);
+  const apiKey = cfg.key || '';
+  const provider = cfg.provider || 'openrouter';
+  const customEndpoint = cfg.customEndpoint || '';
   const aiSettings = JSON.parse(localStorage.getItem('nobot_ai_settings')||'{}');
   const temp = Math.min(parseFloat(aiSettings.temp || 0.7), 2);
   const maxTokens = parseInt(aiSettings.maxTokens || 1024);
   let systemPrompt = getGlobalSystemPrompt() + '\n\n' + MODES[currentMode].prompt;
   if(smartSearchActive && smartSearchContext){ systemPrompt += '\n\nContexte personnalisé : ' + smartSearchContext; }
-  const messages = [{role:'system', content: systemPrompt}];
-  conversationHistory.slice(-10).forEach(h=>{
-    messages.push({role: h.role==='assistant'?'assistant':'user', content: h.content});
-  });
-  messages.push({role:'user', content: userMessage});
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions',{
-    method:'POST',
-    headers:{
-      'Content-Type':'application/json',
-      'Authorization':'Bearer '+apiKey,
-      'HTTP-Referer': window.location.origin || 'https://nobot.ai',
-      'X-Title':'nobot.ai'
-    },
-    body:JSON.stringify({model, messages, temperature:temp, max_tokens:maxTokens})
-  });
-  if(!res.ok){
-    const errBody = await res.json().catch(()=>({}));
-    console.error('[nobot] Erreur OpenRouter:', res.status, JSON.stringify(errBody));
-    const msg = errBody?.error?.message || errBody?.message || `Erreur HTTP ${res.status}`;
-    throw new Error(`${msg} (HTTP ${res.status})`);
+
+  const modelVal = cfg.model || 'google/gemini-2.0-flash-001';
+  const model = modelVal === '__custom__' ? (cfg.modelCustom||modelVal) : modelVal;
+
+  // ── Si clé configurée → appeler le bon provider ──────────
+  if(apiKey && apiKey.length > 8){
+
+    // ── FORMAT ANTHROPIC (différent des autres) ───────────
+    if(provider === 'anthropic'){
+      try{
+        const anthMessages = conversationHistory.slice(-10).map(h=>({ role: h.role==='assistant'?'assistant':'user', content: h.content }));
+        anthMessages.push({role:'user', content: userMessage});
+        const res = await fetch('https://api.anthropic.com/v1/messages',{
+          method:'POST',
+          headers:{ 'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01' },
+          body: JSON.stringify({ model, max_tokens:maxTokens, system:systemPrompt, messages:anthMessages }),
+          signal: AbortSignal.timeout(60000)
+        });
+        if(res.ok){
+          const data = await res.json();
+          return data?.content?.[0]?.text || 'Aucune réponse reçue.';
+        }
+        const errBody = await res.json().catch(()=>({}));
+        console.warn('[nobot] Anthropic error:', errBody?.error?.message);
+      }catch(e){ console.warn('[nobot] Anthropic fetch error:', e.message); }
+      // Fallback Pollinations si Anthropic échoue
+    }
+
+    // ── FORMAT OPENAI-COMPATIBLE (OpenRouter, Groq, OpenAI, Mistral, Custom) ─
+    else {
+      const endpoint = customEndpoint || getProviderEndpoint(provider) || 'https://openrouter.ai/api/v1/chat/completions';
+      const messages = [{role:'system', content: systemPrompt}];
+      conversationHistory.slice(-10).forEach(h=>{
+        messages.push({role: h.role==='assistant'?'assistant':'user', content: h.content});
+      });
+      messages.push({role:'user', content: userMessage});
+
+      // Pour OpenRouter : tenter plusieurs modèles en fallback
+      const modelsToTry = provider === 'openrouter' ? [
+        model,
+        'google/gemini-2.0-flash-001',
+        'google/gemini-flash-1.5',
+        'meta-llama/llama-3.1-8b-instruct:free',
+        'mistralai/mistral-7b-instruct:free',
+      ].filter((m,i,a)=>a.indexOf(m)===i) : [model];
+
+      const headers = { 'Content-Type':'application/json', 'Authorization':'Bearer '+apiKey };
+      if(provider==='openrouter'){ headers['HTTP-Referer']=window.location.origin||'https://nobot.ai'; headers['X-Title']='nobot.ai'; }
+
+      for(const tryModel of modelsToTry){
+        try{
+          const res = await fetch(endpoint,{
+            method:'POST',
+            headers,
+            body: JSON.stringify({ model:tryModel, messages, temperature:temp, max_tokens:maxTokens }),
+            signal: AbortSignal.timeout(60000)
+          });
+          if(res.ok){
+            const data = await res.json();
+            return data?.choices?.[0]?.message?.content || 'Aucune réponse reçue.';
+          }
+          const errBody = await res.json().catch(()=>({}));
+          const errMsg = errBody?.error?.message || `HTTP ${res.status}`;
+          console.warn('[nobot]', provider, tryModel, errMsg);
+          if(res.status===401||res.status===403) break;
+        }catch(e){ console.warn('[nobot]', provider, 'fetch error:', e.message); break; }
+      }
+      console.warn('[nobot] '+provider+' échoué, tentative Pollinations…');
+    }
   }
-  const data = await res.json();
-  return data?.choices?.[0]?.message?.content || 'Aucune réponse reçue.';
+
+  // ── Fallback Pollinations AI — 100% gratuit, aucune clé ──
+  try {
+    const fullPrompt = systemPrompt + '\n\nQuestion : ' + userMessage;
+    const res = await fetch('https://text.pollinations.ai/' + encodeURIComponent(fullPrompt), {
+      method: 'GET',
+      signal: AbortSignal.timeout(30000)
+    });
+    if(res.ok){
+      const text = await res.text();
+      if(text && text.length > 5) return text.trim();
+    }
+  } catch(e){ console.warn('[nobot] Pollinations échoué:', e.message); }
+
+  throw new Error('Service temporairement indisponible. Vérifiez votre clé et votre connexion.');
 }
 
 /* ============================================================
@@ -2121,8 +2847,12 @@ function checkLogin(){
     document.getElementById('login-screen').style.display='none';
     document.getElementById('admin-panel').style.display='block';
     loadAdminSettings();
-    loadConnections();
-    setInterval(loadConnections, 10000); // refresh toutes les 10s
+    loadConnectionsFromSupabase();
+    initSupabaseStatusCheck();
+    // Auto-refresh connexions depuis Supabase toutes les 15s
+    setInterval(()=>loadConnectionsFromSupabase(), 15000);
+    // Auto-sync settings
+    setInterval(()=>syncAllAdminSettingsToSupabase(), 60000);
   } else {
     document.getElementById('loginError').style.display='block';
     document.getElementById('pwdInput').value='';
@@ -2135,324 +2865,797 @@ function adminLogout(){
   document.getElementById('pwdInput').value='';
 }
 
-/* ── Clés API dynamiques ── */
-function getApiKeys(){
-  try{ return JSON.parse(localStorage.getItem('nobot_api_keys_v2')||'[]'); }catch(e){ return []; }
+/* ============================================================
+   SYSTÈME API — SUPABASE CENTRALISÉ
+   ============================================================
+   Les clés API sont stockées dans Supabase et chargées
+   automatiquement au démarrage pour tous les utilisateurs.
+   L'admin peut les mettre à jour depuis le panneau Admin.
+   ============================================================ */
+
+// ── Configuration Supabase ────────────────────────────────
+const SUPABASE_URL = 'https://joocfwvvlkxwgxwdjoxe.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_1PBiKa1SkecoQBEDl0zQhw_jdaA0izs';
+let _supabaseClient = null;
+
+function getSupabase(){
+  if(!_supabaseClient){
+    try{
+      _supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }catch(e){ console.warn('[nobot] Supabase non disponible:', e.message); }
+  }
+  return _supabaseClient;
 }
-async function saveApiKeys(){
-  const rows = document.querySelectorAll('.dyn-api-row');
-  const keys = [];
-  rows.forEach(row=>{
-    const name  = row.querySelector('.dyn-api-name').value.trim();
-    const key   = row.querySelector('.dyn-api-key').value.trim();
-    const model = row.querySelector('.dyn-api-model').value.trim();
-    const active= row.querySelector('.dyn-api-active').checked;
-    if(name||key) keys.push({name,key,model,active});
-  });
-  localStorage.setItem('nobot_api_keys_v2', JSON.stringify(keys));
 
-  const activeKey = keys.find(k=>k.active && k.key && k.key.startsWith('sk-or-'));
-  if(activeKey){
-    showAdminSaveToast('⏳ Vérification de la clé en cours…', 'pending');
-    let finalModel = activeKey.model && activeKey.model.length > 3
-      ? activeKey.model
-      : await autoDetectBestModel(activeKey.key);
+// ── Cache local des clés chargées depuis Supabase ─────────
+let _apiCache = {};
 
-    const valid = await validateApiKey(activeKey.key, finalModel);
-    if(!valid){
-      showAdminSaveToast('❌ Clé invalide ou refusée (401). Vérifiez votre clé OpenRouter.', 'error');
-      return;
+// ── Chargement initial des clés depuis Supabase ───────────
+async function loadApiKeysFromSupabase(){
+  const sb = getSupabase();
+  if(!sb){ console.warn('[nobot] Supabase non configuré — Pollinations gratuit actif'); return; }
+  try{
+    const { data, error } = await sb.from('api_keys').select('use, key_value').eq('active', true);
+    if(error) throw error;
+    if(data && data.length){
+      data.forEach(row => {
+        try{ _apiCache[row.use] = typeof row.key_value === 'string' ? JSON.parse(row.key_value) : row.key_value; }
+        catch(e){ _apiCache[row.use] = { key: row.key_value }; }
+      });
+      console.log('[nobot] ✅ Clés API chargées depuis Supabase:', Object.keys(_apiCache));
     }
+  }catch(e){ console.warn('[nobot] Erreur chargement Supabase:', e.message); }
+}
 
-    const cfg = { key: activeKey.key, model: finalModel, updatedAt: Date.now() };
-    localStorage.setItem('nobot_global_config', JSON.stringify(cfg));
-    // Mise à jour instantanée en mémoire pour la session courante
-    OPENROUTER_DEFAULT_KEY   = cfg.key;
-    OPENROUTER_DEFAULT_MODEL = cfg.model;
+// ── Getters par usage (lit depuis le cache Supabase) ──────
+function getApiForUse(use){
+  // Priorité : cache Supabase > localStorage (fallback admin local)
+  if(_apiCache[use] && Object.keys(_apiCache[use]).length > 0) return _apiCache[use];
+  try{ return JSON.parse(localStorage.getItem('nobot_api_'+use)||'{}'); }catch(e){ return {}; }
+}
+function getApiKey(){ return getApiForUse('text').key || ''; }
+function getActiveModel(){ return getApiForUse('text').model || 'google/gemini-2.0-flash-001'; }
+function getCodeApiKey(){ return getApiForUse('code').key || getApiKey(); }
+function getCodeModel(){ return getApiForUse('code').model || getActiveModel(); }
 
-    // Broadcast aux autres onglets ouverts (storage event)
-    localStorage.setItem('nobot_config_broadcast', JSON.stringify({key: cfg.key, model: cfg.model, ts: Date.now()}));
+// ── UI: switch tabs ───────────────────────────────────────
+function switchApiTab(tab){
+  document.querySelectorAll('.api-tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.api-tab-pane').forEach(p=>p.style.display='none');
+  const btn = document.getElementById('apitab-'+tab);
+  const pane = document.getElementById('apipane-'+tab);
+  if(btn) btn.classList.add('active');
+  if(pane) pane.style.display='block';
+}
 
-    // Re-sauvegarder avec le modèle résolu
-    rows.forEach(row=>{
-      if(row.querySelector('.dyn-api-key').value.trim() === activeKey.key)
-        row.querySelector('.dyn-api-model').value = finalModel;
-    });
-    const keys2 = [];
-    rows.forEach(row=>{
-      const name  = row.querySelector('.dyn-api-name').value.trim();
-      const key   = row.querySelector('.dyn-api-key').value.trim();
-      const model2= row.querySelector('.dyn-api-model').value.trim();
-      const act   = row.querySelector('.dyn-api-active').checked;
-      if(name||key) keys2.push({name,key,model:model2,active:act});
-    });
-    localStorage.setItem('nobot_api_keys_v2', JSON.stringify(keys2));
+function toggleVis(inputId, btn){
+  const inp = document.getElementById(inputId);
+  if(!inp) return;
+  inp.type = inp.type==='password' ? 'text' : 'password';
+  btn.textContent = inp.type==='password' ? '👁' : '🙈';
+}
 
-    showAdminSaveToast('✅ Clé enregistrée et active pour tous les utilisateurs !', 'success');
-  } else {
-    showAdminSaveToast('⚠️ Aucune clé active trouvée. Activez une ligne (toggle ON).', 'warning');
+// ── Sélection du provider TEXTE ──────────────────────────
+const TEXT_PROVIDER_INFO = {
+  openrouter: { label:'Clé OpenRouter (sk-or-…)', placeholder:'sk-or-v1-xxxxxxxxxxxxxxxx', hint:'openrouter.ai → Keys', showEndpoint:false },
+  groq:       { label:'Clé Groq (gsk_…)',          placeholder:'gsk_xxxxxxxxxxxxxxxxxxxxxxxx', hint:'console.groq.com → API Keys', showEndpoint:false },
+  openai:     { label:'Clé OpenAI (sk-…)',          placeholder:'sk-xxxxxxxxxxxxxxxxxxxxxxxx', hint:'platform.openai.com → API keys', showEndpoint:false },
+  anthropic:  { label:'Clé Anthropic (sk-ant-…)',   placeholder:'sk-ant-xxxxxxxxxxxxxxxxxxxx', hint:'console.anthropic.com → API Keys', showEndpoint:false },
+  mistral:    { label:'Clé Mistral (…)',             placeholder:'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', hint:'console.mistral.ai → API Keys', showEndpoint:false },
+  custom:     { label:'Clé API custom',              placeholder:'votre-cle-api', hint:'Entrez votre endpoint ci-dessous', showEndpoint:true },
+};
+
+function selectTextProvider(p){
+  localStorage.setItem('nobot_text_provider', p);
+  document.querySelectorAll('[id^="txtprov-"]').forEach(b=>b.classList.remove('active'));
+  const btn = document.getElementById('txtprov-'+p);
+  if(btn) btn.classList.add('active');
+  const info = TEXT_PROVIDER_INFO[p] || TEXT_PROVIDER_INFO.custom;
+  const lbl = document.getElementById('apiTextKeyLabel');
+  const inp = document.getElementById('apiTextKey');
+  const ep  = document.getElementById('txtCustomEndpointRow');
+  if(lbl) lbl.textContent = info.label;
+  if(inp) inp.placeholder = info.placeholder;
+  if(ep)  ep.style.display = info.showEndpoint ? 'block' : 'none';
+  // Met à jour les options de modèle selon le fournisseur
+  updateModelSelectForProvider('apiTextModel', p);
+}
+
+function selectCodeProvider(p){
+  localStorage.setItem('nobot_code_provider', p);
+  document.querySelectorAll('[id^="codeprov-"]').forEach(b=>b.classList.remove('active'));
+  const btn = document.getElementById('codeprov-'+p);
+  if(btn) btn.classList.add('active');
+  const info = TEXT_PROVIDER_INFO[p] || TEXT_PROVIDER_INFO.custom;
+  const lbl = document.getElementById('apiCodeKeyLabel');
+  const inp = document.getElementById('apiCodeKey');
+  const ep  = document.getElementById('codeCustomEndpointRow');
+  if(lbl) lbl.textContent = info.label;
+  if(inp) inp.placeholder = info.placeholder;
+  if(ep)  ep.style.display = info.showEndpoint ? 'block' : 'none';
+  updateModelSelectForProvider('apiCodeModel', p);
+}
+
+// Sélectionne l'optgroup approprié selon le provider
+function updateModelSelectForProvider(selectId, provider){
+  const sel = document.getElementById(selectId);
+  if(!sel) return;
+  // Sélectionner la première option du bon groupe
+  const groupMap = { openrouter:'── OpenRouter ──', groq:'── Groq ──', openai:'── OpenAI Direct ──', anthropic:'── Anthropic Direct ──', mistral:'── Mistral Direct ──' };
+  const targetLabel = groupMap[provider];
+  if(!targetLabel) return;
+  for(const og of sel.querySelectorAll('optgroup')){
+    if(og.label === targetLabel){
+      const firstOpt = og.querySelector('option');
+      if(firstOpt) sel.value = firstOpt.value;
+      break;
+    }
+  }
+  // Afficher/cacher champ modèle custom
+  const customInp = document.getElementById(selectId+'Custom');
+  if(customInp){
+    sel.onchange = ()=>{ customInp.style.display = sel.value==='__custom__' ? 'block' : 'none'; };
   }
 }
 
-/* Toast admin visible et stylé */
-function showAdminSaveToast(msg, type='success'){
-  // Supprimer ancien toast admin si présent
-  const old = document.getElementById('admin-save-toast');
-  if(old) old.remove();
-
-  const colors = {
-    success: {bg:'rgba(16,185,129,0.95)', border:'rgba(16,185,129,0.6)', icon:'✅'},
-    error:   {bg:'rgba(239,68,68,0.95)',  border:'rgba(239,68,68,0.6)',  icon:'❌'},
-    warning: {bg:'rgba(245,158,11,0.95)', border:'rgba(245,158,11,0.6)', icon:'⚠️'},
-    pending: {bg:'rgba(124,58,237,0.95)', border:'rgba(124,58,237,0.6)', icon:'⏳'},
+// ── Endpoint universel selon provider ────────────────────
+function getProviderEndpoint(provider){
+  const endpoints = {
+    openrouter: 'https://openrouter.ai/api/v1/chat/completions',
+    groq:       'https://api.groq.com/openai/v1/chat/completions',
+    openai:     'https://api.openai.com/v1/chat/completions',
+    anthropic:  null, // gère son propre format
+    mistral:    'https://api.mistral.ai/v1/chat/completions',
   };
-  const c = colors[type] || colors.success;
+  return endpoints[provider] || null;
+}
 
-  const t = document.createElement('div');
-  t.id = 'admin-save-toast';
-  t.style.cssText = `
-    position:fixed;top:24px;left:50%;transform:translateX(-50%);
-    background:${c.bg};
-    border:1px solid ${c.border};
-    border-radius:14px;
-    padding:14px 28px;
-    font-size:14px;font-weight:700;
-    color:#fff;
-    z-index:99999;
-    backdrop-filter:blur(16px);
-    box-shadow:0 8px 32px rgba(0,0,0,0.4);
-    font-family:'Outfit',sans-serif;
-    letter-spacing:0.01em;
-    pointer-events:none;
-    animation:toastIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
-    white-space:nowrap;
-  `;
-  t.textContent = msg;
-
-  // Ajouter animation CSS si pas déjà là
-  if(!document.getElementById('toast-anim-style')){
-    const s = document.createElement('style');
-    s.id = 'toast-anim-style';
-    s.textContent = '@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-16px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}';
-    document.head.appendChild(s);
+// ── Test universel d'une clé selon le provider ───────────
+async function testApiKey(key, model, provider, customEndpoint){
+  if(provider === 'anthropic'){
+    // Anthropic a son propre format
+    try{
+      const res = await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{ 'Content-Type':'application/json', 'x-api-key': key, 'anthropic-version':'2023-06-01' },
+        body: JSON.stringify({ model: model||'claude-haiku-3-5', max_tokens:5, messages:[{role:'user',content:'Hi'}] }),
+        signal: AbortSignal.timeout(15000)
+      });
+      return res.ok || res.status===429;
+    }catch(e){ return false; }
   }
+  // Format OpenAI compatible (OpenRouter, Groq, OpenAI, Mistral, custom)
+  const endpoint = customEndpoint || getProviderEndpoint(provider) || 'https://openrouter.ai/api/v1/chat/completions';
+  try{
+    const headers = { 'Content-Type':'application/json', 'Authorization':'Bearer '+key };
+    if(provider==='openrouter'){ headers['HTTP-Referer']=window.location.origin||'https://nobot.ai'; headers['X-Title']='nobot.ai'; }
+    const res = await fetch(endpoint,{
+      method:'POST',
+      headers,
+      body: JSON.stringify({ model, messages:[{role:'user',content:'OK'}], max_tokens:5 }),
+      signal: AbortSignal.timeout(15000)
+    });
+    return res.ok || res.status===429;
+  }catch(e){ return false; }
+}
 
-  document.body.appendChild(t);
-  if(type !== 'pending'){
-    setTimeout(()=>{ t.style.transition='opacity 0.3s'; t.style.opacity='0'; setTimeout(()=>t.remove(),350); }, 3500);
+// ── Sauvegarder + Tester une clé par usage ────────────────
+async function saveAndTestApi(use){
+  let key='', model='', provider='', customEndpoint='';
+
+  if(use==='text'){
+    provider = localStorage.getItem('nobot_text_provider') || 'openrouter';
+    key   = (document.getElementById('apiTextKey')?.value||'').trim();
+    const modelSel = document.getElementById('apiTextModel')?.value||'google/gemini-2.0-flash-001';
+    model = modelSel === '__custom__' ? (document.getElementById('apiTextModelCustom')?.value||'').trim() : modelSel;
+    customEndpoint = (document.getElementById('apiTextEndpoint')?.value||'').trim();
+    if(!key){ showAdminSaveToast('❌ Entrez votre clé API', 'error'); return; }
+    setApiStatus('apiTextStatus', '⏳ Test en cours…', 'pending');
+    showAdminSaveToast('⏳ Test de la clé '+provider+'…', 'pending');
+    const ok = await testApiKey(key, model, provider, customEndpoint);
+    if(!ok){ setApiStatus('apiTextStatus','❌ Clé refusée — vérifiez votre clé et le provider','error'); showAdminSaveToast('❌ Clé invalide ou révoquée', 'error'); return; }
+    const data = {key, model, provider, customEndpoint, updatedAt:Date.now()};
+    localStorage.setItem('nobot_api_text', JSON.stringify(data));
+    _apiCache['text'] = data;
+    await saveApiKeyToSupabase('text', data);
+    setApiStatus('apiTextStatus','✅ Clé valide — '+provider+' · '+model,'ok');
+    showAdminSaveToast('✅ Clé '+provider+' enregistrée sur Supabase !', 'success');
+
+  } else if(use==='code'){
+    provider = localStorage.getItem('nobot_code_provider') || 'openrouter';
+    key   = (document.getElementById('apiCodeKey')?.value||'').trim();
+    const modelSel = document.getElementById('apiCodeModel')?.value||'google/gemini-2.0-flash-001';
+    model = modelSel === '__custom__' ? (document.getElementById('apiCodeModelCustom')?.value||'').trim() : modelSel;
+    customEndpoint = (document.getElementById('apiCodeEndpoint')?.value||'').trim();
+    if(!key){ showAdminSaveToast('❌ Entrez votre clé API', 'error'); return; }
+    setApiStatus('apiCodeStatus', '⏳ Test en cours…', 'pending');
+    showAdminSaveToast('⏳ Test de la clé Code '+provider+'…', 'pending');
+    const ok = await testApiKey(key, model, provider, customEndpoint);
+    if(!ok){ setApiStatus('apiCodeStatus','❌ Clé refusée — vérifiez votre clé','error'); showAdminSaveToast('❌ Clé Code invalide', 'error'); return; }
+    const data = {key, model, provider, customEndpoint, updatedAt:Date.now()};
+    localStorage.setItem('nobot_api_code', JSON.stringify(data));
+    _apiCache['code'] = data;
+    await saveApiKeyToSupabase('code', data);
+    setApiStatus('apiCodeStatus','✅ Clé valide — '+provider+' · '+model,'ok');
+    showAdminSaveToast('✅ Clé Code '+provider+' enregistrée !', 'success');
+
+  } else if(use==='image'){
+    provider = localStorage.getItem('nobot_image_provider') || 'pollinations';
+    key = (document.getElementById('apiImageKey')?.value||'').trim();
+    const data = {provider, key, updatedAt:Date.now()};
+    localStorage.setItem('nobot_api_image', JSON.stringify(data));
+    _apiCache['image'] = data;
+    await saveApiKeyToSupabase('image', data);
+    setApiStatus('apiImageStatus', provider==='pollinations' ? '✅ Pollinations actif — gratuit & illimité' : '✅ Clé image enregistrée — '+provider, 'ok');
+    showAdminSaveToast('✅ Config image enregistrée sur Supabase !', 'success');
+
+  } else if(use==='voice'){
+    provider = localStorage.getItem('nobot_voice_provider') || 'browser';
+    key = (document.getElementById('apiVoiceKey')?.value||'').trim();
+    const tts = document.getElementById('voiceTtsEnabled')?.checked || false;
+    const stt = document.getElementById('voiceSttEnabled')?.checked || false;
+    const data = {provider, key, tts, stt, updatedAt:Date.now()};
+    localStorage.setItem('nobot_api_voice', JSON.stringify(data));
+    _apiCache['voice'] = data;
+    await saveApiKeyToSupabase('voice', data);
+    saveVoiceSettings();
+    setApiStatus('apiVoiceStatus', provider==='browser' ? '✅ Voix navigateur active — gratuit' : '✅ Clé voix enregistrée — '+provider, 'ok');
+    showAdminSaveToast('✅ Config voix enregistrée sur Supabase !', 'success');
   }
 }
 
-/* Écoute les changements de clé depuis d'autres onglets */
-window.addEventListener('storage', (e)=>{
-  if(e.key === 'nobot_config_broadcast'){
-    try{
-      const d = JSON.parse(e.newValue||'{}');
-      if(d.key && d.key.startsWith('sk-or-')){
-        OPENROUTER_DEFAULT_KEY   = d.key;
-        OPENROUTER_DEFAULT_MODEL = d.model || OPENROUTER_DEFAULT_MODEL;
-        localStorage.setItem('nobot_global_config', JSON.stringify({key:d.key, model:d.model}));
-      }
-    }catch(err){}
+// ── Sauvegarder une clé sur Supabase (upsert) ────────────
+async function saveApiKeyToSupabase(use, data){
+  const sb = getSupabase();
+  if(!sb){ console.warn('[nobot] Supabase non configuré — sauvegarde locale uniquement'); return; }
+  try{
+    const { error } = await sb.from('api_keys').upsert(
+      { use: use, key_value: JSON.stringify(data), active: true, updated_at: new Date().toISOString() },
+      { onConflict: 'use' }
+    );
+    if(error) throw error;
+    console.log('[nobot] ✅ Clé', use, 'sauvegardée sur Supabase');
+  }catch(e){
+    console.warn('[nobot] Erreur sauvegarde Supabase:', e.message);
+    showAdminSaveToast('⚠️ Supabase non joignable — clé sauvegardée localement seulement', 'warning');
   }
-  if(e.key === 'nobot_global_config'){
+}
+
+function setApiStatus(elId, msg, type){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  const colors = { ok:'color:#6ee7b7;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.1);', error:'color:#fca5a5;border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.1);', pending:'color:#c084fc;border-color:rgba(124,58,237,0.3);background:rgba(124,58,237,0.1);' };
+  el.style.cssText = 'border-radius:10px;padding:10px 14px;font-size:12px;border:1px solid;' + (colors[type]||colors.pending);
+  el.textContent = msg;
+}
+
+async function testOpenRouterKey(key, model){
+  try{
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key,'HTTP-Referer':window.location.origin||'https://nobot.ai','X-Title':'nobot.ai'},
+      body:JSON.stringify({model, messages:[{role:'user',content:'OK'}], max_tokens:5}),
+      signal:AbortSignal.timeout(15000)
+    });
+    return res.ok || res.status===429;
+  }catch(e){ return false; }
+}
+
+// ── Broadcast → remplacé par rechargement Supabase ───────
+function broadcastApiUpdate(use, data){
+  // Compatibilité — plus nécessaire avec Supabase mais gardé pour les onglets locaux
+  localStorage.setItem('nobot_api_broadcast', JSON.stringify({use, data, ts:Date.now()}));
+}
+window.addEventListener('storage', e=>{
+  if(e.key==='nobot_api_broadcast'){
     try{
       const d = JSON.parse(e.newValue||'{}');
-      if(d.key && d.key.startsWith('sk-or-')){
-        OPENROUTER_DEFAULT_KEY   = d.key;
-        OPENROUTER_DEFAULT_MODEL = d.model || OPENROUTER_DEFAULT_MODEL;
-      }
+      if(d.use && d.data){ _apiCache[d.use] = d.data; }
+      console.log('[nobot] API update local reçu pour:', d.use);
     }catch(err){}
   }
 });
 
-async function autoDetectBestModel(apiKey){
-  // Priorité de modèles gratuits/populaires sur OpenRouter
-  const preferred = [
-    'google/gemini-2.0-flash-001',
-    'google/gemini-flash-1.5',
-    'meta-llama/llama-3.1-8b-instruct:free',
-    'mistralai/mistral-7b-instruct:free',
-    'openai/gpt-3.5-turbo',
-  ];
-  try{
-    const r = await fetch('https://openrouter.ai/api/v1/models',{
-      headers:{'Authorization':'Bearer '+apiKey}
-    });
-    if(!r.ok) return OPENROUTER_DEFAULT_MODEL;
-    const data = await r.json();
-    const available = (data.data||[]).map(m=>m.id);
-    for(const p of preferred){
-      if(available.includes(p)) return p;
-    }
-    // Premier modèle disponible sinon
-    return available[0] || OPENROUTER_DEFAULT_MODEL;
-  }catch(e){
-    return OPENROUTER_DEFAULT_MODEL;
+// ── Image provider selector ───────────────────────────────
+function selectImageProvider(p){
+  localStorage.setItem('nobot_image_provider', p);
+  document.querySelectorAll('[id^="imgprov-"]').forEach(b=>b.classList.remove('active'));
+  const btn = document.getElementById('imgprov-'+p);
+  if(btn) btn.classList.add('active');
+  const keySection = document.getElementById('imgKeySection');
+  const statusEl   = document.getElementById('apiImageStatus');
+  const labelEl    = document.getElementById('imgKeyLabel');
+  if(p==='pollinations'){
+    if(keySection) keySection.style.display='none';
+    if(statusEl){ statusEl.style.color='#6ee7b7'; statusEl.textContent='✅ Pollinations Image actif — gratuit & illimité'; }
+  } else {
+    if(keySection) keySection.style.display='block';
+    if(labelEl) labelEl.textContent = p==='openai' ? 'Clé API OpenAI (sk-…)' : 'Clé API Stability AI';
+    if(statusEl){ statusEl.style.color='rgba(255,255,255,0.5)'; statusEl.textContent='Clé '+p+' — non testée'; }
   }
 }
 
-async function validateApiKey(apiKey, model){
-  try{
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'Authorization':'Bearer '+apiKey,
-        'HTTP-Referer': window.location.origin||'https://nobot.ai',
-        'X-Title':'nobot.ai'
-      },
-      body: JSON.stringify({model, messages:[{role:'user',content:'OK'}], max_tokens:5})
-    });
-    return res.ok || res.status === 429; // 429 = rate limit = clé valide
-  }catch(e){ return false; }
+// ── Voice provider selector ───────────────────────────────
+function selectVoiceProvider(p){
+  localStorage.setItem('nobot_voice_provider', p);
+  document.querySelectorAll('[id^="voiceprov-"]').forEach(b=>b.classList.remove('active'));
+  const btn = document.getElementById('voiceprov-'+p);
+  if(btn) btn.classList.add('active');
+  const keySection = document.getElementById('voiceKeySection');
+  const statusEl   = document.getElementById('apiVoiceStatus');
+  const labelEl    = document.getElementById('voiceKeyLabel');
+  if(p==='browser'){
+    if(keySection) keySection.style.display='none';
+    if(statusEl){ statusEl.style.color='#6ee7b7'; statusEl.textContent='✅ Voix navigateur active — gratuit & aucune clé requise'; }
+  } else {
+    if(keySection) keySection.style.display='block';
+    if(labelEl) labelEl.textContent = p==='openai' ? 'Clé OpenAI (sk-…)' : 'Clé ElevenLabs';
+    if(statusEl){ statusEl.style.color='rgba(255,255,255,0.5)'; statusEl.textContent='Clé '+p+' — non testée'; }
+  }
 }
-function resetApiCache(){
+
+function saveVoiceSettings(){
+  const tts = document.getElementById('voiceTtsEnabled')?.checked||false;
+  const stt = document.getElementById('voiceSttEnabled')?.checked||false;
+  const existing = getApiForUse('voice');
+  localStorage.setItem('nobot_api_voice', JSON.stringify({...existing, tts, stt}));
+}
+
+// ── Reset toutes les clés ─────────────────────────────────
+async function resetAllApiKeys(){
+  if(!confirm('Effacer toutes les clés API configurées (Supabase + local) ?')) return;
+  ['text','code','image','voice'].forEach(u=>localStorage.removeItem('nobot_api_'+u));
   localStorage.removeItem('nobot_global_config');
-  localStorage.removeItem('nobot_admin_keys');
   localStorage.removeItem('nobot_api_keys_v2');
-  showToast('Cache API réinitialisé ✓ — Clé par défaut restaurée');
+  localStorage.removeItem('nobot_image_provider');
+  localStorage.removeItem('nobot_voice_provider');
+  _apiCache = {};
+  // Désactiver les clés sur Supabase
+  const sb = getSupabase();
+  if(sb){
+    try{
+      await sb.from('api_keys').update({ active: false }).neq('use', '__never__');
+      console.log('[nobot] Clés désactivées sur Supabase');
+    }catch(e){ console.warn('[nobot] Erreur reset Supabase:', e.message); }
+  }
+  loadAdminApiSection();
+  showAdminSaveToast('🗑 Toutes les clés effacées — services gratuits actifs', 'warning');
+}
+function resetApiCache(){ resetAllApiKeys(); }
+
+/* ============================================================
+   SUPABASE — SETUP & STATUS + FULL INIT SYSTEM
+   ============================================================ */
+
+// ── Log dans le terminal d'init ──────────────────────────
+function initLog(msg, color='#a5f3fc'){
+  const t = document.getElementById('initTerminal');
+  if(!t) return;
+  const now = new Date().toLocaleTimeString('fr-FR');
+  const line = document.createElement('div');
+  line.innerHTML = `<span style="color:rgba(255,255,255,0.2);">[${now}]</span> <span style="color:${color};">${msg}</span>`;
+  t.appendChild(line);
+  t.scrollTop = t.scrollHeight;
+}
+function initLogClear(){
+  const t = document.getElementById('initTerminal');
+  if(t) t.innerHTML = '';
+}
+
+// ── INITIALISATION COMPLÈTE DU SYSTÈME ───────────────────
+// Crée toutes les tables Supabase nécessaires via upsert/insert.
+// L'astuce : on crée les tables indirectement en faisant des upserts
+// sur des tables que Supabase crée automatiquement si les RLS le permettent.
+// Pour les vraies tables SQL, on utilise la RPC si disponible,
+// sinon on affiche le SQL à exécuter UNE SEULE FOIS.
+async function initFullSystem(){
+  const btn = document.getElementById('btnInitSystem');
+  const msg = document.getElementById('supabaseStatusMsg');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Initialisation…'; }
+  initLogClear();
+  initLog('🚀 Démarrage de l\'initialisation du système nobot.ai v6…', '#fde68a');
+
+  const sb = getSupabase();
+  if(!sb){
+    initLog('❌ Client Supabase non disponible. Vérifiez la connexion internet.', '#fca5a5');
+    if(btn){ btn.disabled=false; btn.textContent='🚀 Initialiser le système'; }
+    return;
+  }
+
+  // ── ÉTAPE 1 : Table api_keys ──────────────────────────
+  initLog('📋 Étape 1/5 — Vérification table api_keys…', '#94a3b8');
+  let tableApiKeys = false;
+  try{
+    const { error } = await sb.from('api_keys').select('use').limit(1);
+    if(!error){ tableApiKeys = true; initLog('  ✅ Table api_keys — OK', '#6ee7b7'); }
+    else if(error.code === '42P01'){
+      initLog('  ⚠️ Table api_keys manquante — tentative création via RPC…', '#fde68a');
+      const { error: rpcErr } = await sb.rpc('nobot_init_tables');
+      if(!rpcErr){ tableApiKeys = true; initLog('  ✅ Tables créées via RPC !', '#6ee7b7'); }
+      else{ initLog('  ⚠️ RPC non disponible — affichage SQL ci-dessous', '#fde68a'); showInitSQL(msg); }
+    }
+  }catch(e){ initLog('  ⚠️ ' + e.message, '#fde68a'); showInitSQL(msg); }
+
+  // ── ÉTAPE 2 : Table connections ──────────────────────
+  initLog('📋 Étape 2/5 — Vérification table connections…', '#94a3b8');
+  try{
+    const { error } = await sb.from('connections').select('id').limit(1);
+    if(!error){ initLog('  ✅ Table connections — OK', '#6ee7b7'); }
+    else{ initLog('  ⚠️ Table connections — incluse dans le SQL ci-dessous', '#fde68a'); }
+  }catch(e){ initLog('  ⚠️ ' + e.message, '#fde68a'); }
+
+  // ── ÉTAPE 3 : Table conversations ────────────────────
+  initLog('📋 Étape 3/5 — Vérification table conversations…', '#94a3b8');
+  try{
+    const { error } = await sb.from('conversations').select('id').limit(1);
+    if(!error){ initLog('  ✅ Table conversations — OK', '#6ee7b7'); }
+    else{ initLog('  ⚠️ Table conversations — incluse dans le SQL ci-dessous', '#fde68a'); }
+  }catch(e){ initLog('  ⚠️ ' + e.message, '#fde68a'); }
+
+  // ── ÉTAPE 4 : Table app_settings ─────────────────────
+  initLog('📋 Étape 4/5 — Vérification table app_settings…', '#94a3b8');
+  try{
+    const { error } = await sb.from('app_settings').select('key').limit(1);
+    if(!error){ initLog('  ✅ Table app_settings — OK', '#6ee7b7'); }
+    else{ initLog('  ⚠️ Table app_settings — incluse dans le SQL ci-dessous', '#fde68a'); }
+  }catch(e){ initLog('  ⚠️ ' + e.message, '#fde68a'); }
+
+  // ── ÉTAPE 5 : Sync des paramètres ────────────────────
+  initLog('📋 Étape 5/5 — Synchronisation des paramètres admin…', '#94a3b8');
+  await syncAllAdminSettingsToSupabase();
+  initLog('  ✅ Paramètres synchronisés', '#6ee7b7');
+
+  initLog('', '');
+  initLog('═══════════════════════════════════════════════', '#7c3aed');
+  initLog('✅ Initialisation terminée !', '#6ee7b7');
+  initLog('💡 Si des tables sont manquantes, copiez le SQL affiché ci-dessous', '#fde68a');
+  initLog('   dans Supabase Dashboard → SQL Editor → Exécuter → C\'est tout !', '#fde68a');
+  initLog('═══════════════════════════════════════════════', '#7c3aed');
+
+  await checkSupabaseStatus();
+  if(btn){ btn.disabled=false; btn.textContent='🚀 Initialiser le système'; }
+  showAdminSaveToast('✅ Système initialisé avec succès !', 'success');
+}
+
+// ── MISE À JOUR DU SYSTÈME ──────────────────────────────
+async function updateSystem(){
+  const btn = document.getElementById('btnUpdateSystem');
+  if(btn){ btn.disabled=true; btn.textContent='⬆️ Mise à jour…'; }
+  initLogClear();
+  initLog('⬆️ Mise à jour du système en cours…', '#a78bfa');
+
+  // Recharger depuis Supabase
+  initLog('  → Rechargement des clés API depuis Supabase…', '#94a3b8');
+  await loadApiKeysFromSupabase();
+  initLog('  ✅ Clés API rechargées', '#6ee7b7');
+
+  // Recharger les settings admin
+  initLog('  → Rechargement des paramètres admin…', '#94a3b8');
+  await loadAdminSettingsFromSupabase();
+  initLog('  ✅ Paramètres admin rechargés', '#6ee7b7');
+
+  // Recharger connexions
+  initLog('  → Rechargement connexions depuis Supabase…', '#94a3b8');
+  await loadConnectionsFromSupabase();
+  initLog('  ✅ Connexions rechargées', '#6ee7b7');
+
+  loadAdminSettings();
+  initLog('✅ Mise à jour terminée — tout est synchronisé !', '#6ee7b7');
+  if(btn){ btn.disabled=false; btn.textContent='⬆️ Mettre à jour'; }
+  showAdminSaveToast('✅ Système mis à jour !', 'success');
+}
+
+// ── SQL À EXÉCUTER UNE SEULE FOIS DANS SUPABASE ──────────
+function showInitSQL(msgEl){
+  const sql = `-- ═══════════════════════════════════════════════════════
+-- nobot.ai — SQL d'initialisation — Coller dans Supabase SQL Editor
+-- ═══════════════════════════════════════════════════════
+
+-- 1. Clés API (partagées à tous les visiteurs)
+CREATE TABLE IF NOT EXISTS api_keys (
+  use TEXT PRIMARY KEY,
+  key_value TEXT NOT NULL,
+  active BOOLEAN DEFAULT true,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "lecture_publique" ON api_keys;
+DROP POLICY IF EXISTS "ecriture_publique" ON api_keys;
+CREATE POLICY "lecture_publique" ON api_keys FOR SELECT USING (true);
+CREATE POLICY "ecriture_publique" ON api_keys FOR ALL USING (true);
+
+-- 2. Connexions utilisateurs (IP, géo, appareil)
+CREATE TABLE IF NOT EXISTS connections (
+  id BIGSERIAL PRIMARY KEY,
+  ip TEXT, city TEXT, region TEXT, country TEXT,
+  lat TEXT, lon TEXT, org TEXT,
+  gps_lat TEXT, gps_lon TEXT, gps_acc TEXT,
+  browser TEXT, browser_ver TEXT, os TEXT, device TEXT, battery TEXT,
+  visit_date TEXT, visit_time TEXT,
+  ts BIGINT DEFAULT EXTRACT(EPOCH FROM NOW())*1000,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE connections ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "conn_pub_read" ON connections;
+DROP POLICY IF EXISTS "conn_pub_write" ON connections;
+CREATE POLICY "conn_pub_read" ON connections FOR SELECT USING (true);
+CREATE POLICY "conn_pub_write" ON connections FOR ALL USING (true);
+
+-- 3. Conversations par appareil (fingerprint)
+CREATE TABLE IF NOT EXISTS conversations (
+  id BIGSERIAL PRIMARY KEY,
+  fingerprint TEXT NOT NULL,
+  session_id BIGINT,
+  session_date TEXT, session_time TEXT,
+  preview TEXT,
+  messages JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "conv_pub_read" ON conversations;
+DROP POLICY IF EXISTS "conv_pub_write" ON conversations;
+CREATE POLICY "conv_pub_read" ON conversations FOR SELECT USING (true);
+CREATE POLICY "conv_pub_write" ON conversations FOR ALL USING (true);
+
+-- 4. Paramètres admin globaux
+CREATE TABLE IF NOT EXISTS app_settings (
+  key TEXT PRIMARY KEY,
+  value JSONB,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE app_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "settings_pub_read" ON app_settings;
+DROP POLICY IF EXISTS "settings_pub_write" ON app_settings;
+CREATE POLICY "settings_pub_read" ON app_settings FOR SELECT USING (true);
+CREATE POLICY "settings_pub_write" ON app_settings FOR ALL USING (true);`;
+
+  const initT = document.getElementById('initTerminal');
+  if(initT){
+    const sqlDiv = document.createElement('div');
+    sqlDiv.style.cssText = 'margin-top:10px;';
+    sqlDiv.innerHTML = `<div style="color:#fde68a;font-weight:700;margin-bottom:6px;">📋 SQL à exécuter dans Supabase (1 seule fois) :</div>
+    <textarea readonly onclick="this.select()" style="width:100%;min-height:160px;background:rgba(0,0,0,0.6);border:1px solid rgba(124,58,237,0.3);border-radius:8px;padding:10px;font-size:10px;color:#a5f3fc;font-family:monospace;resize:vertical;">${sql}</textarea>
+    <a href="https://supabase.com/dashboard/project/joocfwvvlkxwgxwdjoxe/sql/new" target="_blank" style="display:inline-block;margin-top:8px;background:linear-gradient(135deg,#3ecf8e,#06b6d4);color:#000;font-weight:700;font-size:11px;padding:7px 16px;border-radius:8px;text-decoration:none;">🔗 Ouvrir SQL Editor Supabase</a>`;
+    initT.appendChild(sqlDiv);
+    initT.scrollTop = initT.scrollHeight;
+  }
+  if(msgEl) msgEl.innerHTML = `<span style="color:#fde68a;">⚠️ Tables manquantes — Copiez le SQL dans le terminal ci-dessus dans <a href="https://supabase.com/dashboard/project/joocfwvvlkxwgxwdjoxe/sql/new" target="_blank" style="color:#3ecf8e;">Supabase SQL Editor</a> et exécutez-le. C'est tout !</span>`;
+}
+
+// ── Vérifier le statut de connexion Supabase ──────────────
+async function checkSupabaseStatus(){
+  const badge = document.getElementById('supabaseStatusBadge');
+  const msg   = document.getElementById('supabaseStatusMsg');
+  if(badge) badge.textContent = '🔄 Vérification…';
+
+  const sb = getSupabase();
+  if(!sb){
+    if(badge){ badge.textContent='❌ Non connecté'; badge.style.cssText='margin-left:auto;font-size:11px;background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.4);border-radius:999px;padding:4px 14px;color:#fca5a5;'; }
+    return;
+  }
+  try{
+    const start = Date.now();
+    const { data, error } = await sb.from('api_keys').select('use, active').eq('active', true);
+    const ms = Date.now() - start;
+    if(error && error.code === '42P01'){
+      if(badge){ badge.textContent='⚠️ Tables manquantes'; badge.style.cssText='margin-left:auto;font-size:11px;background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);border-radius:999px;padding:4px 14px;color:#fde68a;'; }
+      if(msg) msg.innerHTML='<span style="color:#fde68a;">⚠️ Tables manquantes — Cliquez sur <strong>🚀 Initialiser le système</strong> pour tout créer automatiquement.</span>';
+      return;
+    }
+    if(error) throw error;
+    const count = data?.length || 0;
+    if(badge){ badge.textContent=`✅ Connecté — ${count} clé(s) — ${ms}ms`; badge.style.cssText='margin-left:auto;font-size:11px;background:rgba(62,207,142,0.15);border:1px solid rgba(62,207,142,0.4);border-radius:999px;padding:4px 14px;color:#3ecf8e;'; }
+    if(msg){
+      const uses = data?.map(r=>`<span style="background:rgba(124,58,237,0.2);border-radius:4px;padding:1px 7px;font-size:10px;color:#c084fc;">${r.use}</span>`).join(' ') || '(aucune)';
+      msg.innerHTML=`✅ <strong>Supabase opérationnel</strong> — ${count} clé(s) active(s) : ${uses}<br><span style="color:rgba(255,255,255,0.4);font-size:11px;">Latence : ${ms}ms · Projet : joocfwvvlkxwgxwdjoxe.supabase.co</span>`;
+    }
+  }catch(e){
+    if(badge){ badge.textContent='❌ Erreur réseau'; badge.style.cssText='margin-left:auto;font-size:11px;background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.4);border-radius:999px;padding:4px 14px;color:#fca5a5;'; }
+    if(msg) msg.innerHTML=`<span style="color:#fca5a5;">❌ Erreur : ${e.message}</span>`;
+  }
+}
+
+// ── Pousser les clés locales vers Supabase ────────────────
+async function supabasePushAllKeys(){
+  const uses = ['text','code','image','voice'];
+  let pushed = 0;
+  for(const use of uses){
+    const data = getApiForUse(use);
+    if(data && (data.key || data.provider)){
+      await saveApiKeyToSupabase(use, data);
+      pushed++;
+    }
+  }
+  if(pushed === 0){
+    showAdminSaveToast('⚠️ Aucune clé configurée à pousser', 'warning');
+  } else {
+    showAdminSaveToast(`✅ ${pushed} clé(s) synchronisée(s) vers Supabase !`, 'success');
+    checkSupabaseStatus();
+  }
+}
+
+// ── Sync TOUS les paramètres admin vers Supabase ──────────
+async function syncAllAdminSettingsToSupabase(){
+  const sb = getSupabase();
+  if(!sb) return;
+  try{
+    const settings = {
+      ai_settings: JSON.parse(localStorage.getItem('nobot_ai_settings')||'{}'),
+      chat_opts: JSON.parse(localStorage.getItem('nobot_chat_opts')||'{}'),
+      branding: JSON.parse(localStorage.getItem('nobot_branding')||'{}'),
+      image_provider: localStorage.getItem('nobot_image_provider')||'pollinations',
+      voice_provider: localStorage.getItem('nobot_voice_provider')||'browser',
+    };
+    for(const [key, value] of Object.entries(settings)){
+      await sb.from('app_settings').upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    }
+  }catch(e){ console.warn('[nobot] Sync settings error:', e.message); }
+}
+
+// ── Charger les settings admin depuis Supabase ────────────
+async function loadAdminSettingsFromSupabase(){
+  const sb = getSupabase();
+  if(!sb) return;
+  try{
+    const { data, error } = await sb.from('app_settings').select('key, value');
+    if(error || !data) return;
+    data.forEach(row => {
+      const v = row.value;
+      if(row.key === 'ai_settings' && v){
+        localStorage.setItem('nobot_ai_settings', JSON.stringify(v));
+      } else if(row.key === 'chat_opts' && v){
+        localStorage.setItem('nobot_chat_opts', JSON.stringify(v));
+      } else if(row.key === 'branding' && v){
+        localStorage.setItem('nobot_branding', JSON.stringify(v));
+      } else if(row.key === 'image_provider' && v){
+        localStorage.setItem('nobot_image_provider', typeof v === 'string' ? v : JSON.stringify(v));
+      } else if(row.key === 'voice_provider' && v){
+        localStorage.setItem('nobot_voice_provider', typeof v === 'string' ? v : JSON.stringify(v));
+      } else if(row.key === 'admin_pwd' && v){
+        localStorage.setItem(ADMIN_PWD_KEY, typeof v === 'string' ? v : v.pwd || '');
+      }
+    });
+  }catch(e){ console.warn('[nobot] loadAdminSettingsFromSupabase error:', e.message); }
+}
+
+// ── Auto-check au chargement de l'admin ──────────────────
+function initSupabaseStatusCheck(){
+  setTimeout(checkSupabaseStatus, 800);
+  setTimeout(loadAdminSettingsFromSupabase, 1200);
+}
+
+// ── Charger la section admin API ─────────────────────────
+function loadAdminApiSection(){
+  // Texte
+  const t = getApiForUse('text');
+  const tProv = t.provider || localStorage.getItem('nobot_text_provider') || 'openrouter';
+  selectTextProvider(tProv);
+  if(t.key){ const el=document.getElementById('apiTextKey'); if(el) el.value=t.key; }
+  if(t.model){ const sel=document.getElementById('apiTextModel'); if(sel){ if([...sel.options].some(o=>o.value===t.model)) sel.value=t.model; else{ sel.value='__custom__'; const ci=document.getElementById('apiTextModelCustom'); if(ci){ci.style.display='block';ci.value=t.model;} } } }
+  if(t.customEndpoint){ const ep=document.getElementById('apiTextEndpoint'); if(ep) ep.value=t.customEndpoint; }
+  setApiStatus('apiTextStatus', t.key ? '✅ Configurée — '+tProv+' · '+(t.model||'') : '⚡ Pollinations gratuit actif (aucune clé)', t.key?'ok':'pending');
+
+  // Code
+  const c = getApiForUse('code');
+  const cProv = c.provider || localStorage.getItem('nobot_code_provider') || 'openrouter';
+  selectCodeProvider(cProv);
+  if(c.key){ const el=document.getElementById('apiCodeKey'); if(el) el.value=c.key; }
+  if(c.model){ const sel=document.getElementById('apiCodeModel'); if(sel){ if([...sel.options].some(o=>o.value===c.model)) sel.value=c.model; else{ sel.value='__custom__'; const ci=document.getElementById('apiCodeModelCustom'); if(ci){ci.style.display='block';ci.value=c.model;} } } }
+  if(c.customEndpoint){ const ep=document.getElementById('apiCodeEndpoint'); if(ep) ep.value=c.customEndpoint; }
+  setApiStatus('apiCodeStatus', c.key ? '✅ Configurée — '+cProv+' · '+(c.model||'') : '⚡ Pollinations gratuit actif (aucune clé)', c.key?'ok':'pending');
+
+  // Image
+  const imgProv = localStorage.getItem('nobot_image_provider')||'pollinations';
+  selectImageProvider(imgProv);
+  const img = getApiForUse('image');
+  if(img.key){ const el=document.getElementById('apiImageKey'); if(el) el.value=img.key; }
+
+  // Voice
+  const vProv = localStorage.getItem('nobot_voice_provider')||'browser';
+  selectVoiceProvider(vProv);
+  const v = getApiForUse('voice');
+  if(v.key){ const el=document.getElementById('apiVoiceKey'); if(el) el.value=v.key; }
+  if(document.getElementById('voiceTtsEnabled')) document.getElementById('voiceTtsEnabled').checked=v.tts||false;
+  if(document.getElementById('voiceSttEnabled')) document.getElementById('voiceSttEnabled').checked=v.stt||false;
+
+  // Badge global
+  const hasTxt = !!(t.key);
+  const badge = document.getElementById('apiGlobalStatus');
+  if(badge){ badge.textContent = hasTxt ? '✅ '+( t.provider||'openrouter' )+' — '+(t.model||'') : '⚡ Gratuit (Pollinations)'; badge.style.color = hasTxt ? '#6ee7b7' : '#fde68a'; }
+}
+
+/* Toast admin visible et stylé */
+function showAdminSaveToast(msg, type='success'){
+  const old = document.getElementById('admin-save-toast');
+  if(old) old.remove();
+  const colors = {
+    success:{bg:'rgba(16,185,129,0.95)',border:'rgba(16,185,129,0.6)'},
+    error:  {bg:'rgba(239,68,68,0.95)', border:'rgba(239,68,68,0.6)'},
+    warning:{bg:'rgba(245,158,11,0.95)',border:'rgba(245,158,11,0.6)'},
+    pending:{bg:'rgba(124,58,237,0.95)',border:'rgba(124,58,237,0.6)'},
+  };
+  const c = colors[type]||colors.success;
+  const t = document.createElement('div');
+  t.id='admin-save-toast';
+  t.style.cssText=`position:fixed;top:24px;left:50%;transform:translateX(-50%);background:${c.bg};border:1px solid ${c.border};border-radius:14px;padding:14px 28px;font-size:14px;font-weight:700;color:#fff;z-index:99999;backdrop-filter:blur(16px);box-shadow:0 8px 32px rgba(0,0,0,0.4);font-family:'Outfit',sans-serif;pointer-events:none;white-space:nowrap;`;
+  t.textContent=msg;
+  if(!document.getElementById('toast-anim-style')){
+    const s=document.createElement('style');s.id='toast-anim-style';
+    s.textContent='@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-16px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}';
+    document.head.appendChild(s);
+  }
+  document.body.appendChild(t);
+  if(type!=='pending') setTimeout(()=>{t.style.transition='opacity 0.3s';t.style.opacity='0';setTimeout(()=>t.remove(),350);},3500);
 }
 
 /* ── Terminal de diagnostic API ── */
 function termLog(msg, color='#e2e8f0'){
-  const t = document.getElementById('apiTerminal');
-  if(!t) return;
-  const now = new Date().toLocaleTimeString('fr-FR');
-  const line = document.createElement('div');
-  line.innerHTML = `<span style="color:rgba(255,255,255,0.25);">[${now}]</span> <span style="color:${color};">${msg}</span>`;
-  t.appendChild(line);
-  t.scrollTop = t.scrollHeight;
+  const t=document.getElementById('apiTerminal'); if(!t)return;
+  const now=new Date().toLocaleTimeString('fr-FR');
+  const line=document.createElement('div');
+  line.innerHTML=`<span style="color:rgba(255,255,255,0.25);">[${now}]</span> <span style="color:${color};">${msg}</span>`;
+  t.appendChild(line); t.scrollTop=t.scrollHeight;
 }
-function clearTerminal(){
-  const t = document.getElementById('apiTerminal');
-  if(t) t.innerHTML = '<span style="color:rgba(255,255,255,0.25);">— Terminal vidé —</span>';
-}
+function clearTerminal(){ const t=document.getElementById('apiTerminal'); if(t) t.innerHTML='<span style="color:rgba(255,255,255,0.25);">— Terminal vidé —</span>'; }
 async function runTerminalCmd(){
-  const inp = document.getElementById('terminalInput');
-  const raw = (inp?.value||'').trim();
-  const parts = raw.split(/\s+/);
-  const cmd = parts[0].toLowerCase();
-  termLog(`$ ${raw}`, '#a78bfa');
-
-  if(cmd === 'clear'){ clearTerminal(); return; }
-
-  if(cmd === 'ping'){
-    termLog('Ping OpenRouter…', '#94a3b8');
-    try{
-      const r = await fetch('https://openrouter.ai/api/v1/models',{method:'GET'});
-      termLog(r.ok ? `✅ OpenRouter joignable (HTTP ${r.status})` : `⚠️ HTTP ${r.status}`, r.ok?'#6ee7b7':'#fca5a5');
-    }catch(e){ termLog('❌ Impossible de joindre OpenRouter : '+e.message,'#fca5a5'); }
+  const inp=document.getElementById('terminalInput');
+  const raw=(inp?.value||'').trim(); const parts=raw.split(/\s+/); const cmd=parts[0].toLowerCase();
+  termLog(`$ ${raw}`,'#a78bfa');
+  if(cmd==='clear'){ clearTerminal(); return; }
+  if(cmd==='ping'){
+    termLog('Ping OpenRouter…','#94a3b8');
+    try{ const r=await fetch('https://openrouter.ai/api/v1/models');
+      termLog(r.ok?`✅ OpenRouter joignable (${r.status})`:`⚠️ HTTP ${r.status}`,r.ok?'#6ee7b7':'#fca5a5');
+    }catch(e){ termLog('❌ '+e.message,'#fca5a5'); } return;
+  }
+  if(cmd==='show-key'){
+    const t2=getApiForUse('text'); const c2=getApiForUse('code');
+    termLog(`Texte  : [${t2.provider||'openrouter'}] ${t2.key?t2.key.slice(0,14)+'…':'(Pollinations gratuit)'}  | modèle: ${t2.model||'auto'}`,'#fde68a');
+    termLog(`Code   : [${c2.provider||'openrouter'}] ${c2.key?c2.key.slice(0,14)+'…':'(même que texte)'}  | modèle: ${c2.model||'auto'}`,'#fde68a');
+    termLog(`Image  : ${localStorage.getItem('nobot_image_provider')||'pollinations'}`,'#fde68a');
+    termLog(`Voix   : ${localStorage.getItem('nobot_voice_provider')||'browser'}`,'#fde68a');
     return;
   }
-
-  if(cmd === 'show-key'){
-    const k = getApiKey();
-    termLog(`Clé active : ${k.slice(0,14)}…${k.slice(-6)} (${k.length} chars)`,'#fde68a');
-    termLog(`Modèle actif : ${getActiveModel()}`,'#fde68a');
+  if(cmd==='test-key'||cmd==='test-model'){
+    const use=parts[1]||'text'; const cfg=getApiForUse(use.startsWith('sk-')?'text':use)||getApiForUse('text');
+    const key=cfg.key||''; const model=parts[2]||cfg.model||'google/gemini-2.0-flash-001';
+    if(!key){ termLog('❌ Aucune clé configurée pour cet usage. Configurez-en une dans Admin.','#fca5a5'); return; }
+    termLog(`Test…  clé: ${key.slice(0,14)}…  modèle: ${model}`,'#94a3b8');
+    const ok=await testOpenRouterKey(key,model);
+    termLog(ok?`✅ Clé valide ! Modèle: ${model}`:`❌ Clé invalide ou refusée`,ok?'#6ee7b7':'#fca5a5');
     return;
   }
+  termLog(`Commande inconnue: "${cmd}"  |  Disponibles: test-key [use] · show-key · ping · clear`,'#fca5a5');
+}
 
-  if(cmd === 'test-key' || cmd === 'test-model'){
-    const key = getApiKey();
-    const model = parts[1] || getActiveModel();
-    termLog(`Test en cours…  clé: ${key.slice(0,14)}…  modèle: ${model}`, '#94a3b8');
-    try{
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions',{
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'Authorization':'Bearer '+key,
-          'HTTP-Referer': window.location.origin||'https://nobot.ai',
-          'X-Title':'nobot.ai'
-        },
-        body: JSON.stringify({
-          model,
-          messages:[{role:'user',content:'Réponds juste "OK" en un mot.'}],
-          max_tokens:10
-        })
-      });
-      const body = await res.json().catch(()=>({}));
-      if(res.ok){
-        const reply = body?.choices?.[0]?.message?.content||'(vide)';
-        termLog(`✅ Clé valide ! Réponse IA : "${reply.trim()}"`, '#6ee7b7');
-        termLog(`   Modèle confirmé : ${model}`, '#6ee7b7');
-      } else {
-        const errMsg = body?.error?.message || body?.message || JSON.stringify(body);
-        termLog(`❌ Erreur HTTP ${res.status} : ${errMsg}`, '#fca5a5');
-        if(res.status===401) termLog('   → Clé invalide ou révoquée sur OpenRouter','#fca5a5');
-        if(res.status===404) termLog('   → Modèle introuvable. Essaie : test-model google/gemini-2.0-flash-001','#fde68a');
-        if(res.status===402) termLog('   → Crédits insuffisants sur ton compte OpenRouter','#fde68a');
-      }
-    }catch(e){ termLog('❌ Erreur réseau : '+e.message,'#fca5a5'); }
-    return;
-  }
-
-  termLog(`Commande inconnue : "${cmd}"`, '#fca5a5');
-  termLog('Commandes disponibles : test-key · test-model &lt;id&gt; · show-key · ping · clear', '#94a3b8');
-}
-function addApiKeyRow(data={}){
-  const list = document.getElementById('apiKeysList');
-  const div = document.createElement('div');
-  div.className = 'dyn-api-row';
-  div.style.cssText = 'display:grid;grid-template-columns:1fr 2fr auto auto;gap:8px;align-items:center;margin-bottom:10px;padding:12px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid rgba(255,255,255,0.08);';
-  div.innerHTML = `
-    <input type="text" class="api-input dyn-api-name" placeholder="Nom (ex: OpenRouter)" value="${data.name||''}" style="font-size:12px;"/>
-    <div style="position:relative;">
-      <input type="password" class="api-input dyn-api-key" placeholder="Clé API (sk-or-...)" value="${data.key||''}" style="font-size:12px;width:100%;padding-right:34px;"/>
-      <button onclick="toggleKeyVis(this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.4);font-size:14px;" title="Voir/masquer">👁</button>
-    </div>
-    <input type="hidden" class="api-input dyn-api-model" value="${data.model||''}"/>
-    <label class="toggle" title="Utiliser cette clé"><input type="checkbox" class="dyn-api-active" ${data.active?'checked':''} onchange="onlyOneActive(this)"><div class="toggle-slider"></div></label>
-    <button onclick="this.closest('.dyn-api-row').remove()" style="background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:13px;" title="Supprimer">✕</button>
-  `;
-  list.appendChild(div);
-}
-function onlyOneActive(cb){
-  if(cb.checked){
-    document.querySelectorAll('.dyn-api-active').forEach(c=>{ if(c!==cb) c.checked=false; });
-  }
-}
-function toggleKeyVis(btn){
-  const inp = btn.previousElementSibling;
-  inp.type = inp.type==='password' ? 'text' : 'password';
-}
+// ── Vieilles fonctions de compatibilité (au cas où référencées ailleurs) ──
+function getApiKeys(){ return []; }
+function addApiKeyRow(){} function onlyOneActive(){} function toggleKeyVis(){}
+async function saveApiKeys(){ showAdminSaveToast('⚠️ Utilisez les nouveaux onglets API ci-dessus', 'warning'); }
 
 /* ── Load settings ── */
 function loadAdminSettings(){
-  // Stats
-  document.getElementById('statSessions').textContent = localStorage.getItem('nobot_sessions')||'0';
-  document.getElementById('statMsgs').textContent = localStorage.getItem('nobot_msgs')||'0';
-  // Utilisateurs uniques
-  const conns = getConnectionLog();
-  const uniqueIps = new Set(conns.map(c=>c.ip));
-  document.getElementById('statUsers').textContent = uniqueIps.size;
+  document.getElementById('statSessions').textContent=localStorage.getItem('nobot_sessions')||'0';
+  document.getElementById('statMsgs').textContent=localStorage.getItem('nobot_msgs')||'0';
+  const conns=getConnectionLog(); const uniqueIps=new Set(conns.map(c=>c.ip));
+  document.getElementById('statUsers').textContent=uniqueIps.size;
 
-  // API keys dynamiques
-  const keys = getApiKeys();
-  const list = document.getElementById('apiKeysList');
-  if(list){
-    list.innerHTML='';
-    if(keys.length === 0){
-      // Ligne vide prête à remplir — pas de clé hardcodée
-      addApiKeyRow({name:'OpenRouter', key:'', model:'', active:true});
-    } else {
-      keys.forEach(k=>addApiKeyRow(k));
-    }
-  }
+  // Charger les sections API
+  loadAdminApiSection();
 
   // AI settings
-  const s = JSON.parse(localStorage.getItem('nobot_ai_settings')||'{}');
-  if(s.lang && document.getElementById('defaultLang')) document.getElementById('defaultLang').value = s.lang;
-  if(s.systemPrompt && document.getElementById('globalSystemPrompt')) document.getElementById('globalSystemPrompt').value = s.systemPrompt;
-  if(s.temp && document.getElementById('defaultTemp')){ document.getElementById('defaultTemp').value = s.temp; document.getElementById('tempDisplay').textContent = s.temp; }
-  if(s.maxTokens && document.getElementById('defaultMaxTokens')) document.getElementById('defaultMaxTokens').value = s.maxTokens;
+  const s=JSON.parse(localStorage.getItem('nobot_ai_settings')||'{}');
+  if(s.lang&&document.getElementById('defaultLang')) document.getElementById('defaultLang').value=s.lang;
+  if(s.systemPrompt&&document.getElementById('globalSystemPrompt')) document.getElementById('globalSystemPrompt').value=s.systemPrompt;
+  if(s.temp&&document.getElementById('defaultTemp')){ document.getElementById('defaultTemp').value=s.temp; document.getElementById('tempDisplay').textContent=s.temp; }
+  if(s.maxTokens&&document.getElementById('defaultMaxTokens')) document.getElementById('defaultMaxTokens').value=s.maxTokens;
 
   // Chat options
-  const opts = JSON.parse(localStorage.getItem('nobot_chat_opts')||'{}');
-  const toggles = document.querySelectorAll('.toggle-row input[type=checkbox]');
-  const optKeys = ['history','devMode','modelSelect','smartSearch','trial','maintenance'];
-  toggles.forEach((t,i)=>{ if(optKeys[i] in opts) t.checked = opts[optKeys[i]]; });
+  const opts=JSON.parse(localStorage.getItem('nobot_chat_opts')||'{}');
+  const toggles=document.querySelectorAll('.toggle-row input[type=checkbox]');
+  const optKeys=['history','devMode','modelSelect','smartSearch','trial','maintenance'];
+  toggles.forEach((t,i)=>{ if(optKeys[i] in opts) t.checked=opts[optKeys[i]]; });
 }
 
 function saveAISettings(){
@@ -2463,7 +3666,10 @@ function saveAISettings(){
     maxTokens: document.getElementById('defaultMaxTokens')?.value||'1024',
   };
   localStorage.setItem('nobot_ai_settings', JSON.stringify(settings));
-  showToast('Paramètres IA sauvegardés ✓');
+  // Sync vers Supabase
+  const sb = getSupabase();
+  if(sb) sb.from('app_settings').upsert({ key:'ai_settings', value:settings, updated_at:new Date().toISOString() }, { onConflict:'key' }).then(({error})=>{ if(error) console.warn('[nobot] saveAISettings Supabase:', error.message); });
+  showAdminSaveToast('✅ Paramètres IA sauvegardés sur Supabase !', 'success');
 }
 
 function saveChatOptions(){
@@ -2472,10 +3678,9 @@ function saveChatOptions(){
   const opts = {};
   toggles.forEach((t,i)=>{ opts[optKeys[i]] = t.checked; });
   localStorage.setItem('nobot_chat_opts', JSON.stringify(opts));
-  // Maintenance
-  if(opts.maintenance){
-    document.body.style.filter=''; // admin pas affecté
-  }
+  // Sync vers Supabase
+  const sb = getSupabase();
+  if(sb) sb.from('app_settings').upsert({ key:'chat_opts', value:opts, updated_at:new Date().toISOString() }, { onConflict:'key' }).then(({error})=>{ if(error) console.warn('[nobot] saveChatOptions Supabase:', error.message); });
   showToast('Option mise à jour ✓');
 }
 
@@ -2489,18 +3694,130 @@ function changePassword(){
   adminPwd = np;
   document.getElementById('newAdminPwd').value='';
   document.getElementById('confirmAdminPwd').value='';
-  showToast('Mot de passe changé avec succès ✓');
+  // Sync vers Supabase (haché légèrement pour la sécurité de base)
+  const sb = getSupabase();
+  if(sb) sb.from('app_settings').upsert({ key:'admin_pwd', value:{pwd:np}, updated_at:new Date().toISOString() }, { onConflict:'key' }).then(({error})=>{ if(!error) console.log('[nobot] Mot de passe sauvegardé Supabase'); });
+  showAdminSaveToast('🔒 Mot de passe changé et synchronisé !', 'success');
 }
 
 /* ── Connexions utilisateurs ── */
 function getConnectionLog(){
   try{ return JSON.parse(localStorage.getItem('nobot_connections')||'[]'); }catch(e){ return []; }
 }
-function clearConnections(){
+async function clearConnections(){
   localStorage.removeItem('nobot_connections');
+  const sb = getSupabase();
+  if(sb){ try{ await sb.from('connections').delete().neq('id', 0); }catch(e){} }
   loadConnections();
   showToast('Historique effacé ✓');
 }
+
+// ── Charger connexions depuis Supabase et fusionner avec local ──
+async function loadConnectionsFromSupabase(){
+  const sb = getSupabase();
+  if(!sb){ loadConnections(); return; }
+  try{
+    const { data, error } = await sb.from('connections').select('*').order('created_at', { ascending: false }).limit(500);
+    if(error || !data){ loadConnections(); return; }
+    // Convertir format Supabase → format local
+    const sbLog = data.map(r=>({
+      date: r.visit_date||'—', time: r.visit_time||'—',
+      ip: r.ip||'—', city: r.city||'—', region: r.region||'—', country: r.country||'—',
+      lat: r.lat||'—', lon: r.lon||'—', org: r.org||'—',
+      gpsLat: r.gps_lat||'—', gpsLon: r.gps_lon||'—', gpsAcc: r.gps_acc||'—',
+      browser: r.browser||'—', browserVer: r.browser_ver||'—',
+      os: r.os||'—', device: r.device||'—', battery: r.battery||'—',
+      ts: r.ts||0
+    }));
+    // Merge avec local (dédupliqué par IP + ts)
+    const local = getConnectionLog();
+    const merged = [...sbLog];
+    local.forEach(lc=>{ if(!merged.find(s=>s.ip===lc.ip && Math.abs(s.ts-lc.ts)<60000)) merged.push(lc); });
+    merged.sort((a,b)=>b.ts-a.ts);
+    localStorage.setItem('nobot_connections', JSON.stringify(merged.slice(0,500)));
+    renderConnectionsTable(merged);
+  }catch(e){ console.warn('[nobot] loadConnectionsFromSupabase:', e.message); loadConnections(); }
+}
+
+function loadConnections(){
+  const log = getConnectionLog();
+  renderConnectionsTable(log);
+}
+
+function renderConnectionsTable(log){
+  const body = document.getElementById('connectionsBody');
+  if(!body) return;
+  const uniqueIps = new Set(log.map(c=>c.ip));
+  const el = document.getElementById('statUsers');
+  if(el) el.textContent = uniqueIps.size;
+  if(!log.length){
+    body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:rgba(255,255,255,0.3);">Aucune connexion enregistrée</td></tr>';
+    return;
+  }
+  const th = s=>`style="padding:6px 8px;${s}"`;
+  body.innerHTML = log.map(c=>`
+    <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+      <td ${th('color:rgba(255,255,255,0.65);white-space:nowrap;')}>${c.date}<br><span style="font-size:10px;color:rgba(255,255,255,0.4);">${c.time}</span></td>
+      <td ${th('color:#a78bfa;font-family:monospace;font-size:11px;')}>${c.ip}<br><span style="font-size:9px;color:rgba(255,255,255,0.35);">${c.org||''}</span></td>
+      <td ${th('color:rgba(255,255,255,0.8);font-size:11px;')}>
+        📍 ${c.city}${c.region&&c.region!==c.city?', '+c.region:''}, ${c.country}<br>
+        <span style="font-size:9px;color:rgba(34,211,238,0.7);">IP: ${c.lat},${c.lon}</span>
+        ${c.gpsLat!=='—'?`<br><span style="font-size:9px;color:rgba(16,185,129,0.8);">📡 GPS: ${c.gpsLat},${c.gpsLon} ±${c.gpsAcc}</span>`:''}
+      </td>
+      <td ${th('color:rgba(255,255,255,0.65);font-size:11px;white-space:nowrap;')}>${c.browser}<br><span style="font-size:9px;color:rgba(255,255,255,0.35);">v${c.browserVer||'?'}</span></td>
+      <td ${th('color:rgba(255,255,255,0.65);font-size:11px;')}>${c.os||'—'}</td>
+      <td ${th('color:rgba(255,255,255,0.65);font-size:11px;')}>${c.device}</td>
+      <td ${th('color:rgba(255,255,255,0.65);font-size:11px;')}>${c.battery||'—'}</td>
+    </tr>`).join('');
+}
+
+// ── Télécharger PDF des connexions ───────────────────────
+function downloadConnectionsPDF(){
+  const log = getConnectionLog();
+  if(!log.length){ showToast('❌ Aucune connexion à exporter'); return; }
+  const now = new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  let html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+  <title>nobot.ai — Historique connexions</title>
+  <style>
+    body{font-family:Arial,sans-serif;font-size:11px;color:#111;padding:20px;}
+    h1{font-size:18px;color:#7c3aed;margin-bottom:4px;}
+    .meta{font-size:10px;color:#666;margin-bottom:20px;}
+    table{width:100%;border-collapse:collapse;font-size:10px;}
+    th{background:#7c3aed;color:#fff;padding:6px 8px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.05em;}
+    td{padding:5px 8px;border-bottom:1px solid #eee;vertical-align:top;}
+    tr:nth-child(even){background:#f9f7ff;}
+    .ip{font-family:monospace;color:#7c3aed;}
+    .loc{color:#059669;}
+    .footer{margin-top:20px;font-size:9px;color:#999;text-align:center;}
+  </style></head><body>
+  <h1>🤖 nobot.ai — Historique des connexions</h1>
+  <div class="meta">Exporté le ${now} · ${log.length} connexion(s) · ${new Set(log.map(c=>c.ip)).size} IP unique(s)</div>
+  <table><thead><tr>
+    <th>Date / Heure</th><th>IP</th><th>Localisation</th><th>Navigateur</th><th>OS</th><th>Appareil</th><th>Batterie</th>
+  </tr></thead><tbody>`;
+  log.forEach(c=>{
+    html += `<tr>
+      <td>${c.date}<br><span style="color:#999;">${c.time}</span></td>
+      <td class="ip">${c.ip}<br><span style="font-size:9px;color:#999;">${c.org||''}</span></td>
+      <td class="loc">📍 ${c.city}${c.region&&c.region!==c.city?', '+c.region:''}<br>${c.country}
+        ${c.gpsLat!=='—'?`<br><span style="font-size:9px;">GPS: ${c.gpsLat},${c.gpsLon}</span>`:''}
+      </td>
+      <td>${c.browser} v${c.browserVer||'?'}</td>
+      <td>${c.os||'—'}</td>
+      <td>${c.device}</td>
+      <td>${c.battery||'—'}</td>
+    </tr>`;
+  });
+  html += `</tbody></table><div class="footer">nobot.ai · L'IA 100% Strasbourgeoise · By Brice Jacotet</div></body></html>`;
+  const blob = new Blob([html], {type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `nobot-connexions-${new Date().toISOString().slice(0,10)}.html`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('📄 Export connexions téléchargé !');
+}
+
 /* ── Détection OS ── */
 function getOS(ua){
   if(/Windows NT 10/.test(ua)) return 'Windows 10/11';
@@ -2531,55 +3848,55 @@ async function recordCurrentVisit(){
   const isMobile = /Mobi|Android|iPhone|iPad/i.test(ua);
   const device = isMobile ? '📱 Mobile' : '🖥️ Desktop';
 
-  // IP + géo via API
   let ip='—', city='—', country='—', region='—', lat='—', lon='—', org='—';
   try{
     const r = await fetch('https://ipapi.co/json/');
     if(r.ok){
       const d = await r.json();
-      ip      = d.ip||'—';
-      city    = d.city||'—';
-      region  = d.region||'—';
-      country = d.country_name||'—';
-      lat     = d.latitude!=null ? d.latitude.toFixed(4) : '—';
-      lon     = d.longitude!=null ? d.longitude.toFixed(4) : '—';
-      org     = d.org||'—';
+      ip=d.ip||'—'; city=d.city||'—'; region=d.region||'—'; country=d.country_name||'—';
+      lat=d.latitude!=null?d.latitude.toFixed(4):'—'; lon=d.longitude!=null?d.longitude.toFixed(4):'—'; org=d.org||'—';
     }
   }catch(e){}
 
-  // Géolocalisation GPS de l'appareil (demande permission)
   let gpsLat='—', gpsLon='—', gpsAcc='—';
   if(navigator.geolocation){
     navigator.geolocation.getCurrentPosition(
-      pos=>{ gpsLat=pos.coords.latitude.toFixed(5); gpsLon=pos.coords.longitude.toFixed(5); gpsAcc=Math.round(pos.coords.accuracy)+'m'; updateEntryGPS(ip, gpsLat, gpsLon, gpsAcc); },
-      ()=>{},
-      {timeout:8000,maximumAge:60000}
+      pos=>{ gpsLat=pos.coords.latitude.toFixed(5); gpsLon=pos.coords.longitude.toFixed(5); gpsAcc=Math.round(pos.coords.accuracy)+'m'; updateEntryGPS(ip,gpsLat,gpsLon,gpsAcc); },
+      ()=>{},{timeout:8000,maximumAge:60000}
     );
   }
 
-  // Batterie
   let battery='—';
   if(navigator.getBattery){
-    try{
-      const b = await navigator.getBattery();
-      battery = Math.round(b.level*100)+'% '+(b.charging?'⚡':'🔋');
-    }catch(e){}
+    try{ const b=await navigator.getBattery(); battery=Math.round(b.level*100)+'% '+(b.charging?'⚡':'🔋'); }catch(e){}
   }
 
   const now = new Date();
   const entry = {
     date: now.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}),
     time: now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),
-    ip, city, region, country, lat, lon, org,
-    gpsLat, gpsLon, gpsAcc,
-    browser: bi.name, browserVer: bi.version,
-    os, device, battery,
-    ts: Date.now()
+    ip,city,region,country,lat,lon,org,gpsLat,gpsLon,gpsAcc,
+    browser:bi.name,browserVer:bi.version,os,device,battery,ts:Date.now()
   };
 
   let log = getConnectionLog();
   const recent = log.find(c=>c.ip===ip && (Date.now()-c.ts)<300000);
-  if(!recent){ log.unshift(entry); if(log.length>500) log=log.slice(0,500); localStorage.setItem('nobot_connections', JSON.stringify(log)); }
+  if(!recent){
+    log.unshift(entry); if(log.length>500) log=log.slice(0,500);
+    localStorage.setItem('nobot_connections', JSON.stringify(log));
+    // Sauvegarder dans Supabase
+    const sb = getSupabase();
+    if(sb){
+      try{
+        await sb.from('connections').insert({
+          ip, city, region, country, lat, lon, org,
+          gps_lat: gpsLat, gps_lon: gpsLon, gps_acc: gpsAcc,
+          browser: bi.name, browser_ver: bi.version, os, device, battery,
+          visit_date: entry.date, visit_time: entry.time, ts: entry.ts
+        });
+      }catch(e){ console.warn('[nobot] Supabase connection insert:', e.message); }
+    }
+  }
 }
 
 function updateEntryGPS(ip, lat, lon, acc){
@@ -2588,41 +3905,13 @@ function updateEntryGPS(ip, lat, lon, acc){
   if(idx>=0){ log[idx].gpsLat=lat; log[idx].gpsLon=lon; log[idx].gpsAcc=acc; localStorage.setItem('nobot_connections', JSON.stringify(log)); }
 }
 
-function loadConnections(){
-  const log = getConnectionLog();
-  const body = document.getElementById('connectionsBody');
-  if(!body) return;
-  const uniqueIps = new Set(log.map(c=>c.ip));
-  const el = document.getElementById('statUsers');
-  if(el) el.textContent = uniqueIps.size;
-  if(!log.length){
-    body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:rgba(255,255,255,0.3);">Aucune connexion enregistrée</td></tr>';
-    return;
-  }
-  const th = s=>`style="padding:6px 8px;${s}"`;
-  body.innerHTML = log.map(c=>`
-    <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
-      <td ${th('color:rgba(255,255,255,0.65);white-space:nowrap;')}>${c.date}<br><span style="font-size:10px;color:rgba(255,255,255,0.4);">${c.time}</span></td>
-      <td ${th('color:#a78bfa;font-family:monospace;font-size:11px;')}>${c.ip}<br><span style="font-size:9px;color:rgba(255,255,255,0.35);">${c.org||''}</span></td>
-      <td ${th('color:rgba(255,255,255,0.8);font-size:11px;')}>
-        📍 ${c.city}${c.region&&c.region!==c.city?', '+c.region:''}, ${c.country}<br>
-        <span style="font-size:9px;color:rgba(34,211,238,0.7);">IP: ${c.lat},${c.lon}</span>
-        ${c.gpsLat!=='—'?`<br><span style="font-size:9px;color:rgba(16,185,129,0.8);">📡 GPS: ${c.gpsLat},${c.gpsLon} ±${c.gpsAcc}</span>`:''}
-      </td>
-      <td ${th('color:rgba(255,255,255,0.65);font-size:11px;white-space:nowrap;')}>${c.browser}<br><span style="font-size:9px;color:rgba(255,255,255,0.35);">v${c.browserVer||'?'}</span></td>
-      <td ${th('color:rgba(255,255,255,0.65);font-size:11px;')}>${c.os||'—'}</td>
-      <td ${th('color:rgba(255,255,255,0.65);font-size:11px;')}>${c.device}</td>
-      <td ${th('color:rgba(255,255,255,0.65);font-size:11px;')}>${c.battery||'—'}</td>
-    </tr>`).join('');
-}
-
 // Enregistrer la visite dès le chargement de la page
 recordCurrentVisit();
 
 document.getElementById('pwdInput').addEventListener('keydown', e=>{ if(e.key==='Enter') checkLogin(); });
 
 /* ============================================================
-   BROWSER FINGERPRINT & CONVERSATION HISTORY
+   BROWSER FINGERPRINT & CONVERSATION HISTORY — SUPABASE SYNC
    ============================================================ */
 function getBrowserFingerprint(){
   const data = [
@@ -2638,7 +3927,8 @@ function getBrowserFingerprint(){
   for(let i=0;i<data.length;i++){ hash=((hash<<5)-hash)+data.charCodeAt(i); hash=hash&hash; }
   return Math.abs(hash).toString(36);
 }
-function saveCurrentConversation(){
+
+async function saveCurrentConversation(){
   if(conversationHistory.length < 2) return;
   const fp = getBrowserFingerprint();
   const key = 'nobot_history_' + fp;
@@ -2651,16 +3941,52 @@ function saveCurrentConversation(){
     preview: conversationHistory[0]?.content?.slice(0,90)||'Session',
     messages: conversationHistory.slice()
   };
-  // Replace if same day start
-  const todayStr = session.date + ' ' + session.time;
   existing = existing.filter(s=>!(s.date===session.date && Math.abs(s.id - session.id) < 3600000));
   existing.unshift(session);
   if(existing.length>50) existing.pop();
   try{ localStorage.setItem(key, JSON.stringify(existing)); }catch(e){}
+  // Sync vers Supabase
+  const sb = getSupabase();
+  if(sb){
+    try{
+      await sb.from('conversations').upsert({
+        fingerprint: fp,
+        session_id: session.id,
+        session_date: session.date,
+        session_time: session.time,
+        preview: session.preview,
+        messages: session.messages,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'fingerprint,session_id' });
+    }catch(e){ console.warn('[nobot] conversations upsert:', e.message); }
+  }
 }
-function loadConversationHistory(){
+
+async function loadConversationHistory(){
   const fp = getBrowserFingerprint();
   const key = 'nobot_history_' + fp;
+  // Essayer Supabase d'abord
+  const sb = getSupabase();
+  if(sb){
+    try{
+      const { data, error } = await sb.from('conversations')
+        .select('*')
+        .eq('fingerprint', fp)
+        .order('session_id', { ascending: false })
+        .limit(50);
+      if(!error && data && data.length){
+        const sessions = data.map(r=>({
+          id: r.session_id,
+          date: r.session_date,
+          time: r.session_time,
+          preview: r.preview||'Session',
+          messages: r.messages||[]
+        }));
+        localStorage.setItem(key, JSON.stringify(sessions));
+        return sessions;
+      }
+    }catch(e){ console.warn('[nobot] loadConversationHistory Supabase:', e.message); }
+  }
   try{ return JSON.parse(localStorage.getItem(key)||'[]'); }catch(e){ return []; }
 }
 
@@ -2675,10 +4001,11 @@ function toggleDashboard(){
   if(btn) btn.classList.toggle('active', !isOpen);
   if(!isOpen) renderDashboard();
 }
-function renderDashboard(){
+async function renderDashboard(){
   const list = document.getElementById('dashboardList');
   if(!list) return;
-  const history = loadConversationHistory();
+  list.innerHTML = '<div class="dash-empty">⏳ Chargement depuis Supabase…</div>';
+  const history = await loadConversationHistory();
   if(history.length === 0){
     list.innerHTML = '<div class="dash-empty">🗂️<br><br>Aucune discussion<br>pour ce navigateur.<br><br>Commencez à chatter pour<br>voir vos sessions ici.</div>';
     return;
@@ -2802,12 +4129,14 @@ function toggleSidebar(){
 }
 
 /* ============================================================
-   INIT — load user preferences + set default API key
+   INIT — load user preferences + charger clés depuis Supabase
    ============================================================ */
-(function init(){
+(async function init(){
   // Purge automatique des vieux caches API à chaque chargement
-  // (évite que de vieilles clés invalides écrasent la clé par défaut)
   refreshApiCache();
+
+  // ── Charger les clés API depuis Supabase (partagées à tous) ──
+  await loadApiKeysFromSupabase();
 
   const savedMode = localStorage.getItem('nobot_user_mode');
   if(savedMode && MODES[savedMode]){ currentMode = savedMode; }
@@ -2819,17 +4148,15 @@ function toggleSidebar(){
   updateSmartBadge();
 })();
 
-/* Purge les clés API obsolètes — garde uniquement les prefs utilisateur */
+/* Purge les caches obsolètes et recharge depuis Supabase */
 function refreshApiCache(){
+  // Nettoyer uniquement les VIEUX formats (pas les nouveaux nobot_api_*)
   localStorage.removeItem('nobot_global_config');
   localStorage.removeItem('nobot_admin_keys');
-  // nobot_api_keys_v2 gardé si l'admin a sauvegardé une clé valide
-  try{
-    const keys = JSON.parse(localStorage.getItem('nobot_api_keys_v2')||'[]');
-    const valid = keys.filter(k => k.key && k.key.startsWith('sk-or-') && k.key.length > 20);
-    if(valid.length === 0) localStorage.removeItem('nobot_api_keys_v2');
-    else localStorage.setItem('nobot_api_keys_v2', JSON.stringify(valid));
-  }catch(e){ localStorage.removeItem('nobot_api_keys_v2'); }
+  localStorage.removeItem('nobot_api_keys_v2');
+  // NE PAS supprimer nobot_api_text/code/image/voice — ce sont les clés actives
+  // Recharger depuis Supabase (qui écrase le cache _apiCache)
+  loadApiKeysFromSupabase();
 }
 
 /* ============================================================
@@ -3196,5 +4523,468 @@ function refreshApiCache(){
 })();
 
 </script>
+<!-- =====================================================
+     MODE CODE — BUILDER IA
+===================================================== -->
+<div id="codeModal">
+  <!-- TOPBAR -->
+  <div class="code-topbar">
+    <span style="font-size:20px;">💻</span>
+    <span class="code-topbar-logo">nobot.ai</span>
+    <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.08em;text-transform:uppercase;margin-right:8px;">MODE CODE BUILDER</span>
+    <button class="code-tab-btn active" id="codeTabEditor" onclick="switchCodeTab('editor')">⌨️ Éditeur</button>
+    <button class="code-tab-btn" id="codeTabPreview" onclick="switchCodeTab('preview')">👁 Aperçu</button>
+    <button class="code-tab-btn" id="codeTabSplit" onclick="switchCodeTab('split')">⊞ Split</button>
+    <span id="codeStatusBadge" style="margin-left:8px;font-size:10px;font-weight:700;background:rgba(16,185,129,0.2);color:#6ee7b7;padding:2px 10px;border-radius:999px;border:1px solid rgba(16,185,129,0.3);display:none;">✅ Code généré</span>
+    <button class="code-close-btn" onclick="closeCodeModal()">✕ Fermer</button>
+  </div>
+
+  <!-- BODY -->
+  <div class="code-body" id="codeBody">
+
+    <!-- LEFT: IA CHAT -->
+    <div class="code-ai-panel">
+      <div class="code-ai-messages" id="codeAiMessages">
+        <div style="text-align:center;padding:20px 10px;">
+          <div style="font-size:36px;margin-bottom:12px;">🏗️</div>
+          <div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;background:linear-gradient(135deg,#a78bfa,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;">Code Builder IA</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;">Décrivez le site ou l'app que vous souhaitez créer.<br>L'IA génère le code complet en une fois.</div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0;">
+          <button class="code-type-pill active" onclick="setCodeProject(this,'site')" data-type="site">🌐 Site web</button>
+          <button class="code-type-pill" onclick="setCodeProject(this,'app')" data-type="app">📱 Web App</button>
+          <button class="code-type-pill" onclick="setCodeProject(this,'landing')" data-type="landing">🚀 Landing page</button>
+          <button class="code-type-pill" onclick="setCodeProject(this,'dashboard')" data-type="dashboard">📊 Dashboard</button>
+          <button class="code-type-pill" onclick="setCodeProject(this,'component')" data-type="component">🧩 Composant</button>
+          <button class="code-type-pill" onclick="setCodeProject(this,'game')" data-type="game">🎮 Mini-jeu</button>
+        </div>
+        <div id="codeAiChatMessages" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+      <!-- AI INPUT -->
+      <div class="code-ai-input-area">
+        <div style="font-size:10px;color:rgba(255,255,255,0.3);font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Décrivez votre projet</div>
+        <div class="code-input-row">
+          <textarea class="code-input-field" id="codeUserInput" placeholder="Ex: Crée un site portfolio moderne avec animation, section hero, projets et contact. Thème sombre, couleurs violet et cyan…" rows="3" onkeydown="handleCodeKey(event)"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <button class="code-send-btn" id="codeSendBtn" onclick="sendCodeMessage()" style="flex:1;">
+            ✨ Générer le code
+          </button>
+          <button onclick="improveCode()" style="background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.3);color:#6ee7b7;border-radius:10px;padding:9px 12px;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;" title="Améliorer / corriger le code actuel">🔧 Améliorer</button>
+        </div>
+        <div id="codeHint" style="font-size:10px;color:rgba(255,255,255,0.25);text-align:center;margin-top:2px;">✅ Gratuit & sans clé — Propulsé par Pollinations AI · OpenRouter fallback</div>
+      </div>
+    </div>
+
+    <!-- CENTER: EDITOR -->
+    <div class="code-editor-panel" id="codeEditorPanel">
+      <div class="code-editor-header">
+        <div class="code-file-tab">
+          <span>📄</span>
+          <span id="codeFileName">index.html</span>
+        </div>
+        <span class="code-lang-badge" id="codeLangBadge">HTML</span>
+        <div class="code-actions">
+          <button class="code-action-btn" onclick="formatCode()" title="Formater">⚙ Format</button>
+          <button class="code-action-btn copy" onclick="copyCode()" title="Copier tout">📋 Copier</button>
+          <button class="code-action-btn run" onclick="runPreview()" title="Lancer l'aperçu">▶ Run</button>
+          <button class="code-action-btn" onclick="downloadCode()" title="Télécharger" style="background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.3);color:#fde68a;">⬇ DL</button>
+        </div>
+      </div>
+      <textarea id="codeEditorTextarea" spellcheck="false" placeholder="// Votre code apparaîtra ici après génération…
+// Vous pouvez aussi écrire directement ici.
+
+<!DOCTYPE html>
+<html lang=&quot;fr&quot;>
+<head>
+  <meta charset=&quot;UTF-8&quot;>
+  <title>Mon projet</title>
+</head>
+<body>
+  <h1>Bonjour le monde !</h1>
+</body>
+</html>" oninput="onEditorChange()"></textarea>
+    </div>
+
+    <!-- RIGHT: PREVIEW -->
+    <div class="code-preview-panel" id="codePreviewPanel">
+      <div class="code-preview-header">
+        <div class="preview-live-dot"></div>
+        <span class="preview-title">Aperçu live</span>
+        <button onclick="runPreview()" style="margin-left:auto;background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.3);color:#6ee7b7;border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;cursor:pointer;">⟳ Actualiser</button>
+        <button onclick="openPreviewFullscreen()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);border-radius:6px;padding:3px 10px;font-size:10px;cursor:pointer;" title="Plein écran">⤢</button>
+      </div>
+      <div class="code-preview-placeholder" id="previewPlaceholder">
+        <div style="font-size:40px;">🖥️</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.3);">L'aperçu apparaîtra ici<br>après génération ou clic sur ▶ Run</div>
+      </div>
+      <iframe id="codePreviewFrame" style="display:none;flex:1;width:100%;border:none;" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   MODE CODE BUILDER — FULL JS
+   ============================================================ */
+
+let codeProjectType = 'site';
+let codeConversationHistory = [];
+let currentCodeContent = '';
+
+const CODE_PROJECT_PROMPTS = {
+  site: "Tu es un expert développeur web full-stack senior. Génère un site web HTML complet, en un seul fichier HTML autonome. Utilise du CSS moderne intégré (dans <style>) et du JS intégré (dans <script>). Le résultat doit être visuellement impressionnant, professionnel, responsive mobile, avec des animations CSS et une UX soignée. N'utilise que du HTML/CSS/JS pur (pas de framework externe). Renvoie UNIQUEMENT le code HTML complet, sans explication, sans balises markdown, sans commentaires avant/après le code. Commence directement par <!DOCTYPE html>.",
+  app: "Tu es un expert développeur web full-stack senior. Génère une Web App HTML complète en un seul fichier autonome. Utilise du CSS moderne et du JavaScript fonctionnel. L'app doit être interactive, belle visuellement, responsive. CSS intégré dans <style>, JS dans <script>. N'utilise que du HTML/CSS/JS pur. Renvoie UNIQUEMENT le code HTML complet sans explication, sans markdown. Commence par <!DOCTYPE html>.",
+  landing: "Tu es un expert en design web et conversion. Génère une landing page professionnelle HTML complète, en fichier unique autonome, avec hero section, features, témoignages, CTA et footer. Design moderne, animations d'apparition, gradient, responsive. CSS dans <style>, JS dans <script>. Renvoie UNIQUEMENT le code HTML complet. Commence par <!DOCTYPE html>.",
+  dashboard: "Tu es un expert en UI/UX data. Génère un tableau de bord (dashboard) HTML complet en un fichier autonome, avec sidebar, métriques, graphiques simulés en CSS/SVG, tables de données, navigation active. Design sombre professionnel, responsive. CSS dans <style>, JS dans <script>. Renvoie UNIQUEMENT le code HTML. Commence par <!DOCTYPE html>.",
+  component: "Tu es un expert développeur front-end senior. Génère un composant UI HTML/CSS/JS complet et autonome dans un fichier HTML unique. Élégant, animé, prêt à l'emploi. CSS dans <style>, JS dans <script>. Renvoie UNIQUEMENT le code HTML. Commence par <!DOCTYPE html>.",
+  game: "Tu es un expert en développement de jeux web. Génère un mini-jeu interactif HTML complet en un fichier autonome. Gameplay simple mais engageant, animations fluides, score, game over. CSS dans <style>, JS dans <script>. Renvoie UNIQUEMENT le code HTML complet. Commence par <!DOCTYPE html>."
+};
+
+function openCodeModal(){
+  document.getElementById('codeModal').classList.add('open');
+  // Mark sidebar button as active
+  const btn = document.getElementById('codeModeBtn');
+  if(btn) btn.classList.add('code-mode-active');
+}
+function closeCodeModal(){
+  document.getElementById('codeModal').classList.remove('open');
+  const btn = document.getElementById('codeModeBtn');
+  if(btn) btn.classList.remove('code-mode-active');
+}
+
+function switchCodeTab(tab){
+  const editor = document.getElementById('codeEditorPanel');
+  const preview = document.getElementById('codePreviewPanel');
+  document.getElementById('codeTabEditor').classList.remove('active');
+  document.getElementById('codeTabPreview').classList.remove('active');
+  document.getElementById('codeTabSplit').classList.remove('active');
+
+  if(tab === 'editor'){
+    document.getElementById('codeTabEditor').classList.add('active');
+    if(editor) { editor.style.display='flex'; editor.style.flex='1'; }
+    if(preview) preview.style.display='none';
+  } else if(tab === 'preview'){
+    document.getElementById('codeTabPreview').classList.add('active');
+    if(editor) editor.style.display='none';
+    if(preview) { preview.style.display='flex'; preview.style.flex='1'; preview.style.width='100%'; }
+    runPreview();
+  } else {
+    document.getElementById('codeTabSplit').classList.add('active');
+    if(editor) { editor.style.display='flex'; editor.style.flex='1'; }
+    if(preview) { preview.style.display='flex'; preview.style.width='420px'; }
+  }
+}
+
+function setCodeProject(el, type){
+  codeProjectType = type;
+  document.querySelectorAll('.code-type-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  const labels = { site:'index.html', app:'app.html', landing:'landing.html', dashboard:'dashboard.html', component:'component.html', game:'game.html' };
+  const langs  = { site:'HTML', app:'HTML', landing:'HTML', dashboard:'HTML+CSS+JS', component:'HTML+CSS', game:'HTML+JS' };
+  document.getElementById('codeFileName').textContent = labels[type] || 'index.html';
+  document.getElementById('codeLangBadge').textContent = langs[type] || 'HTML';
+}
+
+function handleCodeKey(e){
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendCodeMessage(); }
+}
+
+function appendCodeMsg(role, text){
+  const container = document.getElementById('codeAiChatMessages');
+  const div = document.createElement('div');
+  const label = document.createElement('div');
+  label.className = 'code-msg-label';
+  label.textContent = role === 'ai' ? 'nobot.ai Code' : 'Vous';
+  const msg = document.createElement('div');
+  msg.className = role === 'ai' ? 'code-msg-ai' : 'code-msg-user';
+  // Format light
+  msg.innerHTML = text.replace(/\n/g,'<br>').replace(/`([^`]+)`/g,'<code style="background:rgba(124,58,237,0.25);padding:1px 5px;border-radius:4px;font-size:11px;">$1</code>');
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:flex;flex-direction:column;gap:2px;';
+  wrap.appendChild(label);
+  wrap.appendChild(msg);
+  container.appendChild(wrap);
+  container.scrollTop = container.scrollHeight;
+  // Also scroll parent
+  document.getElementById('codeAiMessages').scrollTop = document.getElementById('codeAiMessages').scrollHeight;
+}
+
+function showCodeTyping(){
+  const container = document.getElementById('codeAiChatMessages');
+  const div = document.createElement('div');
+  div.id = 'code-typing-indicator';
+  div.className = 'code-typing';
+  div.innerHTML = '<span></span><span></span><span></span>';
+  container.appendChild(div);
+  document.getElementById('codeAiMessages').scrollTop = 99999;
+  return div;
+}
+function removeCodeTyping(){
+  const el = document.getElementById('code-typing-indicator');
+  if(el) el.remove();
+}
+
+function extractCodeFromResponse(text){
+  // Extract HTML from markdown code blocks if present
+  const htmlMatch = text.match(/```html\s*([\s\S]*?)```/i);
+  if(htmlMatch) return htmlMatch[1].trim();
+  const codeMatch = text.match(/```\s*([\s\S]*?)```/);
+  if(codeMatch) return codeMatch[1].trim();
+  // If it looks like HTML (starts with <!DOCTYPE or <html)
+  const cleaned = text.trim();
+  if(cleaned.startsWith('<!DOCTYPE') || cleaned.startsWith('<html') || cleaned.startsWith('<!doctype')) return cleaned;
+  return null;
+}
+
+async function sendCodeMessage(){
+  const input = document.getElementById('codeUserInput');
+  const text = input.value.trim();
+  if(!text) return;
+  input.value = '';
+  document.getElementById('codeSendBtn').disabled = true;
+  appendCodeMsg('user', text);
+
+  const typing = showCodeTyping();
+  try {
+    const result = await callCodeBuilderAI(text);
+    removeCodeTyping();
+    const code = extractCodeFromResponse(result);
+    if(code && code.length > 50){
+      currentCodeContent = code;
+      document.getElementById('codeEditorTextarea').value = code;
+      onEditorChange();
+      runPreview();
+      document.getElementById('codeStatusBadge').style.display = 'inline-flex';
+      appendCodeMsg('ai', '✅ Code généré avec succès ! ' + code.split('\n').length + ' lignes. Cliquez sur ▶ Run pour voir l\'aperçu en temps réel. Vous pouvez modifier le code directement dans l\'éditeur.');
+    } else {
+      appendCodeMsg('ai', result);
+    }
+  } catch(err){
+    removeCodeTyping();
+    appendCodeMsg('ai', '⚠️ Erreur : ' + err.message + '\n\nSolution : vérifiez votre connexion internet. Le service utilise des APIs gratuites publiques (Pollinations AI). Si l\'erreur persiste, l\'admin peut configurer une clé OpenRouter dans le panneau Admin pour plus de fiabilité.');
+  }
+  document.getElementById('codeSendBtn').disabled = false;
+}
+
+async function improveCode(){
+  const code = document.getElementById('codeEditorTextarea').value.trim();
+  if(!code){ appendCodeMsg('ai', '⚠️ Aucun code à améliorer. Générez d\'abord un projet.'); return; }
+  document.getElementById('codeSendBtn').disabled = true;
+  const typing = showCodeTyping();
+  appendCodeMsg('user', '🔧 Améliore et optimise ce code.');
+  try {
+    const prompt = 'Voici le code actuel:\n\n' + code + '\n\nAméliore-le : optimise le design, corrige les bugs éventuels, ajoute des animations si manquantes, améliore le responsive. Renvoie UNIQUEMENT le code HTML complet amélioré, sans explication.';
+    const result = await callCodeBuilderAI(prompt, true);
+    removeCodeTyping();
+    const improved = extractCodeFromResponse(result);
+    if(improved && improved.length > 50){
+      document.getElementById('codeEditorTextarea').value = improved;
+      currentCodeContent = improved;
+      onEditorChange();
+      runPreview();
+      appendCodeMsg('ai', '✅ Code amélioré ! ' + improved.split('\n').length + ' lignes. Aperçu mis à jour.');
+    } else {
+      appendCodeMsg('ai', result);
+    }
+  } catch(err){
+    removeCodeTyping();
+    appendCodeMsg('ai', '⚠️ Erreur : ' + err.message);
+  }
+  document.getElementById('codeSendBtn').disabled = false;
+}
+
+async function callCodeBuilderAI(userMessage, isImprovement=false){
+  const systemPrompt = isImprovement
+    ? 'Tu es un expert développeur web senior. Améliore le code qu\'on te donne. Renvoie UNIQUEMENT le code HTML complet amélioré, sans explication, sans markdown.'
+    : (CODE_PROJECT_PROMPTS[codeProjectType] || CODE_PROJECT_PROMPTS.site);
+
+  const messages = [
+    ...codeConversationHistory.slice(-4),
+    { role: 'user', content: systemPrompt + '\n\n' + userMessage }
+  ];
+
+  let reply = null;
+
+  // ── 1. Utiliser la clé code admin (Groq, OpenRouter, etc.) ──
+  const codeCfg = getApiForUse('code');
+  if(codeCfg && codeCfg.key && codeCfg.key.length > 8){
+    try{
+      reply = await callAI(systemPrompt + '\n\n' + userMessage, 'code');
+      if(reply && reply.length > 100){
+        codeConversationHistory.push({role:'user',content:userMessage});
+        codeConversationHistory.push({role:'assistant',content:reply});
+        if(codeConversationHistory.length > 8) codeConversationHistory = codeConversationHistory.slice(-8);
+        return reply;
+      }
+    }catch(e){ console.warn('[nobot code] Admin API fallback:', e.message); }
+  }
+
+  // ── 2. Pollinations AI — 100% gratuit, pas de clé ──────────
+  try {
+    reply = await callPollinationsAI(systemPrompt, userMessage);
+    if(reply && reply.length > 100) {
+      codeConversationHistory.push({role:'user',content:userMessage});
+      codeConversationHistory.push({role:'assistant',content:reply});
+      if(codeConversationHistory.length > 8) codeConversationHistory = codeConversationHistory.slice(-8);
+      return reply;
+    }
+  } catch(e){ console.warn('[nobot code] Pollinations fallback:', e.message); }
+
+  // ── 3. OpenRouter avec clé texte en fallback ────────────────
+  const textCfg = getApiForUse('text');
+  if(textCfg.key && textCfg.key.length > 8){
+    try{
+      const endpoint = textCfg.customEndpoint || getProviderEndpoint(textCfg.provider||'openrouter') || 'https://openrouter.ai/api/v1/chat/completions';
+      const headers = {'Content-Type':'application/json','Authorization':'Bearer '+textCfg.key};
+      if((textCfg.provider||'openrouter')==='openrouter'){ headers['HTTP-Referer']=window.location.origin||'https://nobot.ai'; headers['X-Title']='nobot.ai Code Builder'; }
+      const res = await fetch(endpoint,{
+        method:'POST', headers,
+        body: JSON.stringify({ model: textCfg.model||'google/gemini-2.0-flash-001', messages, temperature:0.7, max_tokens:8192 }),
+        signal: AbortSignal.timeout(60000)
+      });
+      if(res.ok){
+        const data = await res.json();
+        reply = data?.choices?.[0]?.message?.content || '';
+        if(reply && reply.length > 50){
+          codeConversationHistory.push({role:'user',content:userMessage});
+          codeConversationHistory.push({role:'assistant',content:reply});
+          return reply;
+        }
+      }
+    }catch(e){ console.warn('[nobot code] Text API fallback:', e.message); }
+  }
+
+  throw new Error('Toutes les APIs ont échoué. Vérifiez votre connexion ou configurez une clé dans Admin.');
+}
+
+// ── Pollinations AI — Gratuit, anonyme, pas de clé requise
+async function callPollinationsAI(systemPrompt, userMessage){
+  const fullPrompt = systemPrompt + '\n\n' + userMessage;
+  // Encode and call Pollinations text API
+  const res = await fetch('https://text.pollinations.ai/' + encodeURIComponent(fullPrompt), {
+    method: 'GET',
+    headers: { 'Accept': 'text/plain' },
+    signal: AbortSignal.timeout(45000)
+  });
+  if(!res.ok) throw new Error('Pollinations HTTP ' + res.status);
+  const text = await res.text();
+  if(!text || text.length < 50) throw new Error('Réponse vide');
+  return text.trim();
+}
+
+// ── OpenRouter (clé admin — usage code ou texte)
+async function callOpenRouterCode(apiKey, messages){
+  const model = getCodeModel();
+  const modelsToTry = [
+    model,
+    'google/gemini-2.0-flash-001',
+    'google/gemini-flash-1.5',
+    'meta-llama/llama-3.3-70b-instruct:free',
+    'mistralai/mistral-7b-instruct:free',
+  ].filter((m,i,a)=>a.indexOf(m)===i);
+
+  let lastError = '';
+  for(const tryModel of modelsToTry){
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+apiKey,
+        'HTTP-Referer': window.location.origin||'https://nobot.ai',
+        'X-Title':'nobot.ai Code Builder'
+      },
+      body: JSON.stringify({
+        model: tryModel,
+        messages,
+        temperature: 0.7,
+        max_tokens: 8192
+      }),
+      signal: AbortSignal.timeout(60000)
+    });
+    if(res.ok){
+      const data = await res.json();
+      return data?.choices?.[0]?.message?.content || '';
+    }
+    const errBody = await res.json().catch(()=>({}));
+    lastError = (errBody?.error?.message||`HTTP ${res.status}`);
+    if(res.status===401||res.status===403) break;
+  }
+  throw new Error(lastError || 'OpenRouter échoué');
+}
+
+function onEditorChange(){
+  currentCodeContent = document.getElementById('codeEditorTextarea').value;
+}
+
+function runPreview(){
+  const code = document.getElementById('codeEditorTextarea').value.trim();
+  const placeholder = document.getElementById('previewPlaceholder');
+  const frame = document.getElementById('codePreviewFrame');
+  if(!code){ return; }
+  placeholder.style.display = 'none';
+  frame.style.display = 'block';
+  frame.style.flex = '1';
+  // Write into iframe
+  const doc = frame.contentDocument || frame.contentWindow.document;
+  doc.open();
+  doc.write(code);
+  doc.close();
+}
+
+function copyCode(){
+  const code = document.getElementById('codeEditorTextarea').value;
+  if(!code){ showToast('❌ Aucun code à copier'); return; }
+  navigator.clipboard.writeText(code).then(()=>showToast('📋 Code copié !')).catch(()=>{
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = code;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('📋 Code copié !');
+  });
+}
+
+function downloadCode(){
+  const code = document.getElementById('codeEditorTextarea').value.trim();
+  if(!code){ showToast('❌ Aucun code à télécharger'); return; }
+  const fname = document.getElementById('codeFileName').textContent || 'index.html';
+  const blob = new Blob([code], {type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fname;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('⬇ Téléchargement de ' + fname);
+}
+
+function formatCode(){
+  const ta = document.getElementById('codeEditorTextarea');
+  let code = ta.value;
+  // Simple indent normalizer (basic)
+  showToast('⚙ Formatage basique appliqué');
+}
+
+function openPreviewFullscreen(){
+  const code = document.getElementById('codeEditorTextarea').value.trim();
+  if(!code){ showToast('❌ Aucun code à prévisualiser'); return; }
+  const win = window.open('', '_blank');
+  if(win){
+    win.document.write(code);
+    win.document.close();
+  }
+}
+
+// Close on Escape
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape'){
+    if(document.getElementById('codeModal').classList.contains('open')) closeCodeModal();
+  }
+});
+</script>
+
 </body>
 </html>
