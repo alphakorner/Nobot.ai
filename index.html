@@ -5116,14 +5116,32 @@ function removeCodeTyping(){
 }
 
 function extractCodeFromResponse(text){
-  // Extract HTML from markdown code blocks if present
+  if(!text) return null;
+  // 1. Blocs markdown ```html ... ```
   const htmlMatch = text.match(/```html\s*([\s\S]*?)```/i);
   if(htmlMatch) return htmlMatch[1].trim();
+  // 2. Blocs markdown génériques ``` ... ```
   const codeMatch = text.match(/```\s*([\s\S]*?)```/);
   if(codeMatch) return codeMatch[1].trim();
-  // If it looks like HTML (starts with <!DOCTYPE or <html)
+  // 3. Cherche <!DOCTYPE ou <html n'importe où dans le texte (Pollinations met parfois du texte avant)
+  const doctypeIdx = text.search(/<!DOCTYPE\s+html/i);
+  if(doctypeIdx >= 0){
+    const slice = text.slice(doctypeIdx);
+    // Prendre jusqu'à </html>
+    const endIdx = slice.search(/<\/html\s*>/i);
+    if(endIdx >= 0) return slice.slice(0, endIdx + 7).trim();
+    return slice.trim();
+  }
+  const htmlTagIdx = text.search(/<html[\s>]/i);
+  if(htmlTagIdx >= 0){
+    const slice = text.slice(htmlTagIdx);
+    const endIdx = slice.search(/<\/html\s*>/i);
+    if(endIdx >= 0) return slice.slice(0, endIdx + 7).trim();
+    return slice.trim();
+  }
+  // 4. Commence directement par < (balise HTML)
   const cleaned = text.trim();
-  if(cleaned.startsWith('<!DOCTYPE') || cleaned.startsWith('<html') || cleaned.startsWith('<!doctype')) return cleaned;
+  if(cleaned.startsWith('<')) return cleaned;
   return null;
 }
 
@@ -5186,11 +5204,15 @@ async function improveCode(){
 
 async function callCodeBuilderAI(userMessage, isImprovement=false){
   const NVIDIA_KEY      = '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';
-  const NVIDIA_MODEL    = 'nvidia/llama-3.3-nemotron-super-49b-v1.5';
+  // Modèles NVIDIA NIM valides (noms exacts de l'API catalog)
+  const NVIDIA_MODELS   = [
+    'nvidia/llama-3.3-nemotron-super-49b-v1',
+    'meta/llama-3.3-70b-instruct',
+    'meta/llama-3.1-70b-instruct',
+    'mistralai/mistral-large-2-instruct'
+  ];
   const NVIDIA_ENDPOINT = 'https://integrate.api.nvidia.com/v1/chat/completions';
-  // OpenRouter proxifie NVIDIA sans blocage CORS
   const OR_ENDPOINT     = 'https://openrouter.ai/api/v1/chat/completions';
-  const OR_MODEL        = 'nvidia/llama-3.3-nemotron-super-49b-v1.5:free';
 
   const systemPrompt = isImprovement
     ? `Tu es un expert développeur web senior de niveau MONDIAL. Améliore le code qu'on te donne.
@@ -5210,66 +5232,111 @@ OBLIGATIONS :
 
   let reply = null;
 
-  // ── Tentative 1 : NVIDIA NIM direct (souvent bloqué CORS navigateur, normal) ──
-  try{
-    const res = await fetch(NVIDIA_ENDPOINT, {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+NVIDIA_KEY},
-      body:JSON.stringify({model:NVIDIA_MODEL,messages,temperature:0.6,top_p:0.95,max_tokens:16384,stream:false}),
-      signal:AbortSignal.timeout(90000)
-    });
-    if(res.ok){ const d=await res.json(); reply=d?.choices?.[0]?.message?.content||''; if(reply) console.log('[nobot code] ✅ NVIDIA direct OK'); }
-    else{ const eb=await res.json().catch(()=>({})); console.warn('[nobot code] NVIDIA direct:',res.status,eb?.detail||eb?.message||''); }
-  }catch(e){ console.warn('[nobot code] NVIDIA CORS/réseau (attendu):',e.message); }
+  // ── Tentative 1 : NVIDIA NIM direct — essaie chaque modèle ───────────────────
+  // (CORS autorisé par NVIDIA NIM sur integrate.api.nvidia.com)
+  for(const nvModel of NVIDIA_MODELS){
+    if(reply && reply.length > 200) break;
+    try{
+      const res = await fetch(NVIDIA_ENDPOINT, {
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+NVIDIA_KEY},
+        body:JSON.stringify({model:nvModel,messages,temperature:0.55,top_p:0.95,max_tokens:16384,stream:false}),
+        signal:AbortSignal.timeout(90000)
+      });
+      if(res.ok){
+        const d = await res.json();
+        const t = d?.choices?.[0]?.message?.content || '';
+        if(t && t.length > 200){ reply = t; console.log('[nobot code] ✅ NVIDIA OK →', nvModel); break; }
+      } else {
+        const eb = await res.json().catch(()=>({}));
+        console.warn('[nobot code] NVIDIA', nvModel, res.status, eb?.detail||eb?.message||'');
+        if(res.status === 401 || res.status === 403) break; // clé invalide → stop
+      }
+    }catch(e){ console.warn('[nobot code] NVIDIA CORS/timeout', nvModel, ':', e.message); break; }
+  }
 
-  // ── Tentative 2 : OpenRouter — UNIQUEMENT avec clé sk-or- admin ──────────────
-  // ⚠️ OpenRouter n'accepte PAS les clés nvapi- : on vérifie avant d'envoyer
-  if(!reply || reply.length < 100){
+  // ── Tentative 2 : OpenRouter avec clé admin sk-or- (si configurée) ───────────
+  if(!reply || reply.length < 200){
     try{
       const codeCfg = getApiForUse('code');
       const orKey = (codeCfg?.key||'').startsWith('sk-or-') ? codeCfg.key : '';
       if(orKey){
-        const orModels = [codeCfg?.model||'google/gemini-2.0-flash-001','google/gemini-2.0-flash-001','meta-llama/llama-3.3-70b-instruct:free','mistralai/mistral-7b-instruct:free'].filter((m,i,a)=>a.indexOf(m)===i);
+        const orModels = [
+          codeCfg?.model || 'google/gemini-2.0-flash-001',
+          'google/gemini-2.0-flash-001',
+          'meta-llama/llama-3.3-70b-instruct:free',
+          'mistralai/mistral-7b-instruct:free'
+        ].filter((m,i,a)=>a.indexOf(m)===i);
         for(const tm of orModels){
-          const res=await fetch(OR_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+orKey,'HTTP-Referer':window.location.origin||'https://nobot.ai','X-Title':'nobot.ai Code Builder'},body:JSON.stringify({model:tm,messages,temperature:0.7,max_tokens:16384}),signal:AbortSignal.timeout(90000)});
-          if(res.ok){const d=await res.json();reply=d?.choices?.[0]?.message?.content||'';if(reply){console.log('[nobot code] ✅ OpenRouter OK:',tm);break;}}
+          const res = await fetch(OR_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+orKey,'HTTP-Referer':window.location.origin||'https://nobot.ai','X-Title':'nobot.ai Code Builder'},body:JSON.stringify({model:tm,messages,temperature:0.7,max_tokens:16384}),signal:AbortSignal.timeout(90000)});
+          if(res.ok){const d=await res.json();const t=d?.choices?.[0]?.message?.content||'';if(t&&t.length>200){reply=t;console.log('[nobot code] ✅ OpenRouter OK:',tm);break;}}
           else{const e2=await res.json().catch(()=>({}));console.warn('[nobot code] OR',tm,res.status,e2?.error?.message||'');if(res.status===401||res.status===403)break;}
         }
       }
     }catch(e){console.warn('[nobot code] OpenRouter erreur:',e.message);}
   }
 
-  // ── Tentative 3 : Groq — si clé admin gsk_ configurée ────────────────────────
-  if(!reply || reply.length < 100){
+  // ── Tentative 3 : Groq — rapide, gratuit, si clé gsk_ admin ─────────────────
+  if(!reply || reply.length < 200){
     try{
-      const codeCfg=getApiForUse('code');
-      const groqKey=(codeCfg?.key||'').startsWith('gsk_')?codeCfg.key:'';
+      const codeCfg = getApiForUse('code');
+      const groqKey = (codeCfg?.key||'').startsWith('gsk_') ? codeCfg.key : '';
       if(groqKey){
-        for(const gm of ['llama-3.3-70b-versatile','llama-3.1-8b-instant','mixtral-8x7b-32768']){
+        for(const gm of ['llama-3.3-70b-versatile','llama-3.1-70b-versatile']){
           const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:gm,messages,temperature:0.7,max_tokens:8192}),signal:AbortSignal.timeout(60000)});
-          if(res.ok){const d=await res.json();reply=d?.choices?.[0]?.message?.content||'';if(reply){console.log('[nobot code] ✅ Groq OK:',gm);break;}}
+          if(res.ok){const d=await res.json();const t=d?.choices?.[0]?.message?.content||'';if(t&&t.length>200){reply=t;console.log('[nobot code] ✅ Groq OK:',gm);break;}}
           else if(res.status===401||res.status===403)break;
         }
       }
     }catch(e){console.warn('[nobot code] Groq erreur:',e.message);}
   }
 
-  // ── Tentative 4 : Pollinations AI — 100% GRATUIT, aucune clé, toujours dispo ──
-  if(!reply || reply.length < 100){
+  // ── Tentative 4 : Pollinations POST (OpenAI-compatible, modèle openai-large) ──
+  // Pollinations expose /openai endpoint compatible avec l'API OpenAI, aucune clé
+  if(!reply || reply.length < 200){
     try{
-      console.log('[nobot code] 🔄 Pollinations AI (fallback universel)…');
-      const fullPrompt = systemPrompt + '\n\nDemande : ' + userMessage + '\n\nRenvoie UNIQUEMENT le code HTML complet, rien d\'autre.';
-      const res=await fetch('https://text.pollinations.ai/'+encodeURIComponent(fullPrompt),{method:'GET',headers:{'Accept':'text/plain'},signal:AbortSignal.timeout(60000)});
-      if(res.ok){const t=await res.text();if(t&&t.length>100){reply=t.trim();console.log('[nobot code] ✅ Pollinations OK');}}
-    }catch(e){console.warn('[nobot code] Pollinations erreur:',e.message);}
+      console.log('[nobot code] 🔄 Pollinations openai-large…');
+      const polBody = {
+        model: 'openai-large',
+        messages: messages,
+        temperature: 0.7,
+        max_tokens: 8192,
+        private: true
+      };
+      const res = await fetch('https://text.pollinations.ai/openai', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(polBody),
+        signal:AbortSignal.timeout(90000)
+      });
+      if(res.ok){
+        const d = await res.json();
+        const t = d?.choices?.[0]?.message?.content || '';
+        if(t && t.length > 200){ reply = t; console.log('[nobot code] ✅ Pollinations openai-large OK'); }
+      } else {
+        console.warn('[nobot code] Pollinations POST:', res.status);
+      }
+    }catch(e){console.warn('[nobot code] Pollinations POST erreur:',e.message);}
   }
 
-  if(!reply || reply.length < 50){
-    throw new Error('Service temporairement indisponible. Réessayez dans quelques secondes ou configurez une clé API dans le panneau Admin.');
+  // ── Tentative 5 : Pollinations GET — ultime filet, toujours dispo ─────────────
+  if(!reply || reply.length < 200){
+    try{
+      console.log('[nobot code] 🔄 Pollinations GET (dernier recours)…');
+      const fullP = systemPrompt + '\n\nIMPORTANT: Renvoie UNIQUEMENT du code HTML complet valide, commence par <!DOCTYPE html> et finit par </html>. Aucun texte, aucun markdown.\n\nDemande : ' + userMessage;
+      const res = await fetch('https://text.pollinations.ai/'+encodeURIComponent(fullP)+'?model=openai-large&private=true',{method:'GET',signal:AbortSignal.timeout(60000)});
+      if(res.ok){const t=await res.text();if(t&&t.length>200){reply=t.trim();console.log('[nobot code] ✅ Pollinations GET OK');}}
+    }catch(e){console.warn('[nobot code] Pollinations GET erreur:',e.message);}
   }
 
-  // Nettoyer blocs markdown
-  reply = reply.replace(/^```html\s*/i,'').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
+  if(!reply || reply.length < 100){
+    throw new Error('Service temporairement indisponible. Réessayez dans quelques secondes ou ajoutez une clé API (OpenRouter/Groq) dans le panneau Admin.');
+  }
+
+  // Nettoyage : extraire le code HTML proprement (retire markdown, texte parasite, etc.)
+  const extracted = extractCodeFromResponse(reply);
+  if(extracted && extracted.length > 100) reply = extracted;
+  else reply = reply.replace(/^```html\s*/i,'').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
 
   codeConversationHistory.push({role:'user',    content:userMessage});
   codeConversationHistory.push({role:'assistant',content:reply});
