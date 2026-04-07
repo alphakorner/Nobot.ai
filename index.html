@@ -5152,7 +5152,7 @@ async function sendCodeMessage(){
     }
   } catch(err){
     removeCodeTyping();
-    appendCodeMsg('ai', '⚠️ Erreur : ' + err.message + '\n\nSolution : vérifiez votre connexion internet. Le service utilise des APIs gratuites publiques (Pollinations AI). Si l\'erreur persiste, l\'admin peut configurer une clé OpenRouter dans le panneau Admin pour plus de fiabilité.');
+    appendCodeMsg('ai', '⚠️ Erreur : ' + err.message);
   }
   document.getElementById('codeSendBtn').disabled = false;
 }
@@ -5208,102 +5208,64 @@ OBLIGATIONS :
     { role: 'user', content: userMessage }
   ];
 
-  const body = {
-    model:             NVIDIA_MODEL,
-    messages:          messages,
-    temperature:       0.6,
-    top_p:             0.95,
-    max_tokens:        16384,
-    frequency_penalty: 0,
-    presence_penalty:  0,
-    stream:            false
-  };
-
   let reply = null;
 
-  // ── Tentative 1 : appel direct NVIDIA NIM ─────────────────
+  // ── Tentative 1 : NVIDIA NIM direct (souvent bloqué CORS navigateur, normal) ──
   try{
     const res = await fetch(NVIDIA_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+NVIDIA_KEY },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(90000)
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+NVIDIA_KEY},
+      body:JSON.stringify({model:NVIDIA_MODEL,messages,temperature:0.6,top_p:0.95,max_tokens:16384,stream:false}),
+      signal:AbortSignal.timeout(90000)
     });
-    if(res.ok){
-      const data = await res.json();
-      reply = data?.choices?.[0]?.message?.content || '';
-    } else {
-      const errBody = await res.json().catch(()=>({}));
-      console.warn('[nobot code] NVIDIA direct:', res.status, errBody?.detail||errBody?.message||'');
-    }
-  } catch(e){
-    // CORS ou réseau → on passe au fallback silencieusement
-    console.warn('[nobot code] NVIDIA direct bloqué (CORS/réseau), passage OpenRouter:', e.message);
-  }
+    if(res.ok){ const d=await res.json(); reply=d?.choices?.[0]?.message?.content||''; if(reply) console.log('[nobot code] ✅ NVIDIA direct OK'); }
+    else{ const eb=await res.json().catch(()=>({})); console.warn('[nobot code] NVIDIA direct:',res.status,eb?.detail||eb?.message||''); }
+  }catch(e){ console.warn('[nobot code] NVIDIA CORS/réseau (attendu):',e.message); }
 
-  // ── Tentative 2 : OpenRouter proxifie NVIDIA (CORS ok) ────
+  // ── Tentative 2 : OpenRouter — UNIQUEMENT avec clé sk-or- admin ──────────────
+  // ⚠️ OpenRouter n'accepte PAS les clés nvapi- : on vérifie avant d'envoyer
   if(!reply || reply.length < 100){
     try{
-      const orBody = { ...body, model: OR_MODEL };
-      const res2 = await fetch(OR_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          'Authorization': 'Bearer '+NVIDIA_KEY,
-          'HTTP-Referer':  window.location.origin || 'https://nobot.ai',
-          'X-Title':       'nobot.ai Code Builder'
-        },
-        body: JSON.stringify(orBody),
-        signal: AbortSignal.timeout(90000)
-      });
-      if(res2.ok){
-        const data2 = await res2.json();
-        reply = data2?.choices?.[0]?.message?.content || '';
-        console.log('[nobot code] ✅ NVIDIA via OpenRouter OK');
-      } else {
-        const e2 = await res2.json().catch(()=>({}));
-        console.warn('[nobot code] OpenRouter NVIDIA:', res2.status, e2?.error?.message||'');
+      const codeCfg = getApiForUse('code');
+      const orKey = (codeCfg?.key||'').startsWith('sk-or-') ? codeCfg.key : '';
+      if(orKey){
+        const orModels = [codeCfg?.model||'google/gemini-2.0-flash-001','google/gemini-2.0-flash-001','meta-llama/llama-3.3-70b-instruct:free','mistralai/mistral-7b-instruct:free'].filter((m,i,a)=>a.indexOf(m)===i);
+        for(const tm of orModels){
+          const res=await fetch(OR_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+orKey,'HTTP-Referer':window.location.origin||'https://nobot.ai','X-Title':'nobot.ai Code Builder'},body:JSON.stringify({model:tm,messages,temperature:0.7,max_tokens:16384}),signal:AbortSignal.timeout(90000)});
+          if(res.ok){const d=await res.json();reply=d?.choices?.[0]?.message?.content||'';if(reply){console.log('[nobot code] ✅ OpenRouter OK:',tm);break;}}
+          else{const e2=await res.json().catch(()=>({}));console.warn('[nobot code] OR',tm,res.status,e2?.error?.message||'');if(res.status===401||res.status===403)break;}
+        }
       }
-    } catch(e){ console.warn('[nobot code] OpenRouter fallback erreur:', e.message); }
+    }catch(e){console.warn('[nobot code] OpenRouter erreur:',e.message);}
   }
 
-  // ── Tentative 3 : OpenRouter Gemini Flash gratuit (backup) ─
+  // ── Tentative 3 : Groq — si clé admin gsk_ configurée ────────────────────────
   if(!reply || reply.length < 100){
     try{
-      const res3 = await fetch(OR_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          'Authorization': 'Bearer '+NVIDIA_KEY,
-          'HTTP-Referer':  window.location.origin || 'https://nobot.ai',
-          'X-Title':       'nobot.ai Code Builder'
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-2.0-flash-001',
-          messages, temperature:0.7, max_tokens:16384
-        }),
-        signal: AbortSignal.timeout(90000)
-      });
-      if(res3.ok){
-        const data3 = await res3.json();
-        reply = data3?.choices?.[0]?.message?.content || '';
-        console.log('[nobot code] ✅ Gemini Flash backup OK');
+      const codeCfg=getApiForUse('code');
+      const groqKey=(codeCfg?.key||'').startsWith('gsk_')?codeCfg.key:'';
+      if(groqKey){
+        for(const gm of ['llama-3.3-70b-versatile','llama-3.1-8b-instant','mixtral-8x7b-32768']){
+          const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:gm,messages,temperature:0.7,max_tokens:8192}),signal:AbortSignal.timeout(60000)});
+          if(res.ok){const d=await res.json();reply=d?.choices?.[0]?.message?.content||'';if(reply){console.log('[nobot code] ✅ Groq OK:',gm);break;}}
+          else if(res.status===401||res.status===403)break;
+        }
       }
-    } catch(e){ console.warn('[nobot code] Gemini backup erreur:', e.message); }
+    }catch(e){console.warn('[nobot code] Groq erreur:',e.message);}
   }
 
-  // ── Tentative 4 : clé admin configurée (si différente) ────
+  // ── Tentative 4 : Pollinations AI — 100% GRATUIT, aucune clé, toujours dispo ──
   if(!reply || reply.length < 100){
-    const codeCfg = getApiForUse('code');
-    if(codeCfg && codeCfg.key && codeCfg.key !== NVIDIA_KEY && codeCfg.key.length > 8){
-      try{
-        reply = await callAI(systemPrompt + '\n\n' + userMessage, 'code');
-      } catch(e){ console.warn('[nobot code] Admin key fallback:', e.message); }
-    }
+    try{
+      console.log('[nobot code] 🔄 Pollinations AI (fallback universel)…');
+      const fullPrompt = systemPrompt + '\n\nDemande : ' + userMessage + '\n\nRenvoie UNIQUEMENT le code HTML complet, rien d\'autre.';
+      const res=await fetch('https://text.pollinations.ai/'+encodeURIComponent(fullPrompt),{method:'GET',headers:{'Accept':'text/plain'},signal:AbortSignal.timeout(60000)});
+      if(res.ok){const t=await res.text();if(t&&t.length>100){reply=t.trim();console.log('[nobot code] ✅ Pollinations OK');}}
+    }catch(e){console.warn('[nobot code] Pollinations erreur:',e.message);}
   }
 
-  if(!reply || reply.length < 100){
-    throw new Error('Toutes les APIs ont échoué. Vérifiez votre connexion internet.');
+  if(!reply || reply.length < 50){
+    throw new Error('Service temporairement indisponible. Réessayez dans quelques secondes ou configurez une clé API dans le panneau Admin.');
   }
 
   // Nettoyer blocs markdown
